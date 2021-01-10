@@ -64,6 +64,7 @@ class FakeStakeTest(PivxTestFramework):
 
     def setup_chain(self):
         # Start with PoW cache: 200 blocks
+        self.log.info("Initializing test directory " + self.options.tmpdir)
         self._initialize_chain()
         self.enable_mocktime()
 
@@ -208,10 +209,10 @@ class FakeStakeTest(PivxTestFramework):
                 prevBlockHash = bHash
                 prevModifier = get_prev_modifier(prevBlockHash)
 
-            stakeInputs = self.get_prevouts(1, staking_utxo_list, False, nHeight - 1)
+            stakeInputs = self.get_prevouts(1, staking_utxo_list)
             # Update stake inputs for second block sent on forked chain (must stake the same input)
             if not isMainChain and i == 1:
-                stakeInputs = self.get_prevouts(1, [stakedUtxo], False, nHeight-1)
+                stakeInputs = self.get_prevouts(1, [stakedUtxo])
 
             # Make spam txes sending the inputs to DUMMY_KEY in order to test double spends
             if fDoubleSpend:
@@ -219,7 +220,7 @@ class FakeStakeTest(PivxTestFramework):
                 block_txes = self.make_txes(1, spending_prevouts, self.DUMMY_KEY.get_pubkey())
 
             # Stake the spam block
-            block = self.stake_block(1, nHeight, prevBlockHash, prevModifier, stakeInputs,
+            block = self.stake_block(1, 7, nHeight, prevBlockHash, prevModifier, "0", stakeInputs,
                                      nTime, "", block_txes, fDoubleSpend)
             # Log stake input
             prevout = COutPoint()

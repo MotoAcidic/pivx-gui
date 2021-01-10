@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include <string>
+#include "optional.h"
 
 #include <boost/signals2/last_value.hpp>
 #include <boost/signals2/signal.hpp>
@@ -84,9 +85,6 @@ public:
     /** Progress message during initialization. */
     boost::signals2::signal<void(const std::string& message)> InitMessage;
 
-    /** Translate a message to the native language of the user. */
-    boost::signals2::signal<std::string(const char* psz)> Translate;
-
     /** Number of network connections changed. */
     boost::signals2::signal<void(int newNumConnections)> NotifyNumConnectionsChanged;
 
@@ -110,15 +108,5 @@ public:
 };
 
 extern CClientUIInterface uiInterface;
-
-/**
- * Translation function: Call Translate signal on UI interface, which returns a boost::optional result.
- * If no translation slot is registered, nothing is returned, and simply return the input.
- */
-inline std::string _(const char* psz)
-{
-    boost::optional<std::string> rv = uiInterface.Translate(psz);
-    return rv ? (*rv) : psz;
-}
 
 #endif // BITCOIN_GUIINTERFACE_H

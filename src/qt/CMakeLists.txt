@@ -123,6 +123,7 @@ SET(QT_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/furabstractlistitemdelegate.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/txviewholder.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/qtutils.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/pivx/balancebubble.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/expandablebutton.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/topbar.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/txrow.cpp
@@ -141,7 +142,7 @@ SET(QT_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/sendchangeaddressdialog.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/sendconfirmdialog.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/sendcustomfeedialog.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/pivx/sendchangeaddressdialog.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/pivx/sendmemodialog.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/sendmultirow.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/send.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/addnewaddressdialog.cpp
@@ -221,7 +222,7 @@ target_include_directories(pivx-qt PUBLIC ${ENDIAN_INCLUDES})
 target_link_libraries(pivx-qt
         qt_stuff
         univalue
-        SERVER_A UTIL_A WALLET_A CLI_A COMMON_A BITCOIN_CRYPTO_A ZEROCOIN_A SAPLING_A
+        SERVER_A WALLET_A COMMON_A ZEROCOIN_A UTIL_A SAPLING_A BITCOIN_CRYPTO_A CLI_A
         leveldb crc32c secp256k1 rustzcash
         ${BerkeleyDB_LIBRARIES} ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${PROTOBUF_LIBRARIES} ${LIBEVENT_LIB}
         ${sodium_LIBRARY_RELEASE}

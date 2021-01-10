@@ -207,7 +207,14 @@ def str_to_b64str(string):
 def satoshi_round(amount):
     return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
 
-def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=None):
+def wait_until(predicate,
+               *,
+               attempts=float('inf'),
+               timeout=float('inf'),
+               lock=None,
+               sendpings=None,
+               mocktime=None):
+
     if attempts == float('inf') and timeout == float('inf'):
         timeout = 60
     attempt = 0
@@ -223,6 +230,10 @@ def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=N
                 return
         attempt += 1
         time.sleep(0.5)
+        if sendpings is not None:
+            sendpings()
+        if mocktime is not None:
+            mocktime(1)
 
     # Print the cause of the timeout
     assert_greater_than(attempts, attempt)
@@ -602,4 +613,18 @@ def DecimalAmt(x):
     """Return Decimal from float for equality checks against rpc outputs"""
     return Decimal("{:0.8f}".format(x))
 
+# Find a coinstake/coinbase address on the node, filtering by the number of UTXOs it has.
+# If no filter is provided, returns the coinstake/coinbase address on the node containing
+# the greatest number of spendable UTXOs.
+# The default cached chain has one address per coinbase output.
+def get_coinstake_address(node, expected_utxos=None):
+    addrs = [utxo['address'] for utxo in node.listunspent() if utxo['generated']]
+    assert(len(set(addrs)) > 0)
 
+    if expected_utxos is None:
+        addrs = [(addrs.count(a), a) for a in set(addrs)]
+        return sorted(addrs, reverse=True)[0][1]
+
+    addrs = [a for a in set(addrs) if addrs.count(a) == expected_utxos]
+    assert(len(addrs) > 0)
+    return addrs[0]

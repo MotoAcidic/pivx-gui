@@ -86,6 +86,7 @@
         <file alias="ic-check">pivx/res/img/ic-check.svg</file>
         <file alias="ic-chevron-left">pivx/res/img/ic-chevron-left.svg</file>
         <file alias="ic-chevron-right">pivx/res/img/ic-chevron-right.svg</file>
+        <file alias="ic-chevron-right-liliac">pivx/res/img/ic-chevron-right-liliac.svg</file>
         <file alias="ic-clear-liliac">pivx/res/img/ic-clear-liliac.svg</file>
         <file alias="ic-clear-purple">pivx/res/img/ic-clear-purple.svg</file>
         <file alias="ic-close-white">pivx/res/img/ic-close-white.svg</file>
@@ -219,5 +220,7 @@
         <file alias="ic-check-cold-staking">pivx/res/img/ic-check-cold-staking.svg</file>
         <file alias="ic-check-cold-staking-off">pivx/res/img/ic-check-cold-staking-off.svg</file>
         <file alias="ic-check-cold-staking-enabled">pivx/res/img/ic-check-cold-staking-enabled.svg</file>
+        <file alias="ic-information">pivx/res/img/ic-information.svg</file>
+        <file alias="ic-information-hover">pivx/res/img/ic-information-hover.svg</file>
     </qresource>
 </RCC>

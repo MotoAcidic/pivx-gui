@@ -9,14 +9,12 @@
 #include "ui_helpmessagedialog.h"
 
 #include "clientmodel.h"
+#include "clientversion.h"
 #include "guiconstants.h"
+#include "init.h"
 #include "intro.h"
 #include "guiutil.h"
-
-#include "qt/pivx/qtutils.cpp"
-
-#include "clientversion.h"
-#include "init.h"
+#include "qt/pivx/qtutils.h"
 #include "util.h"
 
 #include <stdio.h>
@@ -100,7 +98,7 @@ HelpMessageDialog::HelpMessageDialog(QWidget* parent, bool about) : QDialog(pare
         QTextCharFormat bold;
         bold.setFontWeight(QFont::Bold);
 
-        Q_FOREACH (const QString &line, coreOptions.split("\n")) {
+        for (const QString &line : coreOptions.split("\n")) {
             if (line.startsWith("  -"))
             {
                 cursor.currentTable()->appendRows(1);

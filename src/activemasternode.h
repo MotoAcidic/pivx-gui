@@ -10,6 +10,7 @@
 #include "key.h"
 #include "masternode.h"
 #include "net.h"
+#include "operationresult.h"
 #include "sync.h"
 #include "wallet/wallet.h"
 
@@ -18,13 +19,13 @@
 #define ACTIVE_MASTERNODE_NOT_CAPABLE 3
 #define ACTIVE_MASTERNODE_STARTED 4
 
+// Responsible for initializing the masternode
+OperationResult initMasternode(const std::string& strMasterNodePrivKey, const std::string& strMasterNodeAddr, bool isFromInit);
+
 // Responsible for activating the Masternode and pinging the network
 class CActiveMasternode
 {
 private:
-    /// Ping Masternode
-    bool SendMasternodePing(std::string& errorMessage);
-
     int status;
     std::string notCapableReason;
 
@@ -39,6 +40,7 @@ public:
     // Initialized by init.cpp
     // Keys for the main Masternode
     CPubKey pubKeyMasternode;
+    CKey privKeyMasternode;
 
     // Initialized while registering Masternode
     Optional<CTxIn> vin;
@@ -50,8 +52,12 @@ public:
     std::string GetStatusMessage() const;
     int GetStatus() const { return status; }
 
+    /// Ping Masternode
+    bool SendMasternodePing(std::string& errorMessage);
     /// Enable cold wallet mode (run a Masternode with no funds)
     bool EnableHotColdMasterNode(CTxIn& vin, CService& addr);
+
+    void GetKeys(CKey& privKeyMasternode, CPubKey& pubKeyMasternode);
 };
 
 #endif

@@ -7,6 +7,7 @@
 #define BITCOIN_POLICY_H
 
 #include "consensus/consensus.h"
+#include "feerate.h"
 #include "script/interpreter.h"
 #include "script/standard.h"
 
@@ -14,6 +15,7 @@
 
 class CChainParams;
 class CCoinsViewCache;
+class CTxOut;
 
 /** Default for -blockmaxsize and -blockminsize, which control the range of sizes the mining code will create **/
 static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 750000;
@@ -48,12 +50,19 @@ static constexpr unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCR
 BOOST_STATIC_ASSERT(DEFAULT_BLOCK_MAX_SIZE <= MAX_BLOCK_SIZE_CURRENT);
 BOOST_STATIC_ASSERT(DEFAULT_BLOCK_PRIORITY_SIZE <= DEFAULT_BLOCK_MAX_SIZE);
 
+CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFee);
+
+bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFee);
+
+CAmount GetDustThreshold(const CFeeRate& dustRelayFee);
+CAmount GetShieldedDustThreshold(const CFeeRate& dustRelayFee);
+
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType);
 
 /** Check for standard transaction types
  * @return True if all outputs (scriptPubKeys) use only standard transaction forms
  */
-bool IsStandardTx(const CTransaction& tx, std::string& reason);
+bool IsStandardTx(const CTransaction& tx, int nBlockHeight, std::string& reason);
 
 /**
  * Check for standard transaction types

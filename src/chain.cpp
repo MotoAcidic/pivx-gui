@@ -67,6 +67,7 @@ const CBlockIndex* CChain::FindFork(const CBlockIndex* pindex) const
 CBlockIndex::CBlockIndex(const CBlock& block):
         nVersion{block.nVersion},
         hashMerkleRoot{block.hashMerkleRoot},
+        hashFinalSaplingRoot(block.hashFinalSaplingRoot),
         nTime{block.nTime},
         nBits{block.nBits},
         nNonce{block.nNonce}
@@ -115,6 +116,7 @@ CBlockHeader CBlockIndex::GetBlockHeader() const
     block.nBits = nBits;
     block.nNonce = nNonce;
     if (nVersion > 3 && nVersion < 7) block.nAccumulatorCheckpoint = nAccumulatorCheckpoint;
+    if (nVersion >= 8) block.hashFinalSaplingRoot = hashFinalSaplingRoot;
     return block;
 }
 
@@ -159,7 +161,7 @@ int64_t CBlockIndex::GetMedianTimePast() const
 unsigned int CBlockIndex::GetStakeEntropyBit() const
 {
     unsigned int nEntropyBit = ((GetBlockHash().GetCheapHash()) & 1);
-    if (GetBoolArg("-printstakemodifier", false))
+    if (gArgs.GetBoolArg("-printstakemodifier", false))
         LogPrintf("GetStakeEntropyBit: nHeight=%u hashBlock=%s nEntropyBit=%u\n", nHeight, GetBlockHash().ToString().c_str(), nEntropyBit);
 
     return nEntropyBit;
@@ -237,6 +239,20 @@ uint256 CBlockIndex::GetStakeModifierV2() const
     uint256 nStakeModifier;
     std::memcpy(nStakeModifier.begin(), vStakeModifier.data(), vStakeModifier.size());
     return nStakeModifier;
+}
+
+void CBlockIndex::SetChainSaplingValue()
+{
+    // Sapling, update chain value
+    if (pprev) {
+        if (pprev->nChainSaplingValue) {
+            nChainSaplingValue = *pprev->nChainSaplingValue + nSaplingValue;
+        } else {
+            nChainSaplingValue = nullopt;
+        }
+    } else {
+        nChainSaplingValue = nSaplingValue;
+    }
 }
 
 //! Check whether this block index entry is valid up to the passed validity level.

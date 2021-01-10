@@ -9,13 +9,17 @@ from test_framework.script import CScript, OP_TRUE, OP_CHECKSIG
 
 
 # Create a block (with regtest difficulty)
-def create_block(hashprev, coinbase, nTime=None):
+def create_block(hashprev, coinbase, nTime=None, nVersion=None, hashFinalSaplingRoot=None):
     block = CBlock()
     if nTime is None:
         import time
         block.nTime = int(time.time()+600)
     else:
         block.nTime = nTime
+    if nVersion is not None:
+        block.nVersion = nVersion
+    if hashFinalSaplingRoot is not None:
+        block.hashFinalSaplingRoot = hashFinalSaplingRoot
     block.hashPrevBlock = hashprev
     block.nBits = 0x1e0ffff0 # Will break after a difficulty adjustment...
     block.vtx.append(coinbase)
@@ -100,9 +104,3 @@ def create_coinbase_pos(height):
     coinbase.vout = [CTxOut(0, b"")]
     coinbase.calc_sha256()
     return coinbase
-
-def is_zerocoin(uniqueness):
-    ulen = len(uniqueness)
-    if ulen == 32: return True
-    if ulen == 36: return False
-    raise Exception("Wrong uniqueness len: %d" % ulen)

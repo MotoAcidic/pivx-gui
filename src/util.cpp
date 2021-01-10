@@ -14,7 +14,6 @@
 #include "allocators.h"
 #include "chainparamsbase.h"
 #include "random.h"
-#include "sync.h"
 #include "utilstrencodings.h"
 #include "utiltime.h"
 
@@ -22,9 +21,6 @@
 
 #include <stdarg.h>
 #include <thread>
-
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 
 #ifndef WIN32
 // for posix_fallocate
@@ -66,6 +62,7 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
+#include <codecvt>
 
 #include <io.h> /* for _commit */
 #include <shlobj.h>
@@ -75,12 +72,12 @@
 #include <sys/prctl.h>
 #endif
 
-#include <boost/algorithm/string/case_conv.hpp> // for to_lower()
-#include <boost/algorithm/string/join.hpp>
-#include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()
+#ifdef MAC_OSX
+#include <CoreFoundation/CoreFoundation.h>
+#endif
+
 #include <boost/program_options/detail/config_file.hpp>
 #include <boost/program_options/parsers.hpp>
-#include <boost/thread.hpp>
 #include <openssl/conf.h>
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
@@ -92,24 +89,16 @@ const char * const PIVX_MASTERNODE_CONF_FILENAME = "masternode.conf";
 
 // PIVX only features
 // Masternode
-bool fMasterNode = false;
-std::string strMasterNodePrivKey = "";
+std::atomic<bool> fMasterNode{false};
 std::string strMasterNodeAddr = "";
 bool fLiteMode = false;
-// SwiftX
-bool fEnableSwiftTX = true;
-int nSwiftTXDepth = 5;
-
-/** Spork enforcement enabled time */
-int64_t enforceMasternodePaymentsTime = 4085657524;
-bool fSucessfullyLoaded = false;
+// budget finalization
 std::string strBudgetMode = "";
 
-std::map<std::string, std::string> mapArgs;
-std::map<std::string, std::vector<std::string> > mapMultiArgs;
+ArgsManager gArgs;
 
 bool fDaemon = false;
-std::string strMiscWarning;
+CTranslationInterface translationInterface;
 
 /** Init OpenSSL library multithreading support */
 static RecursiveMutex** ppmutexOpenSSL;
@@ -162,7 +151,23 @@ public:
 } instance_of_cinit;
 
 
-/** Interpret string as boolean, for argument parsing */
+/**
+ * Interpret a string argument as a boolean.
+ *
+ * The definition of atoi() requires that non-numeric string values like "foo",
+ * return 0. This means that if a user unintentionally supplies a non-integer
+ * argument here, the return value is always false. This means that -foo=false
+ * does what the user probably expects, but -foo=true is well defined but does
+ * not do what they probably expected.
+ *
+ * The return value of atoi() is undefined when given input not representable as
+ * an int. On most systems this means string value between "-2147483648" and
+ * "2147483647" are well defined (this method will return true). Setting
+ * -txindex=2147483648 on most systems, however, is probably undefined.
+ *
+ * For a more extensive discussion of this topic (and a wide range of opinions
+ * on the Right Way to change this code), see upstream PR12713.
+ */
 static bool InterpretBool(const std::string& strValue)
 {
     if (strValue.empty())
@@ -170,83 +175,134 @@ static bool InterpretBool(const std::string& strValue)
     return (atoi(strValue) != 0);
 }
 
-/** Turn -noX into -X=0 */
-static void InterpretNegativeSetting(std::string& strKey, std::string& strValue)
+/**
+ * Interpret -nofoo as if the user supplied -foo=0.
+ *
+ * This method also tracks when the -no form was supplied, and treats "-foo" as
+ * a negated option when this happens. This can be later checked using the
+ * IsArgNegated() method. One use case for this is to have a way to disable
+ * options that are not normally boolean (e.g. using -nodebuglogfile to request
+ * that debug log output is not sent to any file at all).
+ */
+void ArgsManager::InterpretNegatedOption(std::string& key, std::string& val)
 {
-    if (strKey.length()>3 && strKey[0]=='-' && strKey[1]=='n' && strKey[2]=='o') {
-        strKey = "-" + strKey.substr(3);
-        strValue = InterpretBool(strValue) ? "0" : "1";
+    if (key.substr(0, 3) == "-no") {
+        bool bool_val = InterpretBool(val);
+        if (!bool_val ) {
+            // Double negatives like -nofoo=0 are supported (but discouraged)
+            LogPrintf("Warning: parsed potentially confusing double-negative %s=%s\n", key, val);
+        }
+        key.erase(1, 2);
+        m_negated_args.insert(key);
+        val = bool_val ? "0" : "1";
+    } else {
+        // In an invocation like "bitcoind -nofoo -foo" we want to unmark -foo
+        // as negated when we see the second option.
+        m_negated_args.erase(key);
     }
 }
 
-void ParseParameters(int argc, const char* const argv[])
+void ArgsManager::ParseParameters(int argc, const char* const argv[])
 {
+    LOCK(cs_args);
     mapArgs.clear();
     mapMultiArgs.clear();
+    m_negated_args.clear();
 
     for (int i = 1; i < argc; i++) {
-        std::string str(argv[i]);
-        std::string strValue;
-        size_t is_index = str.find('=');
+        std::string key(argv[i]);
+        std::string val;
+        size_t is_index = key.find('=');
         if (is_index != std::string::npos) {
-            strValue = str.substr(is_index + 1);
-            str = str.substr(0, is_index);
+            val = key.substr(is_index + 1);
+            key.erase(is_index);
         }
 #ifdef WIN32
-        boost::to_lower(str);
-        if (boost::algorithm::starts_with(str, "/"))
-            str = "-" + str.substr(1);
+        std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+        if (key[0] == '/')
+            key[0] = '-';
 #endif
 
-        if (str[0] != '-')
+        if (key[0] != '-')
             break;
 
-        // Interpret --foo as -foo.
-        // If both --foo and -foo are set, the last takes effect.
-        if (str.length() > 1 && str[1] == '-')
-            str = str.substr(1);
-        InterpretNegativeSetting(str, strValue);
+        // Transform --foo to -foo
+        if (key.length() > 1 && key[1] == '-')
+            key.erase(0, 1);
 
-        mapArgs[str] = strValue;
-        mapMultiArgs[str].push_back(strValue);
+        // Transform -nofoo to -foo=0
+        InterpretNegatedOption(key, val);
+
+        mapArgs[key] = val;
+        mapMultiArgs[key].push_back(val);
     }
 }
 
-std::string GetArg(const std::string& strArg, const std::string& strDefault)
+std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
 {
-    if (mapArgs.count(strArg))
-        return mapArgs[strArg];
+    LOCK(cs_args);
+    auto it = mapMultiArgs.find(strArg);
+    if (it != mapMultiArgs.end()) return it->second;
+    return {};
+}
+
+bool ArgsManager::IsArgSet(const std::string& strArg) const
+{
+    LOCK(cs_args);
+    return mapArgs.count(strArg);
+}
+
+bool ArgsManager::IsArgNegated(const std::string& strArg) const
+{
+    LOCK(cs_args);
+    return m_negated_args.find(strArg) != m_negated_args.end();
+}
+
+std::string ArgsManager::GetArg(const std::string& strArg, const std::string& strDefault) const
+{
+    LOCK(cs_args);
+    auto it = mapArgs.find(strArg);
+    if (it != mapArgs.end()) return it->second;
     return strDefault;
 }
 
-int64_t GetArg(const std::string& strArg, int64_t nDefault)
+int64_t ArgsManager::GetArg(const std::string& strArg, int64_t nDefault) const
 {
-    if (mapArgs.count(strArg))
-        return atoi64(mapArgs[strArg]);
+    LOCK(cs_args);
+    auto it = mapArgs.find(strArg);
+    if (it != mapArgs.end()) return atoi64(it->second);
     return nDefault;
 }
 
-bool GetBoolArg(const std::string& strArg, bool fDefault)
+bool ArgsManager::GetBoolArg(const std::string& strArg, bool fDefault) const
 {
-    if (mapArgs.count(strArg))
-        return InterpretBool(mapArgs[strArg]);
+    LOCK(cs_args);
+    auto it = mapArgs.find(strArg);
+    if (it != mapArgs.end()) return InterpretBool(it->second);
     return fDefault;
 }
 
-bool SoftSetArg(const std::string& strArg, const std::string& strValue)
+bool ArgsManager::SoftSetArg(const std::string& strArg, const std::string& strValue)
 {
-    if (mapArgs.count(strArg))
-        return false;
-    mapArgs[strArg] = strValue;
+    LOCK(cs_args);
+    if (IsArgSet(strArg)) return false;;
+    ForceSetArg(strArg, strValue);
     return true;
 }
 
-bool SoftSetBoolArg(const std::string& strArg, bool fValue)
+bool ArgsManager::SoftSetBoolArg(const std::string& strArg, bool fValue)
 {
     if (fValue)
         return SoftSetArg(strArg, std::string("1"));
     else
         return SoftSetArg(strArg, std::string("0"));
+}
+
+void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strValue)
+{
+    LOCK(cs_args);
+    mapArgs[strArg] = strValue;
+    mapMultiArgs[strArg] = {strValue};
 }
 
 static const int screenWidth = 79;
@@ -285,7 +341,6 @@ void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
     std::string message = FormatException(pex, pszThread);
     LogPrintf("\n\n************************\n%s\n", message);
     fprintf(stderr, "\n\n************************\n%s\n", message.c_str());
-    strMiscWarning = message;
 }
 
 fs::path GetDefaultDataDir()
@@ -364,8 +419,8 @@ const fs::path &ZC_GetParamsDir()
 #ifdef USE_CUSTOM_PARAMS
     path = fs::system_complete(PARAMS_DIR);
 #else
-    if (mapArgs.count("-paramsdir")) {
-        path = fs::system_complete(mapArgs["-paramsdir"]);
+    if (gArgs.IsArgSet("-paramsdir")) {
+        path = fs::system_complete(gArgs.GetArg("-paramsdir", ""));
         if (!fs::is_directory(path)) {
             path = "";
             return path;
@@ -383,21 +438,55 @@ void initZKSNARKS()
     const fs::path& path = ZC_GetParamsDir();
     fs::path sapling_spend = path / "sapling-spend.params";
     fs::path sapling_output = path / "sapling-output.params";
-    fs::path sprout_groth16 = path / "sprout-groth16.params";
 
-    if (!(fs::exists(sapling_spend) &&
-          fs::exists(sapling_output) &&
-          fs::exists(sprout_groth16)
-    )) {
-        throw std::runtime_error("Sapling params don't exist");
+    bool fParamsFound = false;
+    if (fs::exists(sapling_spend) && fs::exists(sapling_output)) {
+        fParamsFound = true;
+    } else {
+#ifdef MAC_OSX
+        // macOS fallback path for params located within the app bundle
+        // This is a somewhat convoluted series of CoreFoundation calls
+        // that will result in the full path to the app bundle's "Resources"
+        // directory, which will contain the sapling params.
+        LogPrintf("Attempting to find params in app bundle...\n");
+        CFBundleRef mainBundle = CFBundleGetMainBundle();
+        CFURLRef bundleURL = CFBundleCopyBundleURL(mainBundle);
+
+        CFStringRef strBundlePath = CFURLCopyFileSystemPath(bundleURL, kCFURLPOSIXPathStyle);
+        const char* pathBundle = CFStringGetCStringPtr(strBundlePath, CFStringGetSystemEncoding());
+
+        fs::path bundle_path = fs::path(pathBundle);
+        LogPrintf("App bundle Resources path: %s\n", bundle_path);
+        sapling_spend = bundle_path / "Contents/Resources/sapling-spend.params";
+        sapling_output = bundle_path / "Contents/Resources/sapling-output.params";
+
+        // Release the CF objects
+        CFRelease(strBundlePath);
+        CFRelease(bundleURL);
+        CFRelease(mainBundle);
+#else
+        // Linux fallback path for debuild/ppa based installs
+        sapling_spend = "/usr/share/pivx/sapling-spend.params";
+        sapling_output = "/usr/share/pivx/sapling-output.params";
+        if (fs::exists(sapling_spend) && fs::exists(sapling_output)) {
+            fParamsFound = true;
+        } else {
+            // Linux fallback for local installs
+            sapling_spend = "/usr/local/share/pivx/sapling-spend.params";
+            sapling_output = "/usr/local/share/pivx/sapling-output.params";
+        }
+#endif
+        if (fs::exists(sapling_spend) && fs::exists(sapling_output))
+            fParamsFound = true;
     }
+    if (!fParamsFound)
+        throw std::runtime_error("Sapling params don't exist");
 
     static_assert(
         sizeof(fs::path::value_type) == sizeof(codeunit),
         "librustzcash not configured correctly");
     auto sapling_spend_str = sapling_spend.native();
     auto sapling_output_str = sapling_output.native();
-    auto sprout_groth16_str = sprout_groth16.native();
 
     //LogPrintf("Loading Sapling (Spend) parameters from %s\n", sapling_spend.string().c_str());
 
@@ -408,9 +497,9 @@ void initZKSNARKS()
         reinterpret_cast<const codeunit*>(sapling_output_str.c_str()),
         sapling_output_str.length(),
         "657e3d38dbb5cb5e7dd2970e8b03d69b4787dd907285b5a7f0790dcc8072f60bf593b32cc2d1c030e00ff5ae64bf84c5c3beb84ddc841d48264b4a171744d028",
-        reinterpret_cast<const codeunit*>(sprout_groth16_str.c_str()),
-        sprout_groth16_str.length(),
-        "e9b238411bd6c0ec4791e9d04245ec350c9c5744f5610dfcce4365d5ca49dfefd5054e371842b3f88fa1b9d7e8e075249b3ebabd167fa8b0f3161292d36c180a"
+        nullptr,    // sprout_path
+        0,          // sprout_path_len
+        ""          // sprout_hash
     );
 
     //std::cout << "### Sapling params initialized ###" << std::endl;
@@ -427,8 +516,8 @@ const fs::path& GetDataDir(bool fNetSpecific)
     if (!path.empty())
         return path;
 
-    if (mapArgs.count("-datadir")) {
-        path = fs::system_complete(mapArgs["-datadir"]);
+    if (gArgs.IsArgSet("-datadir")) {
+        path = fs::system_complete(gArgs.GetArg("-datadir", ""));
         if (!fs::is_directory(path)) {
             path = "";
             return path;
@@ -446,24 +535,25 @@ const fs::path& GetDataDir(bool fNetSpecific)
 
 void ClearDatadirCache()
 {
+    LOCK(csPathCached);
+
     pathCached = fs::path();
     pathCachedNetSpecific = fs::path();
 }
 
 fs::path GetConfigFile()
 {
-    fs::path pathConfigFile(GetArg("-conf", PIVX_CONF_FILENAME));
+    fs::path pathConfigFile(gArgs.GetArg("-conf", PIVX_CONF_FILENAME));
     return AbsPathForConfigVal(pathConfigFile, false);
 }
 
 fs::path GetMasternodeConfigFile()
 {
-    fs::path pathConfigFile(GetArg("-mnconf", PIVX_MASTERNODE_CONF_FILENAME));
+    fs::path pathConfigFile(gArgs.GetArg("-mnconf", PIVX_MASTERNODE_CONF_FILENAME));
     return AbsPathForConfigVal(pathConfigFile);
 }
 
-void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet,
-    std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet)
+void ArgsManager::ReadConfigFile()
 {
     fs::ifstream streamConfig(GetConfigFile());
     if (!streamConfig.good()) {
@@ -474,17 +564,20 @@ void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet,
         return; // Nothing to read, so just return
     }
 
-    std::set<std::string> setOptions;
-    setOptions.insert("*");
+    {
+        LOCK(cs_args);
+        std::set<std::string> setOptions;
+        setOptions.insert("*");
 
-    for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it) {
-        // Don't overwrite existing settings so command line settings override pivx.conf
-        std::string strKey = std::string("-") + it->string_key;
-        std::string strValue = it->value[0];
-        InterpretNegativeSetting(strKey, strValue);
-        if (mapSettingsRet.count(strKey) == 0)
-            mapSettingsRet[strKey] = strValue;
-        mapMultiSettingsRet[strKey].push_back(strValue);
+        for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it) {
+            // Don't overwrite existing settings so command line settings override pivx.conf
+            std::string strKey = std::string("-") + it->string_key;
+            std::string strValue = it->value[0];
+            InterpretNegatedOption(strKey, strValue);
+            if (mapArgs.count(strKey) == 0)
+                mapArgs[strKey] = strValue;
+            mapMultiArgs[strKey].push_back(strValue);
+        }
     }
     // If datadir is changed in .conf file:
     ClearDatadirCache();
@@ -501,7 +594,7 @@ fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific)
 #ifndef WIN32
 fs::path GetPidFile()
 {
-    fs::path pathPidFile(GetArg("-pid", PIVX_PID_FILENAME));
+    fs::path pathPidFile(gArgs.GetArg("-pid", PIVX_PID_FILENAME));
     return AbsPathForConfigVal(pathPidFile);
 }
 
@@ -682,7 +775,12 @@ double double_safe_multiplication(double fValue, double fmultiplicator)
 
 void runCommand(std::string strCommand)
 {
+    if (strCommand.empty()) return;
+#ifndef WIN32
     int nErr = ::system(strCommand.c_str());
+#else
+    int nErr = ::_wsystem(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t>().from_bytes(strCommand).c_str());
+#endif
     if (nErr)
         LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
 }
@@ -703,7 +801,11 @@ void SetupEnvironment()
     // A dummy locale is used to extract the internal default locale, used by
     // fs::path, which is then used to explicitly imbue the path.
     std::locale loc = fs::path::imbue(std::locale::classic());
+#ifndef WIN32
     fs::path::imbue(loc);
+#else
+    fs::path::imbue(std::locale(loc, new std::codecvt_utf8_utf16<wchar_t>()));
+#endif
 }
 
 bool SetupNetworking()
@@ -735,3 +837,4 @@ int GetNumCores()
 {
     return std::thread::hardware_concurrency();
 }
+

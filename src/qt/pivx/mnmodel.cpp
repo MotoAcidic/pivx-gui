@@ -26,14 +26,12 @@ void MNModel::updateMNList()
         int nIndex;
         if (!mne.castOutputIndex(nIndex))
             continue;
-
         uint256 txHash(mne.getTxHash());
         CTxIn txIn(txHash, uint32_t(nIndex));
-        CMasternode* pmn = mnodeman.Find(txIn);
+        CMasternode* pmn = mnodeman.Find(txIn.prevout);
         if (!pmn) {
             pmn = new CMasternode();
             pmn->vin = txIn;
-            pmn->activeState = CMasternode::MASTERNODE_MISSING;
         }
         nodes.insert(QString::fromStdString(mne.getAlias()), std::make_pair(QString::fromStdString(mne.getIp()), pmn));
         if (pwalletMain) {
@@ -41,7 +39,7 @@ void MNModel::updateMNList()
             {
                 LOCK2(cs_main, pwalletMain->cs_wallet);
                 const CWalletTx *walletTx = pwalletMain->GetWalletTx(txHash);
-                if (walletTx && walletTx->GetDepthInMainChain() >= MASTERNODE_MIN_CONFIRMATIONS) {
+                if (walletTx && walletTx->GetDepthInMainChain() >= MasternodeCollateralMinConf()) {
                     txAccepted = true;
                 }
             }
@@ -89,7 +87,19 @@ QVariant MNModel::data(const QModelIndex &index, int role) const
                 return (isAvailable) ? QString::number(rec->vin.prevout.n) : "Not available";
             case STATUS: {
                 std::pair<QString, CMasternode*> pair = nodes.values().value(row);
-                return (pair.second) ? QString::fromStdString(pair.second->Status()) : "MISSING";
+                std::string status = "MISSING";
+                if (pair.second) {
+                    status = pair.second->Status();
+                    // Quick workaround to the current Masternode status types.
+                    // If the status is REMOVE and there is no pubkey associated to the Masternode
+                    // means that the MN is not in the network list and was created in
+                    // updateMNList(). Which.. denotes a not started masternode.
+                    // This will change in the future with the MasternodeWrapper introduction.
+                    if (status == "REMOVE" && !pair.second->pubKeyCollateralAddress.IsValid()) {
+                        return "MISSING";
+                    }
+                }
+                return QString::fromStdString(status);
             }
             case PRIV_KEY: {
                 for (CMasternodeConfig::CMasternodeEntry mne : masternodeConfig.getEntries()) {
@@ -151,7 +161,7 @@ bool MNModel::addMn(CMasternodeConfig::CMasternodeEntry* mne)
     if (!mne->castOutputIndex(nIndex))
         return false;
 
-    CMasternode* pmn = mnodeman.Find(CTxIn(uint256S(mne->getTxHash()), uint32_t(nIndex)));
+    CMasternode* pmn = mnodeman.Find(COutPoint(uint256S(mne->getTxHash()), uint32_t(nIndex)));
     nodes.insert(QString::fromStdString(mne->getAlias()), std::make_pair(QString::fromStdString(mne->getIp()), pmn));
     endInsertRows();
     return true;
@@ -160,14 +170,14 @@ bool MNModel::addMn(CMasternodeConfig::CMasternodeEntry* mne)
 int MNModel::getMNState(QString mnAlias)
 {
     QMap<QString, std::pair<QString, CMasternode*>>::const_iterator it = nodes.find(mnAlias);
-    if (it != nodes.end()) return it.value().second->activeState;
+    if (it != nodes.end()) return it.value().second->GetActiveState();
     throw std::runtime_error(std::string("Masternode alias not found"));
 }
 
 bool MNModel::isMNInactive(QString mnAlias)
 {
     int activeState = getMNState(mnAlias);
-    return activeState == CMasternode::MASTERNODE_MISSING || activeState == CMasternode::MASTERNODE_EXPIRED || activeState == CMasternode::MASTERNODE_REMOVE;
+    return activeState == CMasternode::MASTERNODE_EXPIRED || activeState == CMasternode::MASTERNODE_REMOVE;
 }
 
 bool MNModel::isMNActive(QString mnAlias)

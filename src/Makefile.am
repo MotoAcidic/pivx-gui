@@ -128,13 +128,19 @@ LIBSAPLING_H = \
   sapling/sapling.h \
   bech32.h \
   sapling/key_io_sapling.h \
-  sapling/util.h \
+  sapling/sapling_core_write.h \
+  sapling/sapling_util.h \
   sapling/prf.h \
-  sapling/noteencryption.hpp \
-  sapling/address.hpp \
-  sapling/note.hpp \
+  sapling/noteencryption.h \
+  sapling/address.h \
+  sapling/note.h \
   sapling/zip32.h \
-  sapling/saplingscriptpubkeyman.h
+  sapling/saplingscriptpubkeyman.h \
+  sapling/incrementalmerkletree.h \
+  sapling/proof.h \
+  sapling/sapling_transaction.h \
+  sapling/transaction_builder.h \
+  sapling/sapling_operation.h
 
 .PHONY: FORCE cargo-build check-symbols check-security
 # pivx core #
@@ -175,9 +181,9 @@ BITCOIN_CORE_H = \
   core_io.h \
   cuckoocache.h \
   crypter.h \
+  cyclingvector.h \
   pairresult.h \
   addressbook.h \
-  denomination_functions.h \
   wallet/db.h \
   fs.h \
   hash.h \
@@ -190,7 +196,6 @@ BITCOIN_CORE_H = \
   invalid_serials.json.h \
   legacy/stakemodifier.h \
   kernel.h \
-  swifttx.h \
   key.h \
   key_io.h \
   keystore.h \
@@ -198,25 +203,34 @@ BITCOIN_CORE_H = \
   limitedmap.h \
   logging.h \
   legacy/validation_zerocoin_legacy.h \
-  main.h \
+  sapling/sapling_validation.h \
+  budget/budgetdb.h \
+  budget/budgetmanager.h \
+  budget/budgetproposal.h \
+  budget/budgetvote.h \
+  budget/finalizedbudget.h \
+  budget/finalizedbudgetvote.h \
   memusage.h \
   masternode.h \
   masternode-payments.h \
-  masternode-budget.h \
   masternode-sync.h \
   masternodeman.h \
   masternodeconfig.h \
   merkleblock.h \
   messagesigner.h \
   miner.h \
+  moneysupply.h \
   net.h \
+  net_processing.h \
   netaddress.h \
   netbase.h \
   netmessagemaker.h \
   noui.h \
+  policy/feerate.h \
   policy/fees.h \
   policy/policy.h \
   optional.h \
+  operationresult.h \
   pow.h \
   prevector.h \
   protocol.h \
@@ -226,7 +240,9 @@ BITCOIN_CORE_H = \
   reverse_iterate.h \
   rpc/client.h \
   rpc/protocol.h \
+  rpc/register.h \
   rpc/server.h \
+  tiertwo/specialtx_validation.h \
   scheduler.h \
   script/interpreter.h \
   script/keyorigin.h \
@@ -254,7 +270,6 @@ BITCOIN_CORE_H = \
   guiinterface.h \
   guiinterfaceutil.h \
   uint256.h \
-  sapling/uint252.h \
   uint512.h \
   blob_uint256.h \
   undo.h \
@@ -265,20 +280,20 @@ BITCOIN_CORE_H = \
   utilstrencodings.h \
   utilmoneystr.h \
   utiltime.h \
+  validation.h \
   validationinterface.h \
   version.h \
   wallet/hdchain.h \
   wallet/rpcwallet.h \
   wallet/scriptpubkeyman.h \
+  destination_io.h \
   wallet/wallet.h \
   wallet/walletdb.h \
+  warnings.h \
   zpivchain.h \
   zpiv/deterministicmint.h \
   zpiv/mintpool.h \
   zpiv/zerocoin.h \
-  zpiv/zpivtracker.h \
-  zpiv/zpivwallet.h \
-  zpiv/zpivmodule.h \
   zpiv/zpos.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h \
@@ -309,10 +324,11 @@ libbitcoin_server_a_SOURCES = \
   init.cpp \
   dbwrapper.cpp \
   legacy/validation_zerocoin_legacy.cpp \
-  main.cpp \
+  sapling/sapling_validation.cpp \
   merkleblock.cpp \
   miner.cpp \
   net.cpp \
+  net_processing.cpp \
   noui.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
@@ -326,13 +342,16 @@ libbitcoin_server_a_SOURCES = \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
+  tiertwo/specialtx_validation.cpp \
   script/sigcache.cpp \
   script/ismine.cpp \
   sporkdb.cpp \
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
+  sapling/sapling_txdb.cpp \
   txmempool.cpp \
+  validation.cpp \
   validationinterface.cpp \
   zpivchain.cpp \
   $(BITCOIN_CORE_H) \
@@ -354,15 +373,19 @@ libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
   activemasternode.cpp \
   bip38.cpp \
-  denomination_functions.cpp \
   interface/wallet.cpp \
   addressbook.cpp \
   crypter.cpp \
   key_io.cpp \
-  swifttx.cpp \
+  budget/budgetdb.cpp \
+  budget/budgetmanager.cpp \
+  budget/budgetproposal.cpp \
+  budget/budgetvote.cpp \
+  budget/finalizedbudget.cpp \
+  budget/finalizedbudgetvote.cpp \
   masternode.cpp \
-  masternode-budget.cpp \
   masternode-payments.cpp \
+  tiertwo_networksync.cpp \
   masternode-sync.cpp \
   masternodeconfig.cpp \
   masternodeman.cpp \
@@ -374,16 +397,13 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/rpcwallet.cpp \
   wallet/hdchain.cpp \
   wallet/scriptpubkeyman.cpp \
+  destination_io.cpp \
   wallet/wallet.cpp \
-  wallet/wallet_zerocoin.cpp \
   wallet/walletdb.cpp \
   zpiv/deterministicmint.cpp \
   zpiv/zerocoin.cpp \
   zpiv/mintpool.cpp \
-  zpiv/zpivwallet.cpp \
-  zpiv/zpivtracker.cpp \
   stakeinput.cpp \
-  zpiv/zpivmodule.cpp \
   zpiv/zpos.cpp \
   $(BITCOIN_CORE_H) \
   $(LIBSAPLING_H)
@@ -443,6 +463,7 @@ libzerocoin_libbitcoin_zerocoin_a_SOURCES = \
   libzerocoin/Params.h \
   libzerocoin/SpendType.h \
   libzerocoin/ZerocoinDefines.h \
+  zpiv/zpivmodule.h \
   libzerocoin/bignum.cpp \
   libzerocoin/Accumulator.cpp \
   libzerocoin/Coin.cpp \
@@ -450,7 +471,8 @@ libzerocoin_libbitcoin_zerocoin_a_SOURCES = \
   libzerocoin/CoinSpend.cpp \
   libzerocoin/Denominations.cpp \
   libzerocoin/ParamGeneration.cpp \
-  libzerocoin/Params.cpp
+  libzerocoin/Params.cpp \
+  zpiv/zpivmodule.cpp
 if USE_NUM_GMP
   libzerocoin_libbitcoin_zerocoin_a_SOURCES += libzerocoin/bignum_gmp.cpp
 endif
@@ -463,7 +485,6 @@ libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
   allocators.cpp \
-  amount.cpp \
   base58.cpp \
   bip38.cpp \
   chainparams.cpp \
@@ -483,6 +504,7 @@ libbitcoin_common_a_SOURCES = \
   keystore.cpp \
   netaddress.cpp \
   netbase.cpp \
+  policy/feerate.cpp \
   protocol.cpp \
   pubkey.cpp \
   scheduler.cpp \
@@ -490,6 +512,7 @@ libbitcoin_common_a_SOURCES = \
   script/script.cpp \
   script/sign.cpp \
   script/standard.cpp \
+  warnings.cpp \
   script/script_error.cpp \
   spork.cpp \
   sporkdb.cpp \
@@ -536,15 +559,20 @@ libsapling_a_CPPFLAGS = $(AM_CPPFLAGS) $(PIC_FLAGS) $(BITCOIN_INCLUDES)
 libsapling_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsapling_a_SOURCES = \
   bech32.cpp \
-  sapling/util.cpp \
+  sapling/sapling_util.cpp \
   sapling/key_io_sapling.cpp \
+  sapling/sapling_core_write.cpp \
   sapling/prf.cpp \
   sapling/noteencryption.cpp \
   sapling/address.cpp \
   sapling/note.cpp \
   sapling/zip32.cpp \
   sapling/crypter_sapling.cpp \
-  sapling/saplingscriptpubkeyman.cpp
+  sapling/saplingscriptpubkeyman.cpp \
+  sapling/incrementalmerkletree.cpp \
+  sapling/proof.cpp \
+  sapling/transaction_builder.cpp \
+  sapling/sapling_operation.cpp
 
 if GLIBC_BACK_COMPAT
 libsapling_a_SOURCES += compat/glibc_compat.cpp
@@ -675,13 +703,20 @@ CLEANFILES = $(EXTRA_LIBRARIES)
 CLEANFILES += *.gcda *.gcno
 CLEANFILES += compat/*.gcda compat/*.gcno
 CLEANFILES += consensus/*.gcda consensus/*.gcno
+CLEANFILES += crc32c/src/*.gcda crc32c/src/*.gcno
 CLEANFILES += crypto/*.gcda crypto/*.gcno
+CLEANFILES += interfaces/*.gcda interfaces/*.gcno
+CLEANFILES += legacy/*.gcda legacy/*.gcno
 CLEANFILES += libzerocoin/*.gcda libzerocoin/*.gcno
+CLEANFILES += policy/*.gcda policy/*.gcno
 CLEANFILES += primitives/*.gcda primitives/*.gcno
 CLEANFILES += rpc/*.gcda rpc/*.gcno
+CLEANFILES += sapling/*.gcda sapling/*.gcno
 CLEANFILES += script/*.gcda script/*.gcno
 CLEANFILES += support/*.gcda support/*.gcno
+CLEANFILES += test/librust/*.gcda test/librust/*.gcno
 CLEANFILES += univalue/*.gcda univalue/*.gcno
+CLEANFILES += util/*.gcda util/*.gcno
 CLEANFILES += wallet/*.gcda wallet/*.gcno
 CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno

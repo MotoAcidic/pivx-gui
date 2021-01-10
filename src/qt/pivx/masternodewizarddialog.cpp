@@ -222,7 +222,7 @@ bool MasterNodeWizardDialog::createMN()
         WalletModel::SendCoinsReturn prepareStatus;
 
         // no coincontrol, no P2CS delegations
-        prepareStatus = walletModel->prepareTransaction(currentTransaction, nullptr, false);
+        prepareStatus = walletModel->prepareTransaction(&currentTransaction, nullptr, false);
 
         QString returnMsg = tr("Unknown error");
         // process prepareStatus and on error generate message shown to user
@@ -363,7 +363,7 @@ bool MasterNodeWizardDialog::createMN()
     // Lock collateral output
     walletModel->lockCoin(collateralOut);
 
-    returnStr = tr("Master node created! Wait %1 confirmations before starting it.").arg(MASTERNODE_MIN_CONFIRMATIONS);
+    returnStr = tr("Master node created! Wait %1 confirmations before starting it.").arg(MasternodeCollateralMinConf());
     return true;
 }
 

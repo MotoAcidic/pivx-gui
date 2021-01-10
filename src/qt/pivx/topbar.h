@@ -12,6 +12,7 @@
 #include <QTimer>
 #include <QProgressBar>
 
+class BalanceBubble;
 class PIVXGUI;
 class WalletModel;
 class ClientModel;
@@ -36,7 +37,6 @@ public:
 
     void openPassPhraseDialog(AskPassphraseDialog::Mode mode, AskPassphraseDialog::Context ctx);
     void encryptWallet();
-    void showUpgradeDialog();
 
     void run(int type) override;
     void onError(QString error, int type) override;
@@ -51,6 +51,7 @@ public Q_SLOTS:
     void setStakingStatusActive(bool fActive);
     void updateStakingStatus();
     void updateHDState(const bool& upgraded, const QString& upgradeError);
+    void showUpgradeDialog(const QString& message);
 
 Q_SIGNALS:
     void themeChanged(bool isLight);
@@ -61,6 +62,7 @@ protected:
     void resizeEvent(QResizeEvent *event) override;
 private Q_SLOTS:
     void onBtnReceiveClicked();
+    void onBtnBalanceInfoClicked();
     void onThemeClicked();
     void onBtnLockClicked();
     void lockDropdownMouseLeave();
@@ -79,7 +81,11 @@ private:
     QTimer* timerStakingIcon = nullptr;
     bool isInitializing = true;
 
+    // info popup
+    BalanceBubble* balanceBubble = nullptr;
+
     void updateTorIcon();
+    void connectUpgradeBtnAndDialogTimer(const QString& message);
 };
 
 #endif // TOPBAR_H

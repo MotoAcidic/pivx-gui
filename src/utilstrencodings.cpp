@@ -8,6 +8,7 @@
 
 #include "tinyformat.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <errno.h>
@@ -16,8 +17,6 @@
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
-
-
 
 static const std::string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -460,7 +459,7 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
             /* pass single 0 */
             ++ptr;
         } else if (val[ptr] >= '1' && val[ptr] <= '9') {
-            while (ptr < end && val[ptr] >= '0' && val[ptr] <= '9') {
+            while (ptr < end && IsDigit(val[ptr])) {
                 if (!ProcessMantissaDigit(val[ptr], mantissa, mantissa_tzeros))
                     return false; /* overflow */
                 ++ptr;
@@ -470,9 +469,9 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
     if (ptr < end && val[ptr] == '.')
     {
         ++ptr;
-        if (ptr < end && val[ptr] >= '0' && val[ptr] <= '9')
+        if (ptr < end && IsDigit(val[ptr]))
         {
-            while (ptr < end && val[ptr] >= '0' && val[ptr] <= '9') {
+            while (ptr < end && IsDigit(val[ptr])) {
                 if (!ProcessMantissaDigit(val[ptr], mantissa, mantissa_tzeros))
                     return false; /* overflow */
                 ++ptr;
@@ -489,8 +488,8 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
             exponent_sign = true;
             ++ptr;
         }
-        if (ptr < end && val[ptr] >= '0' && val[ptr] <= '9') {
-            while (ptr < end && val[ptr] >= '0' && val[ptr] <= '9') {
+        if (ptr < end && IsDigit(val[ptr])) {
+            while (ptr < end && IsDigit(val[ptr])) {
                 if (exponent > (UPPER_BOUND / 10LL))
                     return false; /* overflow */
                 exponent = exponent * 10 + val[ptr] - '0';
@@ -530,3 +529,38 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
 
     return true;
 }
+
+void Downcase(std::string& str)
+{
+    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c){return ToLower(c);});
+}
+
+std::string Capitalize(std::string str)
+{
+    if (str.empty()) return str;
+    str[0] = ToUpper(str.front());
+    return str;
+}
+
+// Based on http://www.zedwood.com/article/cpp-is-valid-utf8-string-function
+bool IsValidUTF8(const std::string& str)
+{
+    const unsigned int strLen = str.length();
+    int c,n;
+    for (unsigned i = 0; i < strLen; i++) {
+        c = (unsigned char) str[i];
+        if (0x00 <= c && c <= 0x7f)     n=0;      // 0bbbbbbb (ASCII)
+        else if ((c & 0xE0) == 0xC0)    n=1;      // 110bbbbb
+        else if ( c == 0xED && i < (strLen - 1) && ((unsigned char)str[i+1] & 0xA0) == 0xA0)
+            return false;                         //U+d800 to U+dfff
+        else if ((c & 0xF0) == 0xE0)    n=2;      // 1110bbbb
+        else if ((c & 0xF8) == 0xF0)    n=3;      // 11110bbb
+        else return false;
+        for (int j=0; j < n && i < strLen; j++) { // n bytes matching 10bbbbbb follow ?
+            if ((++i == strLen) || (( (unsigned char)str[i] & 0xC0) != 0x80))
+                return false;
+        }
+    }
+    return true;
+}
+

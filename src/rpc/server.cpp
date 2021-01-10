@@ -10,7 +10,6 @@
 #include "base58.h"
 #include "fs.h"
 #include "init.h"
-#include "main.h"
 #include "random.h"
 #include "sync.h"
 #include "guiinterface.h"
@@ -22,15 +21,12 @@
 #endif // ENABLE_WALLET
 
 #include <boost/bind.hpp>
-#include <boost/iostreams/concepts.hpp>
-#include <boost/iostreams/stream.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/signals2/signal.hpp>
 #include <boost/thread.hpp>
-#include <boost/algorithm/string/case_conv.hpp> // for to_upper()
 
 #include <univalue.h>
 
+#include <memory> // for unique_ptr
 
 static bool fRPCRunning = false;
 static bool fRPCInWarmup = true;
@@ -39,9 +35,8 @@ static RecursiveMutex cs_rpcWarmup;
 
 /* Timer-creating functions */
 static RPCTimerInterface* timerInterface = NULL;
-/* Map of name to timer.
- * @note Can be changed to std::unique_ptr when C++11 */
-static std::map<std::string, boost::shared_ptr<RPCTimerBase> > deadlineTimers;
+/* Map of name to timer. */
+static std::map<std::string, std::unique_ptr<RPCTimerBase>> deadlineTimers;
 
 static struct CRPCSignals
 {
@@ -95,7 +90,7 @@ void RPCTypeCheckObj(const UniValue& o,
                   bool fAllowNull,
                   bool fStrict)
 {
-    for (const PAIRTYPE(std::string, UniValue::VType)& t : typesExpected) {
+    for (const std::pair<std::string, UniValue::VType>& t : typesExpected) {
         const UniValue& v = find_value(o, t.first);
         if (!fAllowNull && v.isNull())
             throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Missing %s", t.first));
@@ -201,7 +196,7 @@ std::string CRPCTable::help(std::string strCommand) const
     std::vector<std::pair<std::string, const CRPCCommand*> > vCommands;
 
     for (const auto& entry : mapCommands)
-        vCommands.push_back(std::make_pair(entry.second->category + entry.first, entry.second));
+        vCommands.emplace_back(entry.second->category + entry.first, entry.second);
     std::sort(vCommands.begin(), vCommands.end());
 
     for (const std::pair<std::string, const CRPCCommand*>& command : vCommands) {
@@ -226,9 +221,7 @@ std::string CRPCTable::help(std::string strCommand) const
                     if (!category.empty())
                         strRet += "\n";
                     category = pcmd->category;
-                    std::string firstLetter = category.substr(0, 1);
-                    boost::to_upper(firstLetter);
-                    strRet += "== " + firstLetter + category.substr(1) + " ==\n";
+                    strRet += "== " + Capitalize(category) + " ==\n";
                 }
             }
             strRet += strHelp + "\n";
@@ -281,141 +274,9 @@ static const CRPCCommand vRPCCommands[] =
         //  category              name                      actor (function)         okSafeMode
         //  --------------------- ------------------------  -----------------------  ----------
         /* Overall control/query calls */
-        {"control", "getinfo", &getinfo, true }, /* uses wallet if enabled */
+
         {"control", "help", &help, true },
         {"control", "stop", &stop, true },
-
-        /* P2P networking */
-        {"network", "getnetworkinfo", &getnetworkinfo, true },
-        {"network", "addnode", &addnode, true },
-        {"network", "disconnectnode", &disconnectnode, true },
-        {"network", "getaddednodeinfo", &getaddednodeinfo, true },
-        {"network", "getconnectioncount", &getconnectioncount, true },
-        {"network", "getnettotals", &getnettotals, true },
-        {"network", "getpeerinfo", &getpeerinfo, true },
-        {"network", "ping", &ping, true },
-        {"network", "setban", &setban, true },
-        {"network", "listbanned", &listbanned, true },
-        {"network", "clearbanned", &clearbanned, true },
-
-        /* Block chain and UTXO */
-        {"blockchain", "findserial", &findserial, true },
-        {"blockchain", "getblockindexstats", &getblockindexstats, true },
-        {"blockchain", "getserials", &getserials, true },
-        {"blockchain", "getblockchaininfo", &getblockchaininfo, true },
-        {"blockchain", "getbestblockhash", &getbestblockhash, true },
-        {"blockchain", "getblockcount", &getblockcount, true },
-        {"blockchain", "getblock", &getblock, true },
-        {"blockchain", "getblockhash", &getblockhash, true },
-        {"blockchain", "getblockheader", &getblockheader, false },
-        {"blockchain", "getchaintips", &getchaintips, true },
-        {"blockchain", "getdifficulty", &getdifficulty, true },
-        {"blockchain", "getfeeinfo", &getfeeinfo, true },
-        {"blockchain", "getmempoolinfo", &getmempoolinfo, true },
-        {"blockchain", "getrawmempool", &getrawmempool, true },
-        {"blockchain", "gettxout", &gettxout, true },
-        {"blockchain", "gettxoutsetinfo", &gettxoutsetinfo, true },
-        {"blockchain", "invalidateblock", &invalidateblock, true },
-        {"blockchain", "reconsiderblock", &reconsiderblock, true },
-        {"blockchain", "verifychain", &verifychain, true },
-
-        /* Mining */
-        {"mining", "getblocktemplate", &getblocktemplate, true },
-        {"mining", "getmininginfo", &getmininginfo, true },
-        {"mining", "getnetworkhashps", &getnetworkhashps, true },
-        {"mining", "prioritisetransaction", &prioritisetransaction, true },
-        {"mining", "submitblock", &submitblock, true },
-
-#ifdef ENABLE_WALLET
-        /* Coin generation */
-        {"generating", "getgenerate", &getgenerate, true },
-        {"generating", "gethashespersec", &gethashespersec, true },
-        {"generating", "setgenerate", &setgenerate, true },
-        {"generating", "generate", &generate, true },
-#endif
-
-        /* Raw transactions */
-        {"rawtransactions", "createrawtransaction", &createrawtransaction, true },
-        {"rawtransactions", "decoderawtransaction", &decoderawtransaction, true },
-        {"rawtransactions", "decodescript", &decodescript, true },
-        {"rawtransactions", "getrawtransaction", &getrawtransaction, true },
-        {"rawtransactions", "fundrawtransaction", &fundrawtransaction, false},
-        {"rawtransactions", "sendrawtransaction", &sendrawtransaction, false },
-        {"rawtransactions", "signrawtransaction", &signrawtransaction, false }, /* uses wallet if enabled */
-
-        /* Utility functions */
-        {"util", "createmultisig", &createmultisig, true },
-        {"util", "logging", &logging, true },
-        {"util", "validateaddress", &validateaddress, true }, /* uses wallet if enabled */
-        {"util", "verifymessage", &verifymessage, true },
-        {"util", "estimatefee", &estimatefee, true },
-        { "util","estimatesmartfee",       &estimatesmartfee,       true  },
-
-                /* Not shown in help */
-        {"hidden", "invalidateblock", &invalidateblock, true },
-        {"hidden", "reconsiderblock", &reconsiderblock, true },
-        {"hidden", "setmocktime", &setmocktime, true },
-        { "hidden",             "waitfornewblock",        &waitfornewblock,        true },
-        { "hidden",             "waitforblock",           &waitforblock,           true },
-        { "hidden",             "waitforblockheight",     &waitforblockheight,     true },
-
-        /* PIVX features */
-        {"pivx", "listmasternodes", &listmasternodes, true },
-        {"pivx", "getmasternodecount", &getmasternodecount, true },
-        {"pivx", "createmasternodebroadcast", &createmasternodebroadcast, true },
-        {"pivx", "decodemasternodebroadcast", &decodemasternodebroadcast, true },
-        {"pivx", "relaymasternodebroadcast", &relaymasternodebroadcast, true },
-        {"pivx", "masternodecurrent", &masternodecurrent, true },
-        {"pivx", "startmasternode", &startmasternode, true },
-        {"pivx", "createmasternodekey", &createmasternodekey, true },
-        {"pivx", "getmasternodeoutputs", &getmasternodeoutputs, true },
-        {"pivx", "listmasternodeconf", &listmasternodeconf, true },
-        {"pivx", "getmasternodestatus", &getmasternodestatus, true },
-        {"pivx", "getmasternodewinners", &getmasternodewinners, true },
-        {"pivx", "getmasternodescores", &getmasternodescores, true },
-        {"pivx", "preparebudget", &preparebudget, true },
-        {"pivx", "submitbudget", &submitbudget, true },
-        {"pivx", "mnbudgetvote", &mnbudgetvote, true },
-        {"pivx", "getbudgetvotes", &getbudgetvotes, true },
-        {"pivx", "getnextsuperblock", &getnextsuperblock, true },
-        {"pivx", "getbudgetprojection", &getbudgetprojection, true },
-        {"pivx", "getbudgetinfo", &getbudgetinfo, true },
-        {"pivx", "mnbudgetrawvote", &mnbudgetrawvote, true },
-        {"pivx", "mnfinalbudget", &mnfinalbudget, true },
-        {"pivx", "checkbudgets", &checkbudgets, true },
-        {"pivx", "mnsync", &mnsync, true },
-        {"pivx", "spork", &spork, true },
-
-#ifdef ENABLE_WALLET
-        /* Wallet */
-        {"wallet", "bip38encrypt", &bip38encrypt, true },
-        {"wallet", "bip38decrypt", &bip38decrypt, true },
-        {"wallet", "getaddressinfo", &getaddressinfo, true },
-        {"wallet", "getstakingstatus", &getstakingstatus, false },
-        {"wallet", "multisend", &multisend, false },
-        {"zerocoin", "createrawzerocoinspend", &createrawzerocoinspend, false },
-        {"zerocoin", "getzerocoinbalance", &getzerocoinbalance, false },
-        {"zerocoin", "listmintedzerocoins", &listmintedzerocoins, false },
-        {"zerocoin", "listspentzerocoins", &listspentzerocoins, false },
-        {"zerocoin", "listzerocoinamounts", &listzerocoinamounts, false },
-        {"zerocoin", "mintzerocoin", &mintzerocoin, false },
-        {"zerocoin", "spendzerocoin", &spendzerocoin, false },
-        {"zerocoin", "spendrawzerocoin", &spendrawzerocoin, true },
-        {"zerocoin", "spendzerocoinmints", &spendzerocoinmints, false },
-        {"zerocoin", "resetmintzerocoin", &resetmintzerocoin, false },
-        {"zerocoin", "resetspentzerocoin", &resetspentzerocoin, false },
-        {"zerocoin", "getarchivedzerocoin", &getarchivedzerocoin, false },
-        {"zerocoin", "importzerocoins", &importzerocoins, false },
-        {"zerocoin", "exportzerocoins", &exportzerocoins, false },
-        {"zerocoin", "reconsiderzerocoins", &reconsiderzerocoins, false },
-        {"zerocoin", "getspentzerocoinamount", &getspentzerocoinamount, false },
-        {"zerocoin", "getzpivseed", &getzpivseed, false },
-        {"zerocoin", "setzpivseed", &setzpivseed, false },
-        {"zerocoin", "generatemintlist", &generatemintlist, false },
-        {"zerocoin", "searchdzpiv", &searchdzpiv, false },
-        {"zerocoin", "dzpivstate", &dzpivstate, false },
-
-#endif // ENABLE_WALLET
 };
 
 CRPCTable::CRPCTable()
@@ -531,7 +392,7 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
 
 bool IsDeprecatedRPCEnabled(const std::string& method)
 {
-    const std::vector<std::string> enabled_methods = mapMultiArgs["-deprecatedrpc"];
+    const std::vector<std::string> enabled_methods = gArgs.GetArgs("-deprecatedrpc");
 
     return find(enabled_methods.begin(), enabled_methods.end(), method) != enabled_methods.end();
 }
@@ -567,6 +428,12 @@ std::string JSONRPCExecBatch(const UniValue& vReq)
 
 UniValue CRPCTable::execute(const JSONRPCRequest &request) const
 {
+    // Return immediately if in warmup
+    std::string strWarmupStatus;
+    if (RPCIsInWarmup(&strWarmupStatus)) {
+        throw JSONRPCError(RPC_IN_WARMUP, "RPC in warm-up: " + strWarmupStatus);
+    }
+
     // Find method
     const CRPCCommand* pcmd = tableRPC[request.strMethod];
     if (!pcmd)
@@ -630,7 +497,7 @@ void RPCRunLater(const std::string& name, std::function<void(void)> func, int64_
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No timer handler registered for RPC");
     deadlineTimers.erase(name);
     LogPrint(BCLog::RPC, "queue run of timer %s in %i seconds (using %s)\n", name, nSeconds, timerInterface->Name());
-    deadlineTimers.insert(std::make_pair(name, boost::shared_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000))));
+    deadlineTimers.emplace(name, std::unique_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000)));
 }
 
 CRPCTable tableRPC;

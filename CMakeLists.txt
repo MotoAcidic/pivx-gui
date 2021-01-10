@@ -197,10 +197,10 @@ set(SERVER_SOURCES
         ./src/interface/wallet.cpp
         ./src/dbwrapper.cpp
         ./src/legacy/validation_zerocoin_legacy.cpp
-        ./src/main.cpp
         ./src/merkleblock.cpp
         ./src/miner.cpp
         ./src/net.cpp
+        ./src/net_processing.cpp
         ./src/noui.cpp
         ./src/policy/fees.cpp
         ./src/policy/policy.cpp
@@ -219,8 +219,11 @@ set(SERVER_SOURCES
         ./src/sporkdb.cpp
         ./src/timedata.cpp
         ./src/torcontrol.cpp
+        ./src/sapling/sapling_txdb.cpp
         ./src/txdb.cpp
         ./src/txmempool.cpp
+        ./src/sapling/sapling_validation.cpp
+        ./src/validation.cpp
         ./src/validationinterface.cpp
         ./src/zpivchain.cpp
         )
@@ -250,15 +253,19 @@ endif()
 set(WALLET_SOURCES
         ./src/activemasternode.cpp
         ./src/bip38.cpp
-        ./src/denomination_functions.cpp
         ./src/wallet/db.cpp
         ./src/addressbook.cpp
         ./src/crypter.cpp
-        ./src/swifttx.cpp
+        ./src/budget/budgetdb.cpp
+        ./src/budget/budgetmanager.cpp
+        ./src/budget/budgetproposal.cpp
+        ./src/budget/budgetvote.cpp
+        ./src/budget/finalizedbudget.cpp
+        ./src/budget/finalizedbudgetvote.cpp
         ./src/masternode.cpp
-        ./src/masternode-budget.cpp
         ./src/masternode-payments.cpp
         ./src/masternode-sync.cpp
+        ./src/tiertwo_networksync.cpp
         ./src/masternodeconfig.cpp
         ./src/masternodeman.cpp
         ./src/messagesigner.cpp
@@ -272,10 +279,7 @@ set(WALLET_SOURCES
         ./src/kernel.cpp
         ./src/legacy/stakemodifier.cpp
         ./src/wallet/wallet.cpp
-        ./src/wallet/wallet_zerocoin.cpp
         ./src/wallet/walletdb.cpp
-        ./src/zpiv/zpivwallet.cpp
-        ./src/zpiv/zpivtracker.cpp
         ./src/zpiv/zpivmodule.cpp
         ./src/zpiv/zpos.cpp
         ./src/stakeinput.cpp
@@ -361,7 +365,6 @@ target_include_directories(ZEROCOIN_A PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
 
 set(COMMON_SOURCES
         ./src/allocators.cpp
-        ./src/amount.cpp
         ./src/base58.cpp
         ./src/bip38.cpp
         ./src/consensus/params.cpp
@@ -370,6 +373,7 @@ set(COMMON_SOURCES
         ./src/coins.cpp
         ./src/key_io.cpp
         ./src/compressor.cpp
+        ./src/tiertwo/specialtx_validation.cpp
         ./src/consensus/merkle.cpp
         ./src/consensus/tx_verify.cpp
         ./src/consensus/zerocoin_verify.cpp
@@ -385,6 +389,7 @@ set(COMMON_SOURCES
         ./src/keystore.cpp
         ./src/netaddress.cpp
         ./src/netbase.cpp
+        ./src/policy/feerate.cpp
         ./src/protocol.cpp
         ./src/pubkey.cpp
         ./src/scheduler.cpp
@@ -395,6 +400,7 @@ set(COMMON_SOURCES
         ./src/script/script_error.cpp
         ./src/spork.cpp
         ./src/sporkdb.cpp
+        ./src/warnings.cpp
         )
 add_library(COMMON_A STATIC ${BitcoinHeaders} ${COMMON_SOURCES})
 target_include_directories(COMMON_A PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -443,21 +449,28 @@ target_include_directories(CLI_A PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
 
 set(SAPLING_SOURCES
         ./src/bech32.cpp
-        ./src/sapling/util.cpp
+        ./src/sapling/sapling_util.cpp
         ./src/sapling/key_io_sapling.cpp
+        ./src/destination_io.cpp
+        ./src/sapling/sapling_core_write.cpp
         ./src/sapling/prf.cpp
         ./src/sapling/noteencryption.cpp
         ./src/sapling/address.cpp
         ./src/sapling/note.cpp
         ./src/sapling/zip32.cpp
         ./src/sapling/crypter_sapling.cpp
+        ./src/sapling/incrementalmerkletree.cpp
+        ./src/sapling/transaction_builder.cpp
         ./src/sapling/saplingscriptpubkeyman.cpp
+        ./src/sapling/proof.cpp
+        ./src/sapling/sapling_operation.cpp
         )
 
 add_library(SAPLING_A STATIC ${BitcoinHeaders} ${SAPLING_SOURCES})
 target_include_directories(SAPLING_A PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/sapling
         ${CMAKE_CURRENT_SOURCE_DIR}/src/rust/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/univalue/include
         ${OPENSSL_INCLUDE_DIR}
         ${BerkeleyDB_INCLUDE_DIRS}
         )
@@ -558,6 +571,11 @@ if(MINIUPNP_FOUND)
     target_include_directories(pivxd PUBLIC ${MINIUPNP_INCLUDE_DIR})
 endif()
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    target_link_libraries(pivxd "-framework Cocoa")
+endif()
+
 target_link_libraries(pivxd ${sodium_LIBRARY_RELEASE} -ldl -lpthread)
 
 add_subdirectory(src/qt)
+add_subdirectory(src/test)

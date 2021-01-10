@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "zpiv/zpos.h"
+
+#include "validation.h"
 #include "zpivchain.h"
 
 
@@ -41,7 +43,7 @@ bool CLegacyZPivStake::InitFromTxIn(const CTxIn& txin)
     return true;
 }
 
-CLegacyZPivStake::CLegacyZPivStake(const libzerocoin::CoinSpend& spend)
+CLegacyZPivStake::CLegacyZPivStake(const libzerocoin::CoinSpend& spend) : CStakeInput(nullptr)
 {
     this->nChecksum = spend.getAccumulatorChecksum();
     this->denom = spend.getDenomination();
@@ -49,7 +51,7 @@ CLegacyZPivStake::CLegacyZPivStake(const libzerocoin::CoinSpend& spend)
     this->hashSerial = Hash(nSerial.begin(), nSerial.end());
 }
 
-CBlockIndex* CLegacyZPivStake::GetIndexFrom()
+const CBlockIndex* CLegacyZPivStake::GetIndexFrom() const
 {
     // First look in the legacy database
     int nHeightChecksum = 0;

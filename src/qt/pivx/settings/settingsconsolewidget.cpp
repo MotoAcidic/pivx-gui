@@ -4,17 +4,19 @@
 
 #include "qt/pivx/settings/settingsconsolewidget.h"
 #include "qt/pivx/settings/forms/ui_settingsconsolewidget.h"
-#include "QGraphicsDropShadowEffect"
+
 #include "qt/pivx/qtutils.h"
 
 #include "clientmodel.h"
 #include "guiutil.h"
 
 #include "chainparams.h"
-#include "main.h"
 #include "rpc/client.h"
 #include "rpc/server.h"
+#include "sapling/key_io_sapling.h"
 #include "util.h"
+#include "utilitydialog.h"
+
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #endif // ENABLE_WALLET
@@ -28,6 +30,7 @@
 #endif
 
 #include <QDir>
+#include <QGraphicsDropShadowEffect>
 #include <QKeyEvent>
 #include <QMenu>
 #include <QScrollBar>
@@ -36,8 +39,6 @@
 #include <QTime>
 #include <QTimer>
 #include <QStringList>
-#include "qt/pivx/qtutils.h"
-#include "utilitydialog.h"
 
 const int CONSOLE_HISTORY = 50;
 
@@ -123,7 +124,7 @@ bool parseCommandLineSettings(std::vector<std::string>& args, const std::string&
         STATE_ESCAPE_DOUBLEQUOTED
     } state = STATE_EATING_SPACES;
     std::string curarg;
-    Q_FOREACH (char ch, strCommand) {
+    for (char ch : strCommand) {
         switch (state) {
             case STATE_ARGUMENT:      // In or after argument
             case STATE_EATING_SPACES: // Handle runs of whitespace
@@ -364,9 +365,12 @@ void SettingsConsoleWidget::loadClientModel()
         for (size_t i = 0; i < commandList.size(); ++i)
         {
             wordList << commandList[i].c_str();
+            wordList << ("help " + commandList[i]).c_str();
         }
 
+        wordList.sort();
         autoCompleter = new QCompleter(wordList, this);
+        autoCompleter->setModelSorting(QCompleter::CaseSensitivelySortedModel);
         ui->lineEdit->setCompleter(autoCompleter);
 
         // clear the lineEdit after activating from QCompleter
@@ -421,7 +425,7 @@ void SettingsConsoleWidget::clear(bool clearHistory)
     QString clsKey = "Ctrl-L";
 #endif
 
-    message(CMD_REPLY, (tr("Welcome to the PIVX RPC console.") + "<br>" +
+    messageInternal(CMD_REPLY, (tr("Welcome to the PIVX RPC console.") + "<br>" +
                         tr("Use up and down arrows to navigate history, and %1 to clear screen.").arg("<b>"+clsKey+"</b>") + "<br>" +
                         tr("Type <b>help</b> for an overview of available commands.") +
                         "<br><span class=\"secwarning\"><br>" +
@@ -430,7 +434,7 @@ void SettingsConsoleWidget::clear(bool clearHistory)
             true);
 }
 
-void SettingsConsoleWidget::message(int category, const QString& message, bool html)
+void SettingsConsoleWidget::messageInternal(int category, const QString& message, bool html)
 {
     QTime time = QTime::currentTime();
     QString timeString = time.toString();
@@ -446,13 +450,42 @@ void SettingsConsoleWidget::message(int category, const QString& message, bool h
     ui->messagesWidget->append(out);
 }
 
+static bool PotentiallyDangerousCommand(const QString& cmd)
+{
+    if (cmd.size() >= 12 && cmd.leftRef(10) == "dumpwallet") {
+        // at least one char for filename
+        return true;
+    }
+    if (cmd.size() >= 13 && cmd.leftRef(11) == "dumpprivkey") {
+        // valid PIVX Transparent Address
+        std::vector<std::string> args;
+        parseCommandLineSettings(args, cmd.toStdString());
+        return (args.size() == 2 && IsValidDestinationString(args[1], false));
+    }
+    if (cmd.size() >= 18 && cmd.leftRef(16) == "exportsaplingkey") {
+        // valid PIVX Shield Address
+        std::vector<std::string> args;
+        parseCommandLineSettings(args, cmd.toStdString());
+        return (args.size() == 2 && KeyIO::IsValidPaymentAddressString(args[1]));
+    }
+
+    return false;
+}
+
 void SettingsConsoleWidget::on_lineEdit_returnPressed()
 {
     QString cmd = ui->lineEdit->text();
     ui->lineEdit->clear();
 
     if (!cmd.isEmpty()) {
-        message(CMD_REQUEST, cmd);
+
+        // ask confirmation before sending potentially dangerous commands
+        if (PotentiallyDangerousCommand(cmd) &&
+            !ask("DANGER!", "Your coins will be STOLEN if you give\nthe info to anyone!\n\nAre you sure?\n")) {
+            return;
+        }
+
+        messageInternal(CMD_REQUEST, cmd);
         Q_EMIT cmdCommandRequest(cmd);
         // Remove command, if already in history
         history.removeOne(cmd);
@@ -489,7 +522,7 @@ void SettingsConsoleWidget::startExecutor()
     executor->moveToThread(thread);
 
     // Replies from executor object must go to this object
-    connect(executor, &RPCExecutor::reply, this, static_cast<void (SettingsConsoleWidget::*)(int, const QString&)>(&SettingsConsoleWidget::message));
+    connect(executor, &RPCExecutor::reply, this, &SettingsConsoleWidget::response);
     // Requests from this object must go to executor
     connect(this, &SettingsConsoleWidget::cmdCommandRequest, executor, &RPCExecutor::requestCommand);
 

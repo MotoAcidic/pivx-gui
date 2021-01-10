@@ -61,13 +61,11 @@ BASE_SCRIPTS= [
 
     # vv Tests less than 5m vv
     'wallet_zapwallettxes.py',                  # ~ 300 sec
+    'wallet_hd.py',                             # ~ 280 sec
     'p2p_time_offset.py',                       # ~ 267 sec
     'rpc_fundrawtransaction.py',                # ~ 260 sec
     'mining_pos_coldStaking.py',                # ~ 215 sec
-    'mining_pos_reorg.py',                      # ~ 212 sec
     'wallet_abandonconflict.py',                # ~ 212 sec
-    'wallet_hd.py',                             # ~ 210 sec
-    'wallet_zerocoin_publicspends.py',          # ~ 202 sec
     'feature_logging.py',                       # ~ 200 sec
     'rpc_rawtransaction.py',                    # ~ 193 sec
     'wallet_keypool_topup.py',                  # ~ 174 sec
@@ -77,6 +75,7 @@ BASE_SCRIPTS= [
     'interface_rest.py',                        # ~ 154 sec
     'feature_proxy.py',                         # ~ 143 sec
     'feature_uacomment.py',                     # ~ 130 sec
+    'mining_pos_reorg.py',                      # ~ 128 sec
     'wallet_upgrade.py',                        # ~ 124 sec
     'wallet_import_stakingaddress.py',          # ~ 123 sec
 
@@ -86,15 +85,15 @@ BASE_SCRIPTS= [
     'mining_pos_fakestake.py',                  # ~ 113 sec
     'feature_reindex.py',                       # ~ 110 sec
     'interface_http.py',                        # ~ 105 sec
+    'feature_blockhashcache.py',                # ~ 100 sec
     'wallet_listtransactions.py',               # ~ 97 sec
     'mempool_reorg.py',                         # ~ 92 sec
-    'sapling_wallet_persistence.py',            # ~ 90 sec
     'wallet_encryption.py',                     # ~ 89 sec
     'wallet_keypool.py',                        # ~ 88 sec
     'wallet_dump.py',                           # ~ 83 sec
     'rpc_net.py',                               # ~ 83 sec
     'rpc_bip38.py',                             # ~ 82 sec
-    'rpc_deprecated.py',                        # ~ 80 sec
+    #'rpc_deprecated.py',                        # ~ 80 sec (disabled for now, no deprecated RPC commands to test)
     'interface_bitcoin_cli.py',                 # ~ 80 sec
     'mempool_packages.py',                      # ~ 63 sec
 
@@ -137,10 +136,32 @@ BASE_SCRIPTS= [
 
 ]
 
+TIERTWO_SCRIPTS = [
+    # Longest test should go first, to favor running tests in parallel
+    'tiertwo_governance_sync_basic.py',
+    'tiertwo_masternode_activation.py',
+    'tiertwo_masternode_ping.py',
+]
+
+SAPLING_SCRIPTS = [
+    # Longest test should go first, to favor running tests in parallel
+    'sapling_key_import_export.py',             # ~ 378 sec
+    'sapling_wallet.py',                        # ~ 350 sec
+    'sapling_wallet_anchorfork.py',             # ~ 345 sec
+    'sapling_wallet_nullifiers.py',             # ~ 190 sec
+    'sapling_wallet_listreceived.py',           # ~ 157 sec
+    'sapling_changeaddresses.py',               # ~ 151 sec
+    'sapling_mempool.py',                       # ~ 98 sec
+    'sapling_wallet_persistence.py',            # ~ 90 sec
+    'sapling_supply.py',                        # ~ 58 sec
+    'sapling_malleable_sigs.py',                # ~ 44 sec
+]
+
 EXTENDED_SCRIPTS = [
     # These tests are not run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
     # vv Tests less than 20m vv
+    'sapling_fillblock.py',                     # ~ 780 sec
     'feature_fee_estimation.py',                # ~ 360 sec
     # vv Tests less than 5m vv
     # vv Tests less than 2m vv
@@ -177,13 +198,20 @@ LEGACY_SKIP_TESTS = [
     'rpc_net.py',
     'rpc_signmessage.py',
     'rpc_spork.py',
-    'sapling_wallet_persistence.py',
     'wallet_hd.py',         # no HD tests for pre-HD wallets
     'wallet_upgrade.py',    # can't upgrade to pre-HD wallet
+    'sapling_wallet_persistence.py',
+    'sapling_wallet.py',
+    'sapling_changeaddresses.py',
+    'sapling_key_import_export.py',
+    'sapling_wallet_anchorfork.py',
+    'sapling_wallet_listreceived.py',
+    'sapling_wallet_nullifiers.py',
+    'sapling_mempool.py',
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
-ALL_SCRIPTS = EXTENDED_SCRIPTS + BASE_SCRIPTS
+ALL_SCRIPTS = EXTENDED_SCRIPTS + BASE_SCRIPTS + TIERTWO_SCRIPTS + SAPLING_SCRIPTS
 
 NON_SCRIPTS = [
     # These are python files that live in the functional tests directory, but are not test scripts.
@@ -200,6 +228,7 @@ def main():
                                      epilog='''
     Help text and arguments for individual test script:''',
                                      formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('--all', '-a', action='store_true', help='run all available tests (overrides other flags)')
     parser.add_argument('--combinedlogslen', '-c', type=int, default=0, help='print a combined log (of length n lines) from all test nodes and test framework to the console on failure.')
     parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
     parser.add_argument('--exclude', '-x', help='specify a comma-separated-list of scripts to exclude.')
@@ -208,8 +237,11 @@ def main():
     parser.add_argument('--help', '-h', '-?', action='store_true', help='print help text and exit')
     parser.add_argument('--jobs', '-j', type=int, default=4, help='how many test scripts to run in parallel. Default=4.')
     parser.add_argument('--keepcache', '-k', action='store_true', help='the default behavior is to flush the cache directory on startup. --keepcache retains the cache from the previous testrun.')
+    parser.add_argument('--skipcache', '-s', action='store_true', help='do NOT create a cache with the test run (tests that make use of the cache will fail). Takes precedence over --keepcache')
     parser.add_argument('--quiet', '-q', action='store_true', help='only print dots, results summary and failure logs')
     parser.add_argument('--legacywallet', '-w', action='store_true', help='create pre-HD wallets only')
+    parser.add_argument('--tiertwo', '-m', action='store_true', help='run tier two tests only')
+    parser.add_argument('--sapling', '-z', action='store_true', help='run sapling tests only')
     parser.add_argument('--tmpdirprefix', '-t', default=tempfile.gettempdir(), help="Root directory for datadirs")
     args, unknown_args = parser.parse_known_args()
 
@@ -225,6 +257,10 @@ def main():
     passon_args.append("--configfile=%s" % configfile)
     if args.legacywallet:
         passon_args.append("--legacywallet")
+    if args.tiertwo:
+        passon_args.append("--tiertwo")
+    if args.sapling:
+        passon_args.append("--sapling")
 
     # Set up logging
     logging_level = logging.INFO if args.quiet else logging.DEBUG
@@ -252,24 +288,33 @@ def main():
         sys.exit(0)
 
     # Build list of tests
-    if tests:
-        # Individual tests have been specified. Run specified tests that exist
-        # in the ALL_SCRIPTS list. Accept the name with or without .py extension.
-        tests = [re.sub("\.py$", "", t) + ".py" for t in tests]
-        test_list = []
-        for t in tests:
-            if t in ALL_SCRIPTS:
-                test_list.append(t)
-            else:
-                print("{}WARNING!{} Test '{}' not found in full test list.".format(BOLD[1], BOLD[0], t))
+    if args.all:
+        test_list = ALL_SCRIPTS
     else:
-        # No individual tests have been specified.
-        # Run all base tests, and optionally run extended tests.
-        test_list = BASE_SCRIPTS
-        if args.extended:
-            # place the EXTENDED_SCRIPTS first since the three longest ones
-            # are there and the list is shorter
-            test_list = EXTENDED_SCRIPTS + test_list
+        if tests:
+            # Individual tests have been specified. Run specified tests that exist
+            # in the ALL_SCRIPTS list. Accept the name with or without .py extension.
+            tests = [re.sub("\.py$", "", t) + ".py" for t in tests]
+            test_list = []
+            for t in tests:
+                if t in ALL_SCRIPTS:
+                    test_list.append(t)
+                else:
+                    print("{}WARNING!{} Test '{}' not found in full test list.".format(BOLD[1], BOLD[0], t))
+        else:
+            test_list = []
+            if args.tiertwo:
+                test_list += TIERTWO_SCRIPTS
+            if args.sapling:
+                test_list += SAPLING_SCRIPTS
+            if len(test_list) == 0:
+                # No individual tests (or sub-list) have been specified.
+                # Run all base tests, and optionally run extended tests.
+                test_list = BASE_SCRIPTS
+                if args.extended:
+                    # place the EXTENDED_SCRIPTS first since the three longest ones
+                    # are there and the list is shorter
+                    test_list = EXTENDED_SCRIPTS + test_list
 
     # Remove the test cases that the user has explicitly asked to exclude.
     if args.exclude:
@@ -308,9 +353,13 @@ def main():
               tmpdir,
               args.jobs, args.coverage,
               passon_args, args.combinedlogslen,
-              args.keepcache)
+              "skip" if args.skipcache else ("keep" if args.keepcache else "rewrite"))
 
-def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_coverage=False, args=[], combined_logs_len=0, keep_cache=False):
+# keep_cache can either be
+# - "rewrite" : (default) Delete cache directory and recreate it.
+# - "keep"    : Check if the cache in the directory is valid. Recreate only if invalid.
+# - "skip"    : Don' check the contents of the cache and don't create a new one
+def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_coverage=False, args=[], combined_logs_len=0, keep_cache="rewrite"):
     # Warn if pivxd is already running (unix only)
     try:
         if subprocess.check_output(["pidof", "pivxd"]) is not None:
@@ -354,15 +403,16 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
             sys.stdout.flush()
             threading.Timer(pingTime, pingTravis).start()
 
-        if not keep_cache:
+        if keep_cache == "rewrite":
             pingTravis()
-        try:
-            subprocess.check_output([tests_dir + 'create_cache.py'] + flags + ["--tmpdir=%s/cache" % tmpdir])
-        except subprocess.CalledProcessError as e:
-            sys.stdout.buffer.write(e.output)
-            raise
-        finally:
-            stopTimer = True
+        if keep_cache != "skip":
+            try:
+                subprocess.check_output([tests_dir + 'create_cache.py'] + flags + ["--tmpdir=%s/cache" % tmpdir])
+            except subprocess.CalledProcessError as e:
+                sys.stdout.buffer.write(e.output)
+                raise
+            finally:
+                stopTimer = True
 
     #Run Tests
     job_queue = TestHandler(jobs, tests_dir, tmpdir, test_list, flags)
@@ -540,7 +590,7 @@ def check_script_prefixes():
     # convention don't immediately cause the tests to fail.
     LEEWAY = 10
 
-    good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|p2p|rpc|wallet|zerocoin|sapling)_")
+    good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|p2p|rpc|wallet|sapling|tiertwo)_")
     bad_script_names = [script for script in ALL_SCRIPTS if good_prefixes_re.match(script) is None]
 
     if len(bad_script_names) > 0:

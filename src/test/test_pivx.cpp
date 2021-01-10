@@ -5,19 +5,23 @@
 
 #define BOOST_TEST_MODULE Pivx Test Suite
 
-#include "test_pivx.h"
+#include "test/test_pivx.h"
 
-#include "main.h"
-#include "random.h"
-#include "script/sigcache.h"
-#include "txdb.h"
 #include "guiinterface.h"
+#include "net_processing.h"
+#include "random.h"
+#include "rpc/server.h"
+#include "rpc/register.h"
+#include "script/sigcache.h"
+#include "txmempool.h"
+#include "txdb.h"
+#include "validation.h"
 
 #include <boost/test/unit_test.hpp>
 
 std::unique_ptr<CConnman> g_connman;
 
-CClientUIInterface uiInterface;
+CClientUIInterface uiInterface;  // Declared but not defined in guiinterface.h
 
 uint256 insecure_rand_seed = GetRandHash();
 FastRandomContext insecure_rand_ctx(insecure_rand_seed);
@@ -45,7 +49,10 @@ TestingSetup::TestingSetup()
         ClearDatadirCache();
         pathTemp = GetTempPath() / strprintf("test_pivx_%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(100000)));
         fs::create_directories(pathTemp);
-        mapArgs["-datadir"] = pathTemp.string();
+        gArgs.ForceSetArg("-datadir", pathTemp.string());
+        // Ideally we'd move all the RPC tests to the functional testing framework
+        // instead of unit tests, but for now we need these here.
+        RegisterAllCoreRPCCommands(tableRPC);
         pblocktree = new CBlockTreeDB(1 << 20, true);
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         pcoinsTip = new CCoinsViewCache(pcoinsdbview);
@@ -76,10 +83,10 @@ TestingSetup::~TestingSetup()
 }
 
 CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(CMutableTransaction &tx, CTxMemPool *pool) {
-    CTransaction txn(tx);
+    const CTransactionRef txn = MakeTransactionRef(tx); // todo: move to the caller side..
     bool hasNoDependencies = pool ? pool->HasNoInputsOf(tx) : hadNoDependencies;
     // Hack to assume either its completely dependent on other mempool txs or not at all
-    CAmount inChainValue = hasNoDependencies ? txn.GetValueOut() : 0;
+    CAmount inChainValue = hasNoDependencies ? txn->GetValueOut() : 0;
 
     return CTxMemPoolEntry(txn, nFee, nTime, dPriority, nHeight,
                            hasNoDependencies, inChainValue, spendsCoinbaseOrCoinstake, sigOpCount);

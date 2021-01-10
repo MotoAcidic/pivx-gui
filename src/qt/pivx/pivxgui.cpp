@@ -16,7 +16,6 @@
 #include "guiinterface.h"
 #include "qt/pivx/qtutils.h"
 #include "qt/pivx/defaultdialog.h"
-#include "qt/pivx/settings/settingsfaqwidget.h"
 
 #include "init.h"
 #include "util.h"
@@ -59,12 +58,12 @@ PIVXGUI::PIVXGUI(const NetworkStyle* networkStyle, QWidget* parent) :
 
 #ifdef ENABLE_WALLET
     /* if compiled with wallet support, -disablewallet can still disable the wallet */
-    enableWallet = !GetBoolArg("-disablewallet", false);
+    enableWallet = !gArgs.GetBoolArg("-disablewallet", false);
 #else
     enableWallet = false;
 #endif // ENABLE_WALLET
 
-    QString windowTitle = QString::fromStdString(GetArg("-windowtitle", ""));
+    QString windowTitle = QString::fromStdString(gArgs.GetArg("-windowtitle", ""));
     if (windowTitle.isEmpty()) {
         windowTitle = tr("PIVX Core") + " - ";
         windowTitle += ((enableWallet) ? tr("Wallet") : tr("Node"));
@@ -240,9 +239,9 @@ void PIVXGUI::handleRestart(QStringList args)
 }
 
 
-void PIVXGUI::setClientModel(ClientModel* clientModel)
+void PIVXGUI::setClientModel(ClientModel* _clientModel)
 {
-    this->clientModel = clientModel;
+    this->clientModel = _clientModel;
     if (this->clientModel) {
         // Create system tray menu (or setup the dock menu) that late to prevent users from calling actions,
         // while the client has not yet fully loaded
@@ -255,6 +254,9 @@ void PIVXGUI::setClientModel(ClientModel* clientModel)
 
         // Receive and report messages from client model
         connect(clientModel, &ClientModel::message, this, &PIVXGUI::message);
+        connect(clientModel, &ClientModel::alertsChanged, [this](const QString& _alertStr) {
+            message(tr("Alert!"), _alertStr, CClientUIInterface::MSG_WARNING);
+        });
         connect(topBar, &TopBar::walletSynced, dashboard, &DashboardWidget::walletSynced);
         connect(topBar, &TopBar::walletSynced, coldStakingWidget, &ColdStakingWidget::walletSynced);
 
@@ -587,11 +589,11 @@ int PIVXGUI::getNavWidth()
     return this->navMenu->width();
 }
 
-void PIVXGUI::openFAQ(int section)
+void PIVXGUI::openFAQ(SettingsFaqWidget::Section section)
 {
     showHide(true);
     SettingsFaqWidget* dialog = new SettingsFaqWidget(this);
-    if (section > 0) dialog->setSection(section);
+    dialog->setSection(section);
     openDialogWithOpaqueBackgroundFullScreen(dialog, this);
     dialog->deleteLater();
 }

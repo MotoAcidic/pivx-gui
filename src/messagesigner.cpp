@@ -5,7 +5,6 @@
 
 #include "base58.h"
 #include "hash.h"
-#include "main.h" // For strMessageMagic
 #include "messagesigner.h"
 #include "masternodeman.h"  // For GetPublicKey (of MN from its vin)
 #include "tinyformat.h"
@@ -131,8 +130,8 @@ bool CSignedMessage::CheckSignature() const
 
 const CPubKey CSignedMessage::GetPublicKey(std::string& strErrorRet) const
 {
-    const CTxIn vin = GetVin();
-    CMasternode* pmn = mnodeman.Find(vin);
+    const CTxIn& vin = GetVin();
+    CMasternode* pmn = mnodeman.Find(vin.prevout);
     if(pmn) {
         return pmn->pubKeyMasternode;
     }

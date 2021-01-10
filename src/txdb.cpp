@@ -6,9 +6,9 @@
 
 #include "txdb.h"
 
-#include "main.h"
 #include "pow.h"
 #include "uint256.h"
+#include "zpiv/zerocoin.h"
 
 #include <stdint.h>
 
@@ -24,7 +24,7 @@ static const char DB_BEST_BLOCK = 'B';
 static const char DB_FLAG = 'F';
 static const char DB_REINDEX_FLAG = 'R';
 static const char DB_LAST_BLOCK = 'l';
-static const char DB_MONEY_SUPPLY = 'M';
+// static const char DB_MONEY_SUPPLY = 'M';
 
 namespace {
 
@@ -74,7 +74,11 @@ uint256 CCoinsViewDB::GetBestBlock() const
     return hashBestChain;
 }
 
-bool CCoinsViewDB::BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock)
+bool CCoinsViewDB::BatchWrite(CCoinsMap& mapCoins,
+                              const uint256& hashBlock,
+                              const uint256& hashSaplingAnchor,
+                              CAnchorsSaplingMap& mapSaplingAnchors,
+                              CNullifiersMap& mapSaplingNullifiers)
 {
     CDBBatch batch;
     size_t count = 0;
@@ -92,6 +96,10 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock)
         CCoinsMap::iterator itOld = it++;
         mapCoins.erase(itOld);
     }
+
+    // Write Sapling
+    BatchWriteSapling(hashSaplingAnchor, mapSaplingAnchors, mapSaplingNullifiers, batch);
+
     if (!hashBlock.IsNull())
         batch.Write(DB_BEST_BLOCK, hashBlock);
 
@@ -193,16 +201,6 @@ void CCoinsViewDBCursor::Next()
     }
 }
 
-bool CBlockTreeDB::WriteMoneySupply(const int64_t& nSupply)
-{
-    return Write(DB_MONEY_SUPPLY, nSupply);
-}
-
-bool CBlockTreeDB::ReadMoneySupply(int64_t& nSupply) const
-{
-    return Read(DB_MONEY_SUPPLY, nSupply);
-}
-
 bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo) {
     CDBBatch batch;
     for (std::vector<std::pair<int, const CBlockFileInfo*> >::const_iterator it=fileInfo.begin(); it != fileInfo.end(); it++) {
@@ -252,9 +250,9 @@ bool CBlockTreeDB::ReadInt(const std::string& name, int& nValue)
     return Read(std::make_pair('I', name), nValue);
 }
 
-bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256&)> insertBlockIndex)
+bool CBlockTreeDB::LoadBlockIndexGuts(std::function<CBlockIndex*(const uint256&)> insertBlockIndex)
 {
-    boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
 
     pcursor->Seek(std::make_pair(DB_BLOCK_INDEX, UINT256_ZERO));
 
@@ -279,6 +277,10 @@ bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256
                 pindexNew->nNonce = diskindex.nNonce;
                 pindexNew->nStatus = diskindex.nStatus;
                 pindexNew->nTx = diskindex.nTx;
+
+                // sapling
+                pindexNew->nSaplingValue  = diskindex.nSaplingValue;
+                pindexNew->hashFinalSaplingRoot = diskindex.hashFinalSaplingRoot;
 
                 //zerocoin
                 pindexNew->nAccumulatorCheckpoint = diskindex.nAccumulatorCheckpoint;
@@ -389,7 +391,7 @@ bool CZerocoinDB::WipeCoins(std::string strType)
     if (strType != "spends" && strType != "mints")
         return error("%s: did not recognize type %s", __func__, strType);
 
-    boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
 
     char type = (strType == "spends" ? 's' : 'm');
     pcursor->Seek(std::make_pair(type, UINT256_ZERO));
@@ -451,7 +453,7 @@ bool CZerocoinDB::EraseAccChecksum(const uint32_t& nChecksum, const libzerocoin:
 
 bool CZerocoinDB::WipeAccChecksums()
 {
-    boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->Seek(std::make_pair(LZC_ACCUMCS, (uint32_t) 0));
     std::set<uint32_t> setDelete;
     while (pcursor->Valid()) {

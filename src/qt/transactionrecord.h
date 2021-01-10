@@ -9,6 +9,7 @@
 
 #include "amount.h"
 #include "script/script.h"
+#include "optional.h"
 #include "uint256.h"
 
 #include <QList>
@@ -61,9 +62,6 @@ public:
 
     /** Current number of blocks (to know whether cached status is still valid) */
     int cur_num_blocks;
-
-    //** Know when to update transaction for ix locks **/
-    int cur_num_ix_locks;
 };
 
 /** UI model for a transaction. A core transaction can be represented by multiple UI transactions if it has
@@ -94,7 +92,13 @@ public:
         P2CSDelegationSent, // Non-spendable P2CS delegated utxo. (coin-owner transferred ownership to external wallet)
         P2CSDelegationSentOwner, // Spendable P2CS delegated utxo. (coin-owner)
         P2CSUnlockOwner, // Coin-owner spent the delegated utxo
-        P2CSUnlockStaker // Staker watching the owner spent the delegated utxo
+        P2CSUnlockStaker, // Staker watching the owner spent the delegated utxo
+        SendToShielded, // Shielded send
+        RecvWithShieldedAddress, // Shielded receive
+        SendToSelfShieldedAddress, // Shielded send to self
+        SendToSelfShieldToTransparent, // Unshield coins to self
+        SendToSelfShieldToShieldChangeAddress, // Changing coins from one shielded address to another inside the wallet.
+        SendToNobody // Burned PIVs, op_return output.
     };
 
     /** Number of confirmation recommended for accepting a transaction */
@@ -120,12 +124,12 @@ public:
 
     /// Helpers
     static bool decomposeCoinStake(const CWallet* wallet, const CWalletTx& wtx,
-                                   const CAmount& nCredit, const CAmount& nDebit, bool fZSpendFromMe,
+                                   const CAmount& nCredit, const CAmount& nDebit,
                                    QList<TransactionRecord>& parts);
 
     static bool decomposeZcSpendTx(const CWallet* wallet, const CWalletTx& wtx,
-                                    const CAmount& nCredit, const CAmount& nDebit, bool fZSpendFromMe,
-                                    QList<TransactionRecord>& parts);
+                                   const CAmount& nCredit, const CAmount& nDebit,
+                                   QList<TransactionRecord>& parts);
 
     static bool decomposeP2CS(const CWallet* wallet, const CWalletTx& wtx,
                                     const CAmount& nCredit, const CAmount& nDebit,
@@ -136,14 +140,16 @@ public:
 
     static bool decomposeSendToSelfTransaction(const CWalletTx& wtx, const CAmount& nCredit,
                                     const CAmount& nDebit, bool involvesWatchAddress,
-                                    QList<TransactionRecord>& parts);
+                                    QList<TransactionRecord>& parts, const CWallet* wallet);
 
     static bool decomposeDebitTransaction(const CWallet* wallet, const CWalletTx& wtx,
                                                       const CAmount& nDebit, bool involvesWatchAddress,
                                                       QList<TransactionRecord>& parts);
 
+    static bool decomposeShieldedDebitTransaction(const CWallet* wallet, const CWalletTx& wtx, CAmount nTxFee,
+                                                  bool involvesWatchAddress, QList<TransactionRecord>& parts);
+
     static std::string getValueOrReturnEmpty(const std::map<std::string, std::string>& mapValue, const std::string& key);
-    static bool ExtractAddress(const CScript& scriptPubKey, bool fColdStake, std::string& addressStr);
     static void loadHotOrColdStakeOrContract(const CWallet* wallet, const CWalletTx& wtx,
                                             TransactionRecord& record, bool isContract = false);
     static void loadUnlockColdStake(const CWallet* wallet, const CWalletTx& wtx, TransactionRecord& record);
@@ -157,6 +163,8 @@ public:
     CAmount debit;
     CAmount credit;
     unsigned int size;
+    Optional<CAmount> shieldedCredit{nullopt};
+    Optional<std::string> memo{nullopt};
     /**@}*/
 
     /** Subtransaction index, for sort key */
