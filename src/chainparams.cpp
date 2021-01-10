@@ -222,7 +222,7 @@ public:
         pchMessageStart[1] = 0xc4;
         pchMessageStart[2] = 0xfd;
         pchMessageStart[3] = 0xe9;
-        nDefaultPort = 51472;
+        nDefaultPort = 51479;
 
         // Note that of those with the service bits flag, most only support a subset of possible options
         //vSeeds.emplace_back("fuzzbawls.pw", "yieldstakingwallet.seed.fuzzbawls.pw", true);     // Primary DNS Seeder from Fuzzbawls
