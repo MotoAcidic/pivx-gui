@@ -1,0 +1,11 @@
+[Protocol]
+exec=yieldstakingwallet-qt '%u'
+protocol=yieldstakingwallet
+input=none
+output=none
+helper=true
+listing=
+reading=false
+writing=false
+makedir=false
+deleting=false

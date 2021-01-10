@@ -1,0 +1,15 @@
+# http://standards.freedesktop.org/desktop-entry-spec/desktop-entry-spec-1.0.html
+
+[Desktop Entry]
+Encoding=UTF-8
+Name=YieldStakingWallet Core Daemon SNAP
+Comment=testnet
+GenericName=YieldStakingWallet Digital Currency Daemon Client testnet network
+Exec=yieldstakingwallet-core.daemon-testnet %u
+Terminal=true
+Type=Application
+Icon=${SNAP}/share/pixmaps/yieldsakingwallet_testnet.png
+MimeType=x-scheme-handler/ysw;
+Categories=X-Office;X-Finance;
+Keywords=internet;yieldstakingwallet;zysw;core;wallet;daemon;testnet;snap;launchpad;crypto;digital;currency;coin;token;zerocoin;
+Version=1.0

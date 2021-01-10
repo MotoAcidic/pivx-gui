@@ -1,0 +1,15 @@
+# http://standards.freedesktop.org/desktop-entry-spec/desktop-entry-spec-1.0.html
+
+[Desktop Entry]
+Encoding=UTF-8
+Name=YieldStakingWallet Core
+Comment=YieldStakingWallet Core QT main network
+GenericName=YieldStakingWallet Digital Currency QT client main network
+Exec=yieldstakingwallet-core.qt %u
+Terminal=false
+Type=Application
+Icon=${SNAP}/share/pixmaps/yieldstakingwallet.png
+MimeType=x-scheme-handler/yieldstakingwallet;
+Categories=X-Office;X-Finance;
+Keywords=internet;yieldstakingwallet;zysw;ysw;core;wallet;qt;main;snap;launchpad;crypto;digital;currency;coin;token;zerocoin;
+Version=1.0

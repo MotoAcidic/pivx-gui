@@ -1,9 +1,9 @@
-// Copyright (c) 2019-2020 The PIVX developers
+// Copyright (c) 2019-2020 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
-#ifndef PIVX_ZPIVMODULE_H
-#define PIVX_ZPIVMODULE_H
+#ifndef YieldSakingWallet_ZYSWMODULE_H
+#define YieldSakingWallet_ZYSWMODULE_H
 
 #include "libzerocoin/bignum.h"
 #include "libzerocoin/Denominations.h"
@@ -17,7 +17,7 @@
 #include "uint256.h"
 #include <streams.h>
 #include <utilstrencodings.h>
-#include "zpiv/zerocoin.h"
+#include "zysw/zerocoin.h"
 #include "chainparams.h"
 
 static int const PUBSPEND_SCHNORR = 4;
@@ -74,7 +74,7 @@ public:
 
 class CValidationState;
 
-namespace ZPIVModule {
+namespace ZYSWModule {
     CDataStream ScriptSigToSerializedSpend(const CScript& scriptSig);
     PublicCoinSpend parseCoinSpend(const CTxIn &in);
     bool parseCoinSpend(const CTxIn &in, const CTransaction& tx, const CTxOut &prevOut, PublicCoinSpend& publicCoinSpend);
@@ -92,4 +92,4 @@ namespace ZPIVModule {
 };
 
 
-#endif //PIVX_ZPIVMODULE_H
+#endif //YieldSakingWallet_ZYSWMODULE_H

@@ -1,14 +1,14 @@
-// Copyright (c) 2018-2020 The PIVX developers
+// Copyright (c) 2018-2020 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "zpivchain.h"
+#include "zyswchain.h"
 
 #include "guiinterface.h"
 #include "invalid.h"
 #include "txdb.h"
 #include "wallet/wallet.h"
-#include "zpiv/zpivmodule.h"
+#include "zysw/zyswmodule.h"
 
 // 6 comes from OPCODE (1) + vch.size() (1) + BIGNUM size (4)
 #define SCRIPT_OFFSET 6
@@ -254,7 +254,7 @@ bool RemoveSerialFromDB(const CBigNum& bnSerial)
 
 libzerocoin::CoinSpend TxInToZerocoinSpend(const CTxIn& txin)
 {
-    CDataStream serializedCoinSpend = ZPIVModule::ScriptSigToSerializedSpend(txin.scriptSig);
+    CDataStream serializedCoinSpend = ZYSWModule::ScriptSigToSerializedSpend(txin.scriptSig);
     return libzerocoin::CoinSpend(serializedCoinSpend);
 }
 

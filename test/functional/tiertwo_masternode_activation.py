@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The PIVX developers
+# Copyright (c) 2020 The YieldStakingWallet developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.test_framework import PivxTier2TestFramework
+from test_framework.test_framework import YieldSakingWalletTier2TestFramework
 from test_framework.util import (
     assert_equal,
     connect_nodes_clique,
@@ -27,7 +27,7 @@ Test checking:
  7) Masternode collateral spent removal.
 """
 
-class MasternodeActivationTest(PivxTier2TestFramework):
+class MasternodeActivationTest(YieldSakingWalletTier2TestFramework):
 
     def disconnect_remotes(self):
         for i in [self.remoteOnePos, self.remoteTwoPos]:

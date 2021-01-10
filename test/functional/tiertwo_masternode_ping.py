@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The PIVX developers
+# Copyright (c) 2020 The YieldStakingWallet developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.test_framework import PivxTestFramework
+from test_framework.test_framework import YieldSakingWalletTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -17,12 +17,12 @@ import time
 
 """
 Test checking masternode ping thread
-Does not use functions of PivxTier2TestFramework as we don't want to send
+Does not use functions of YieldSakingWalletTier2TestFramework as we don't want to send
 pings on demand. Here, instead, mocktime is disabled, and we just wait with
 time.sleep to verify that masternodes send pings correctly.
 """
 
-class MasternodePingTest(PivxTestFramework):
+class MasternodePingTest(YieldSakingWalletTestFramework):
 
     def set_test_params(self):
         self.setup_clean_chain = True

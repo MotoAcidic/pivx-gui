@@ -1,12 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2015-2020 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/pivx-config.h"
+#include "config/yieldstakingwallet-config.h"
 #endif
 
 #include "util.h"
@@ -82,12 +82,12 @@
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
 
-const char * const PIVX_CONF_FILENAME = "pivx.conf";
-const char * const PIVX_PID_FILENAME = "pivx.pid";
-const char * const PIVX_MASTERNODE_CONF_FILENAME = "masternode.conf";
+const char * const YieldSakingWallet_CONF_FILENAME = "yieldstakingwallet.conf";
+const char * const YieldSakingWallet_PID_FILENAME = "yieldstakingwallet.pid";
+const char * const YieldSakingWallet_MASTERNODE_CONF_FILENAME = "masternode.conf";
 
 
-// PIVX only features
+// YieldStakingWallet only features
 // Masternode
 std::atomic<bool> fMasterNode{false};
 std::string strMasterNodeAddr = "";
@@ -326,7 +326,7 @@ static std::string FormatException(const std::exception* pex, const char* pszThr
     char pszModule[MAX_PATH] = "";
     GetModuleFileNameA(NULL, pszModule, sizeof(pszModule));
 #else
-    const char* pszModule = "pivx";
+    const char* pszModule = "yieldstakingwallet";
 #endif
     if (pex)
         return strprintf(
@@ -345,13 +345,13 @@ void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
 
 fs::path GetDefaultDataDir()
 {
-// Windows < Vista: C:\Documents and Settings\Username\Application Data\PIVX
-// Windows >= Vista: C:\Users\Username\AppData\Roaming\PIVX
-// Mac: ~/Library/Application Support/PIVX
-// Unix: ~/.pivx
+// Windows < Vista: C:\Documents and Settings\Username\Application Data\YieldStakingWallet
+// Windows >= Vista: C:\Users\Username\AppData\Roaming\YieldStakingWallet
+// Mac: ~/Library/Application Support/YieldStakingWallet
+// Unix: ~/.yieldstakingwallet
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "PIVX";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "YieldStakingWallet";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -363,10 +363,10 @@ fs::path GetDefaultDataDir()
     // Mac
     pathRet /= "Library/Application Support";
     TryCreateDirectory(pathRet);
-    return pathRet / "PIVX";
+    return pathRet / "YieldStakingWallet";
 #else
     // Unix
-    return pathRet / ".pivx";
+    return pathRet / ".yieldstakingwallet";
 #endif
 #endif
 }
@@ -379,13 +379,13 @@ static RecursiveMutex csPathCached;
 static fs::path ZC_GetBaseParamsDir()
 {
     // Copied from GetDefaultDataDir and adapter for zcash params.
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\PIVXParams
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\PIVXParams
-    // Mac: ~/Library/Application Support/PIVXParams
-    // Unix: ~/.pivx-params
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\YieldSakingWalletParams
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\YieldSakingWalletParams
+    // Mac: ~/Library/Application Support/YieldSakingWalletParams
+    // Unix: ~/.yieldstakingwallet-params
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "PIVXParams";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "YieldSakingWalletParams";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -397,10 +397,10 @@ static fs::path ZC_GetBaseParamsDir()
     // Mac
     pathRet /= "Library/Application Support";
     TryCreateDirectory(pathRet);
-    return pathRet / "PIVXParams";
+    return pathRet / "YieldSakingWalletParams";
 #else
     // Unix
-    return pathRet / ".pivx-params";
+    return pathRet / ".yieldstakingwallet-params";
 #endif
 #endif
 }
@@ -466,14 +466,14 @@ void initZKSNARKS()
         CFRelease(mainBundle);
 #else
         // Linux fallback path for debuild/ppa based installs
-        sapling_spend = "/usr/share/pivx/sapling-spend.params";
-        sapling_output = "/usr/share/pivx/sapling-output.params";
+        sapling_spend = "/usr/share/yieldstakingwallet/sapling-spend.params";
+        sapling_output = "/usr/share/yieldstakingwallet/sapling-output.params";
         if (fs::exists(sapling_spend) && fs::exists(sapling_output)) {
             fParamsFound = true;
         } else {
             // Linux fallback for local installs
-            sapling_spend = "/usr/local/share/pivx/sapling-spend.params";
-            sapling_output = "/usr/local/share/pivx/sapling-output.params";
+            sapling_spend = "/usr/local/share/yieldstakingwallet/sapling-spend.params";
+            sapling_output = "/usr/local/share/yieldstakingwallet/sapling-output.params";
         }
 #endif
         if (fs::exists(sapling_spend) && fs::exists(sapling_output))
@@ -543,13 +543,13 @@ void ClearDatadirCache()
 
 fs::path GetConfigFile()
 {
-    fs::path pathConfigFile(gArgs.GetArg("-conf", PIVX_CONF_FILENAME));
+    fs::path pathConfigFile(gArgs.GetArg("-conf", YieldSakingWallet_CONF_FILENAME));
     return AbsPathForConfigVal(pathConfigFile, false);
 }
 
 fs::path GetMasternodeConfigFile()
 {
-    fs::path pathConfigFile(gArgs.GetArg("-mnconf", PIVX_MASTERNODE_CONF_FILENAME));
+    fs::path pathConfigFile(gArgs.GetArg("-mnconf", YieldSakingWallet_MASTERNODE_CONF_FILENAME));
     return AbsPathForConfigVal(pathConfigFile);
 }
 
@@ -557,7 +557,7 @@ void ArgsManager::ReadConfigFile()
 {
     fs::ifstream streamConfig(GetConfigFile());
     if (!streamConfig.good()) {
-        // Create empty pivx.conf if it does not exist
+        // Create empty yieldstakingwallet.conf if it does not exist
         FILE* configFile = fsbridge::fopen(GetConfigFile(), "a");
         if (configFile != NULL)
             fclose(configFile);
@@ -570,7 +570,7 @@ void ArgsManager::ReadConfigFile()
         setOptions.insert("*");
 
         for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it) {
-            // Don't overwrite existing settings so command line settings override pivx.conf
+            // Don't overwrite existing settings so command line settings override yieldstakingwallet.conf
             std::string strKey = std::string("-") + it->string_key;
             std::string strValue = it->value[0];
             InterpretNegatedOption(strKey, strValue);
@@ -594,7 +594,7 @@ fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific)
 #ifndef WIN32
 fs::path GetPidFile()
 {
-    fs::path pathPidFile(gArgs.GetArg("-pid", PIVX_PID_FILENAME));
+    fs::path pathPidFile(gArgs.GetArg("-pid", YieldSakingWallet_PID_FILENAME));
     return AbsPathForConfigVal(pathPidFile);
 }
 

@@ -1,9 +1,9 @@
-// Copyright (c) 2020 The PIVX Core developers
+// Copyright (c) 2020 The YieldStakingWallet Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIVX_SAPLINGSCRIPTPUBKEYMAN_H
-#define PIVX_SAPLINGSCRIPTPUBKEYMAN_H
+#ifndef YieldSakingWallet_SAPLINGSCRIPTPUBKEYMAN_H
+#define YieldSakingWallet_SAPLINGSCRIPTPUBKEYMAN_H
 
 #include "consensus/consensus.h"
 #include "sapling/note.h"
@@ -422,4 +422,4 @@ private:
     TxNullifiers mapTxSaplingNullifiers;
 };
 
-#endif //PIVX_SAPLINGSCRIPTPUBKEYMAN_H
+#endif //YieldSakingWallet_SAPLINGSCRIPTPUBKEYMAN_H

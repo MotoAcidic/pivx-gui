@@ -1,9 +1,9 @@
-// Copyright (c) 2018-2020 The PIVX developers
+// Copyright (c) 2018-2020 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIVX_ZPIVCHAIN_H
-#define PIVX_ZPIVCHAIN_H
+#ifndef YieldSakingWallet_ZYSWCHAIN_H
+#define YieldSakingWallet_ZYSWCHAIN_H
 
 #include "chain.h"
 #include "libzerocoin/Coin.h"
@@ -37,4 +37,4 @@ libzerocoin::CoinSpend TxInToZerocoinSpend(const CTxIn& txin);
 bool TxOutToPublicCoin(const CTxOut& txout, libzerocoin::PublicCoin& pubCoin, CValidationState& state);
 std::list<libzerocoin::CoinDenomination> ZerocoinSpendListFromBlock(const CBlock& block, bool fFilterInvalid);
 
-#endif //PIVX_ZPIVCHAIN_H
+#endif //YieldSakingWallet_ZYSWCHAIN_H

@@ -1,0 +1,81 @@
+policy_module(yieldstakingwallet, 1.100.1)
+
+########################################
+#
+# Declarations
+#
+
+type yieldsakingwallet_t;
+type yieldsakingwallet_exec_t;
+init_daemon_domain(yieldsakingwallet_t, yieldsakingwallet_exec_t)
+
+permissive yieldsakingwallet_t;
+
+type yieldsakingwallet_initrc_exec_t;
+init_script_file(yieldsakingwallet_initrc_exec_t)
+
+type yieldsakingwallet_conf_t;
+files_type(yieldsakingwallet_conf_t)
+
+type yieldsakingwallet_var_lib_t;
+files_type(yieldsakingwallet_var_lib_t)
+
+type yieldsakingwallet_var_run_t;
+files_type(yieldsakingwallet_var_run_t)
+
+type yieldsakingwallet_port_t;
+corenet_port(yieldsakingwallet_port_t)
+
+########################################
+#
+# yieldstakingwallet local policy
+#
+allow yieldsakingwallet_t self:process { fork };
+
+allow yieldsakingwallet_t self:fifo_file rw_fifo_file_perms;
+allow yieldsakingwallet_t self:unix_stream_socket create_stream_socket_perms;
+
+manage_dirs_pattern(yieldsakingwallet_t, yieldsakingwallet_conf_t, yieldsakingwallet_conf_t)
+manage_files_pattern(yieldsakingwallet_t, yieldsakingwallet_conf_t, yieldsakingwallet_conf_t)
+
+manage_dirs_pattern(yieldsakingwallet_t, yieldsakingwallet_var_lib_t, yieldsakingwallet_var_lib_t)
+manage_files_pattern(yieldsakingwallet_t, yieldsakingwallet_var_lib_t, yieldsakingwallet_var_lib_t)
+files_var_lib_filetrans(yieldsakingwallet_t, yieldsakingwallet_var_lib_t, { dir file })
+
+manage_dirs_pattern(yieldsakingwallet_t, yieldsakingwallet_var_run_t, yieldsakingwallet_var_run_t)
+manage_files_pattern(yieldsakingwallet_t, yieldsakingwallet_var_run_t, yieldsakingwallet_var_run_t)
+
+sysnet_dns_name_resolve(yieldsakingwallet_t)
+corenet_all_recvfrom_unlabeled(yieldsakingwallet_t)
+
+allow yieldsakingwallet_t self:tcp_socket create_stream_socket_perms;
+corenet_tcp_sendrecv_generic_if(yieldsakingwallet_t)
+corenet_tcp_sendrecv_generic_node(yieldsakingwallet_t)
+corenet_tcp_sendrecv_all_ports(yieldsakingwallet_t)
+corenet_tcp_bind_generic_node(yieldsakingwallet_t)
+
+gen_require(`
+    type yieldsakingwallet_port_t;
+')
+allow yieldsakingwallet_t yieldsakingwallet_port_t:tcp_socket name_bind;
+
+gen_require(`
+    type yieldsakingwallet_port_t;
+')
+allow yieldsakingwallet_t yieldsakingwallet_port_t:tcp_socket name_connect;
+
+domain_use_interactive_fds(yieldsakingwallet_t)
+
+files_read_etc_files(yieldsakingwallet_t)
+
+miscfiles_read_localization(yieldsakingwallet_t)
+
+sysnet_dns_name_resolve(yieldsakingwallet_t)
+
+allow yieldsakingwallet_t yieldsakingwallet_exec_t:file execute_no_trans;
+allow yieldsakingwallet_t self:process setsched;
+corecmd_exec_ls(yieldsakingwallet_t)
+corenet_tcp_connect_http_port(yieldsakingwallet_t)
+dev_read_urand(yieldsakingwallet_t)
+fs_getattr_xattr_fs(yieldsakingwallet_t)
+kernel_read_system_state(yieldsakingwallet_t)
