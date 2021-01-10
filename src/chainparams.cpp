@@ -71,7 +71,7 @@ static Checkpoints::MapCheckpoints mapCheckpoints =
 static const Checkpoints::CCheckpointData data = {
     &mapCheckpoints,
     1454124731, // * UNIX timestamp of last checkpoint block
-    5607713,    // * total number of transactions between genesis and last checkpoint
+    0,          // * total number of transactions between genesis and last checkpoint
                 //   (the tx=... number in the UpdateTip debug.log lines)
     3000        // * estimated number of transactions per day after checkpoint
 };
@@ -87,7 +87,7 @@ static const Checkpoints::CCheckpointData dataTestnet = {
     3000};
 
 static Checkpoints::MapCheckpoints mapCheckpointsRegtest =
-    boost::assign::map_list_of(0, uint256S("0x001"));
+    boost::assign::map_list_of(0, uint256S("00000bbe3ef624bcb4bd8647dd1e1c3588cd0eda94f6eff0553710c4aced291b"));
 static const Checkpoints::CCheckpointData dataRegtest = {
     &mapCheckpointsRegtest,
     1454124731,
@@ -196,8 +196,8 @@ public:
         consensus.vUpgrades[Consensus::UPGRADE_BIP65].nActivationHeight         = 101;
         consensus.vUpgrades[Consensus::UPGRADE_ZC_PUBLIC].nActivationHeight     = INT_MAX;
         consensus.vUpgrades[Consensus::UPGRADE_V3_4].nActivationHeight          = 101;
-        consensus.vUpgrades[Consensus::UPGRADE_V4_0].nActivationHeight          = 101;
-        consensus.vUpgrades[Consensus::UPGRADE_V5_0].nActivationHeight          = 2700500;
+        consensus.vUpgrades[Consensus::UPGRADE_V4_0].nActivationHeight          = 102;
+        consensus.vUpgrades[Consensus::UPGRADE_V5_0].nActivationHeight          = 103;
 
 
         consensus.vUpgrades[Consensus::UPGRADE_ZC].hashActivationBlock =
@@ -371,10 +371,10 @@ public:
         networkID = CBaseChainParams::REGTEST;
         strNetworkID = "regtest";
 
-        genesis = CreateGenesisBlock(1454124731, 2402015, 0x1e0ffff0, 1, 250 * COIN);
+        genesis = CreateGenesisBlock(1454124731, 2591414, 0x1e0ffff0, 1, 250 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x0000041e482b9b9691d98eefb48473405c0b8ec31b76df3797c74a78680ef818"));
-        assert(genesis.hashMerkleRoot == uint256S("0x1b2ef6e2f28be914103a277377ae7729dcd125dfeb8bf97bd5964ba72b6dc39b"));
+        assert(consensus.hashGenesisBlock == uint256S("00000bbe3ef624bcb4bd8647dd1e1c3588cd0eda94f6eff0553710c4aced291b"));
+        assert(genesis.hashMerkleRoot == uint256S("da19758e8ed2b7dbc7119cea537cee4450a41e9e0f86452b93a8bebadd4ec265"));
 
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.powLimit   = ~UINT256_ZERO >> 20;   // PIVX starting difficulty is 1 / 2^12
