@@ -104,7 +104,7 @@ public:
         genesis = CreateGenesisBlock(1454124731, 2402015, 0x1e0ffff0, 1, 250 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
-        hashGenesisBlock = genesis.GetHash();
+
         if (genesis.GetHash() != uint256("0x")) {
             printf("MSearching for genesis block...\n");
             uint256 hashTarget;
