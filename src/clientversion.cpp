@@ -13,7 +13,7 @@
  * for both yieldstakingwalletd and yieldstakingwallet-qt, to make it harder for attackers to
  * target servers or GUI users specifically.
  */
-const std::string CLIENT_NAME("YieldStakingWallet Core");
+const std::string CLIENT_NAME("Yield Staking Wallet Core");
 
 /**
  * Client version number
