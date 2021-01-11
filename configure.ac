@@ -14,7 +14,7 @@ AC_CONFIG_HEADERS([src/config/yieldstakingwallet-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
-BITCOIN_DAEMON_NAME=yieldsakingwalletd
+BITCOIN_DAEMON_NAME=yieldstakingwalletd
 BITCOIN_GUI_NAME=yieldstakingwallet-qt
 BITCOIN_CLI_NAME=yieldstakingwallet-cli
 BITCOIN_TX_NAME=yieldstakingwallet-tx
@@ -471,7 +471,7 @@ AC_ARG_WITH([libs],
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
-  [build yieldsakingwalletd daemon (default=yes)])],
+  [build yieldstakingwalletd daemon (default=yes)])],
   [build_bitcoind=$withval],
   [build_bitcoind=yes])
 
@@ -1220,7 +1220,7 @@ AX_CHECK_COMPILE_FLAG([-Wno-builtin-declaration-mismatch],[CXXFLAGS="$CXXFLAGS -
 
 LIBZCASH_LIBS="$BOOST_SYSTEM_LIB $CRYPTO_LIBS $SODIUM_LIBS $RUST_LIBS"
 
-AC_MSG_CHECKING([whether to build yieldsakingwalletd])
+AC_MSG_CHECKING([whether to build yieldstakingwalletd])
 AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_bitcoind = xyes])
 AC_MSG_RESULT($build_bitcoind)
 
@@ -1352,7 +1352,7 @@ if test x$bitcoin_enable_qt != xno; then
     AC_MSG_WARN("xgettext is required to update qt translations")
   fi
 
-  AC_MSG_CHECKING([whether to build test_yieldsakingwallet-qt])
+  AC_MSG_CHECKING([whether to build test_yieldstakingwallet-qt])
   if test x$use_gui_tests$bitcoin_enable_qt_test = xyesyes; then
     AC_MSG_RESULT([yes])
     BUILD_TEST_QT="yes"
@@ -1379,7 +1379,7 @@ esac
 AM_CONDITIONAL([USE_NUM_GMP], [test "x$set_bignum" = "xgmp"])
 AM_CONDITIONAL([USE_NUM_OPENSSL], [test "x$set_bignum" = "xopenssl"])
 
-AC_MSG_CHECKING([whether to build test_yieldsakingwallet])
+AC_MSG_CHECKING([whether to build test_yieldstakingwallet])
 if test x$use_tests = xyes; then
   AC_MSG_RESULT([yes])
   BUILD_TEST="yes"

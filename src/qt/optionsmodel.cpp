@@ -192,7 +192,7 @@ void OptionsModel::setDisplayDefaultOptions(QSettings& settings, bool reset)
         addOverriddenOption("-lang");
 
     if (settings.contains("nAnonymizeYieldSakingWalletAmount") || reset)
-        gArgs.SoftSetArg("-anonymizeyieldsakingwalletamount", settings.value("nAnonymizeYieldSakingWalletAmount").toString().toStdString());
+        gArgs.SoftSetArg("-anonymizeyieldstakingwalletamount", settings.value("nAnonymizeYieldSakingWalletAmount").toString().toStdString());
 
     if (!settings.contains("strThirdPartyTxUrls") || reset)
         settings.setValue("strThirdPartyTxUrls", "");

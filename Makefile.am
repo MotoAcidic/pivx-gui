@@ -41,7 +41,7 @@ OSX_QT_TRANSLATIONS = da,de,es,hu,ru,uk,zh_CN,zh_TW
 DIST_DOCS = $(wildcard doc/*.md) $(wildcard doc/release-notes/*.md)
 DIST_CONTRIB = $(top_srcdir)/contrib/yieldstakingwallet-cli.bash-completion \
 	       $(top_srcdir)/contrib/yieldstakingwallet-tx.bash-completion \
-	       $(top_srcdir)/contrib/yieldsakingwalletd.bash-completion \
+	       $(top_srcdir)/contrib/yieldstakingwalletd.bash-completion \
            $(top_srcdir)/contrib/init \
            $(top_srcdir)/contrib/install_db4.sh
 
@@ -64,9 +64,9 @@ WINDOWS_PACKAGING = $(top_srcdir)/share/pixmaps/yieldstakingwallet.ico \
   $(top_srcdir)/share/pixmaps/nsis-wizard.bmp \
   $(top_srcdir)/doc/README_windows.txt
 
-LINUX_PACKAGING = $(top_srcdir)/share/pixmaps/yieldsakingwallet16.xpm \
-  $(top_srcdir)/share/pixmaps/yieldsakingwallet32.xpm \
-  $(top_srcdir)/share/pixmaps/yieldsakingwallet128.png
+LINUX_PACKAGING = $(top_srcdir)/share/pixmaps/yieldstakingwallet16.xpm \
+  $(top_srcdir)/share/pixmaps/yieldstakingwallet32.xpm \
+  $(top_srcdir)/share/pixmaps/yieldstakingwallet128.png
 
 OSX_PACKAGING = $(OSX_DEPLOY_SCRIPT) $(OSX_FANCY_PLIST) $(OSX_INSTALLER_ICONS) \
   $(top_srcdir)/contrib/macdeploy/$(OSX_BACKGROUND_SVG) \
@@ -78,9 +78,9 @@ SPEND_PARAMS = $(top_srcdir)/params/sapling-spend.params
 OUTPUT_PARAMS = $(top_srcdir)/params/sapling-output.params
 
 COVERAGE_INFO = baseline.info \
-  test_yieldsakingwallet_filtered.info total_coverage.info \
+  test_yieldstakingwallet_filtered.info total_coverage.info \
   baseline_filtered.info functional_test.info functional_test_filtered.info \
-  test_yieldsakingwallet_coverage.info test_yieldsakingwallet.info
+  test_yieldstakingwallet_coverage.info test_yieldstakingwallet.info
 
 dist-hook:
 	-$(GIT) archive --format=tar HEAD -- src/clientversion.cpp | $(AMTAR) -C $(top_distdir) -xf -
@@ -202,16 +202,16 @@ baseline_filtered.info: baseline.info
 	$(abs_builddir)/contrib/filter-lcov.py $(LCOV_FILTER_PATTERN) $< $@
 	$(LCOV) -a $@ $(LCOV_OPTS) -o $@
 
-test_yieldsakingwallet.info: baseline_filtered.info
+test_yieldstakingwallet.info: baseline_filtered.info
 	$(MAKE) -C src/ check
-	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src -t test_yieldsakingwallet -o $@
+	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src -t test_yieldstakingwallet -o $@
 	$(LCOV) -z $(LCOV_OPTS) -d $(abs_builddir)/src
 
-test_yieldsakingwallet_filtered.info: test_yieldsakingwallet.info
+test_yieldstakingwallet_filtered.info: test_yieldstakingwallet.info
 	$(abs_builddir)/contrib/filter-lcov.py $(LCOV_FILTER_PATTERN) $< $@
 	$(LCOV) -a $@ $(LCOV_OPTS) -o $@
 
-functional_test.info: test_yieldsakingwallet_filtered.info
+functional_test.info: test_yieldstakingwallet_filtered.info
 	-@TIMEOUT=15 test/functional/test_runner.py $(EXTENDED_FUNCTIONAL_TESTS)
 	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src --t functional-tests -o $@
 	$(LCOV) -z $(LCOV_OPTS) -d $(abs_builddir)/src
@@ -220,13 +220,13 @@ functional_test_filtered.info: functional_test.info
 	$(abs_builddir)/contrib/filter-lcov.py $(LCOV_FILTER_PATTERN) $< $@
 	$(LCOV) -a $@ $(LCOV_OPTS) -o $@
 
-test_yieldsakingwallet_coverage.info: baseline_filtered.info test_yieldsakingwallet_filtered.info
-	$(LCOV) -a $(LCOV_OPTS) baseline_filtered.info -a test_yieldsakingwallet_filtered.info -o $@
+test_yieldstakingwallet_coverage.info: baseline_filtered.info test_yieldstakingwallet_filtered.info
+	$(LCOV) -a $(LCOV_OPTS) baseline_filtered.info -a test_yieldstakingwallet_filtered.info -o $@
 
-total_coverage.info: test_yieldsakingwallet_filtered.info functional_test_filtered.info
-	$(LCOV) -a $(LCOV_OPTS) baseline_filtered.info -a test_yieldsakingwallet_filtered.info -a functional_test_filtered.info -o $@ | $(GREP) "\%" | $(AWK) '{ print substr($$3,2,50) "/" $$5 }' > coverage_percent.txt
+total_coverage.info: test_yieldstakingwallet_filtered.info functional_test_filtered.info
+	$(LCOV) -a $(LCOV_OPTS) baseline_filtered.info -a test_yieldstakingwallet_filtered.info -a functional_test_filtered.info -o $@ | $(GREP) "\%" | $(AWK) '{ print substr($$3,2,50) "/" $$5 }' > coverage_percent.txt
 
-test_yieldsakingwallet.coverage/.dirstamp:  test_yieldsakingwallet_coverage.info
+test_yieldstakingwallet.coverage/.dirstamp:  test_yieldstakingwallet_coverage.info
 	$(GENHTML) -s $(LCOV_OPTS) $< -o $(@D)
 	@touch $@
 
@@ -234,7 +234,7 @@ total.coverage/.dirstamp: total_coverage.info
 	$(GENHTML) -s $(LCOV_OPTS) $< -o $(@D)
 	@touch $@
 
-cov: test_yieldsakingwallet.coverage/.dirstamp total.coverage/.dirstamp
+cov: test_yieldstakingwallet.coverage/.dirstamp total.coverage/.dirstamp
 
 endif
 
@@ -290,6 +290,6 @@ clean-docs:
 	rm -rf doc/doxygen
 
 clean-local: clean-docs
-	rm -rf coverage_percent.txt test_yieldsakingwallet.coverage/ total.coverage/ test/tmp/ cache/ $(OSX_APP)
+	rm -rf coverage_percent.txt test_yieldstakingwallet.coverage/ total.coverage/ test/tmp/ cache/ $(OSX_APP)
 	rm -rf test/functional/__pycache__ test/functional/test_framework/__pycache__ test/cache share/rpcauth/__pycache__
 

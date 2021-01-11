@@ -5,7 +5,7 @@
 #include "qt/yieldstakingwallet/tooltipmenu.h"
 #include "qt/yieldstakingwallet/forms/ui_tooltipmenu.h"
 
-#include "qt/yieldstakingwallet/yieldsakingwalletgui.h"
+#include "qt/yieldstakingwallet/yieldstakingwalletgui.h"
 #include "qt/yieldstakingwallet/qtutils.h"
 #include <QTimer>
 

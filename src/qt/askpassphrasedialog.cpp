@@ -14,7 +14,7 @@
 #include "qt/yieldstakingwallet/qtutils.h"
 #include "qt/yieldstakingwallet/loadingdialog.h"
 #include "qt/yieldstakingwallet/defaultdialog.h"
-#include "qt/yieldstakingwallet/yieldsakingwalletgui.h"
+#include "qt/yieldstakingwallet/yieldstakingwalletgui.h"
 #include <QDebug>
 
 #include <QKeyEvent>

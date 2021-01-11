@@ -2510,7 +2510,7 @@ https://www.transifex.com/yieldstakingwallet-project/yieldstakingwallet-project-
 <context>
     <name>YieldSakingWalletGUI</name>
     <message>
-        <location filename="../yieldstakingwallet/yieldsakingwalletgui.cpp" line="+68"/>
+        <location filename="../yieldstakingwallet/yieldstakingwalletgui.cpp" line="+68"/>
         <location line="+301"/>
         <location line="+69"/>
         <source>YieldStakingWallet Core</source>
@@ -6957,7 +6957,7 @@ YieldStakingWallet Core Wallet</source>
 <context>
     <name>yieldstakingwallet-core</name>
     <message>
-        <location filename="../yieldsakingwalletstrings.cpp" line="+18"/>
+        <location filename="../yieldstakingwalletstrings.cpp" line="+18"/>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation type="unfinished">Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</translation>
     </message>

@@ -53,8 +53,8 @@ endfunction()
 GenerateHeaders(${JSON_TEST_FILES})
 
 set(BITCOIN_TEST_SUITE
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_yieldsakingwallet.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_yieldsakingwallet.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/test_yieldstakingwallet.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/test_yieldstakingwallet.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/librust/sapling_test_fixture.h
         ${CMAKE_CURRENT_SOURCE_DIR}/librust/sapling_test_fixture.cpp
         ${CMAKE_SOURCE_DIR}/src/wallet/test/wallet_test_fixture.h
@@ -136,15 +136,15 @@ set(BITCOIN_TESTS
         ${CMAKE_SOURCE_DIR}/src/wallet/test/wallet_shielded_balances_tests.cpp
         )
 
-set(test_test_yieldsakingwallet_SOURCES ${BITCOIN_TEST_SUITE} ${BITCOIN_TESTS} ${JSON_TEST_FILES})
-add_executable(test_yieldsakingwallet ${test_test_yieldsakingwallet_SOURCES} ${BitcoinHeaders})
-add_dependencies(test_yieldsakingwallet genHeaders libunivalue libsecp256k1 libzcashrust leveldb crc32c)
-target_include_directories(test_yieldsakingwallet PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+set(test_test_yieldstakingwallet_SOURCES ${BITCOIN_TEST_SUITE} ${BITCOIN_TESTS} ${JSON_TEST_FILES})
+add_executable(test_yieldstakingwallet ${test_test_yieldstakingwallet_SOURCES} ${BitcoinHeaders})
+add_dependencies(test_yieldstakingwallet genHeaders libunivalue libsecp256k1 libzcashrust leveldb crc32c)
+target_include_directories(test_yieldstakingwallet PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/src/leveldb
         ${CMAKE_SOURCE_DIR}/src/leveldb/include
         ${CMAKE_SOURCE_DIR}/src/leveldb/helpers/memenv
         ${LIBEVENT_INCLUDE_DIR})
-target_link_libraries(test_yieldsakingwallet PRIVATE
+target_link_libraries(test_yieldstakingwallet PRIVATE
         SERVER_A
         CLI_A
         WALLET_A
@@ -161,24 +161,24 @@ target_link_libraries(test_yieldsakingwallet PRIVATE
         ${BerkeleyDB_LIBRARIES} ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${LIBEVENT_LIB} pthread
         )
 if(GMP_FOUND)
-    target_link_libraries(test_yieldsakingwallet PRIVATE ${GMP_LIBRARY})
-    target_include_directories(test_yieldsakingwallet PRIVATE ${GMP_INCLUDE_DIR})
+    target_link_libraries(test_yieldstakingwallet PRIVATE ${GMP_LIBRARY})
+    target_include_directories(test_yieldstakingwallet PRIVATE ${GMP_INCLUDE_DIR})
 endif()
 if(ZMQ_FOUND)
-    target_link_libraries(test_yieldsakingwallet PRIVATE ZMQ_A ${ZMQ_LIB})
-    target_include_directories(test_yieldsakingwallet PRIVATE ${ZMQ_INCLUDE_DIR})
+    target_link_libraries(test_yieldstakingwallet PRIVATE ZMQ_A ${ZMQ_LIB})
+    target_include_directories(test_yieldstakingwallet PRIVATE ${ZMQ_INCLUDE_DIR})
 endif()
 if(MINIUPNP_FOUND)
-    target_compile_definitions(test_yieldsakingwallet PRIVATE "-DSTATICLIB -DMINIUPNP_STATICLIB")
-    target_link_libraries(test_yieldsakingwallet PRIVATE ${MINIUPNP_LIBRARY})
-    target_include_directories(test_yieldsakingwallet PRIVATE ${MINIUPNP_INCLUDE_DIR})
+    target_compile_definitions(test_yieldstakingwallet PRIVATE "-DSTATICLIB -DMINIUPNP_STATICLIB")
+    target_link_libraries(test_yieldstakingwallet PRIVATE ${MINIUPNP_LIBRARY})
+    target_include_directories(test_yieldstakingwallet PRIVATE ${MINIUPNP_INCLUDE_DIR})
 endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    target_link_libraries(test_yieldsakingwallet PRIVATE "-framework Cocoa")
+    target_link_libraries(test_yieldstakingwallet PRIVATE "-framework Cocoa")
 endif()
 
-target_link_libraries(test_yieldsakingwallet PRIVATE ${sodium_LIBRARY_RELEASE} -ldl -lpthread)
+target_link_libraries(test_yieldstakingwallet PRIVATE ${sodium_LIBRARY_RELEASE} -ldl -lpthread)
 
 enable_testing()
-add_test(NAME btest_yieldsakingwallet COMMAND test_yieldsakingwallet)
+add_test(NAME btest_yieldstakingwallet COMMAND test_yieldstakingwallet)

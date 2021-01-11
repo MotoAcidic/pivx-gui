@@ -1,7 +1,7 @@
 // Copyright (c) 2020 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
-#include "test/test_yieldsakingwallet.h"
+#include "test/test_yieldstakingwallet.h"
 
 #include "base58.h"
 #include "key.h"

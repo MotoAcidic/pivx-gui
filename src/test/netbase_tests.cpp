@@ -6,7 +6,7 @@
 
 #include "net.h"    // validateMasternodeIP
 #include "netbase.h"
-#include "test/test_yieldsakingwallet.h"
+#include "test/test_yieldstakingwallet.h"
 
 #include <string>
 

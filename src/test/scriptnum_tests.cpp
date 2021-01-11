@@ -5,7 +5,7 @@
 
 #include "libzerocoin/bignum.h"
 #include "script/script.h"
-#include "test/test_yieldsakingwallet.h"
+#include "test/test_yieldstakingwallet.h"
 
 #include <boost/test/unit_test.hpp>
 #include <limits.h>

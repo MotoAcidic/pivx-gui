@@ -46,9 +46,9 @@ QString BitcoinUnits::id(int unit)
     case YSW:
         return QString("yieldstakingwallet");
     case mYSW:
-        return QString("myieldsakingwallet");
+        return QString("myieldstakingwallet");
     case uYSW:
-        return QString::fromUtf8("uyieldsakingwallet");
+        return QString::fromUtf8("uyieldstakingwallet");
     default:
         return QString("???");
     }

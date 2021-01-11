@@ -486,7 +486,7 @@ UniValue getnewaddress(const JSONRPCRequest& request)
             "1. \"label\"        (string, optional) The label name for the address to be linked to. if not provided, the default label \"\" is used. It can also be set to the empty string \"\" to represent the default label. The label does not need to exist, it will be created if there is no label by the given name.\n"
 
             "\nResult:\n"
-            "\"yieldsakingwalletaddress\"    (string) The new yieldstakingwallet address\n"
+            "\"yieldstakingwalletaddress\"    (string) The new yieldstakingwallet address\n"
 
             "\nExamples:\n" +
             HelpExampleCli("getnewaddress", "") + HelpExampleRpc("getnewaddress", ""));
@@ -507,7 +507,7 @@ UniValue getnewstakingaddress(const JSONRPCRequest& request)
 
 
             "\nResult:\n"
-            "\"yieldsakingwalletaddress\"    (string) The new yieldstakingwallet address\n"
+            "\"yieldstakingwalletaddress\"    (string) The new yieldstakingwallet address\n"
 
             "\nExamples:\n" +
             HelpExampleCli("getnewstakingaddress", "") + HelpExampleRpc("getnewstakingaddress", ""));
@@ -899,11 +899,11 @@ UniValue setlabel(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
-            "setlabel \"yieldsakingwalletaddress\" \"label\"\n"
+            "setlabel \"yieldstakingwalletaddress\" \"label\"\n"
             "\nSets the label associated with the given address.\n"
 
             "\nArguments:\n"
-            "1. \"yieldsakingwalletaddress\"   (string, required) The yieldstakingwallet address to be associated with a label.\n"
+            "1. \"yieldstakingwalletaddress\"   (string, required) The yieldstakingwallet address to be associated with a label.\n"
             "2. \"label\"         (string, required) The label to assign to the address.\n"
 
             "\nExamples:\n" +
@@ -1012,12 +1012,12 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 4)
         throw std::runtime_error(
-            "sendtoaddress \"yieldsakingwalletaddress\" amount ( \"comment\" \"comment-to\" )\n"
+            "sendtoaddress \"yieldstakingwalletaddress\" amount ( \"comment\" \"comment-to\" )\n"
             "\nSend an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n" +
             HelpRequiringPassphrase() + "\n"
 
             "\nArguments:\n"
-            "1. \"yieldsakingwalletaddress\"  (string, required) The yieldstakingwallet address to send to.\n"
+            "1. \"yieldstakingwalletaddress\"  (string, required) The yieldstakingwallet address to send to.\n"
             "2. \"amount\"      (numeric, required) The amount in YSW to send. eg 0.1\n"
             "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
             "                             This is not part of the transaction, just kept in your wallet.\n"
@@ -1348,7 +1348,7 @@ UniValue viewshieldtransaction(const JSONRPCRequest& request)
                 "      \"spend\" : n,                    (numeric, sapling) the index of the spend within vShieldedSpend\n"
                 "      \"txidPrev\" : \"transactionid\",   (string) The id for the transaction this note was created in\n"
                 "      \"outputPrev\" : n,               (numeric, sapling) the index of the output within the vShieldedOutput\n"
-                "      \"address\" : \"yieldsakingwalletaddress\",     (string) The YieldStakingWallet address involved in the transaction\n"
+                "      \"address\" : \"yieldstakingwalletaddress\",     (string) The YieldStakingWallet address involved in the transaction\n"
                 "      \"value\" : x.xxx                 (numeric) The amount in " + CURRENCY_UNIT + "\n"
                 "      \"valueSat\" : xxxx               (numeric) The amount in satoshis\n"
                 "    }\n"
@@ -1357,7 +1357,7 @@ UniValue viewshieldtransaction(const JSONRPCRequest& request)
                 "  \"outputs\" : [\n"
                 "    {\n"
                 "      \"output\" : n,                   (numeric, sapling) the index of the output within the vShieldedOutput\n"
-                "      \"address\" : \"yieldsakingwalletaddress\",     (string) The YieldStakingWallet address involved in the transaction\n"
+                "      \"address\" : \"yieldstakingwalletaddress\",     (string) The YieldStakingWallet address involved in the transaction\n"
                 "      \"outgoing\" : true|false         (boolean, sapling) True if the output is not for an address in the wallet\n"
                 "      \"value\" : x.xxx                 (numeric) The amount in " + CURRENCY_UNIT + "\n"
                 "      \"valueSat\" : xxxx               (numeric) The amount in satoshis\n"
@@ -1751,7 +1751,7 @@ UniValue listaddressgroupings(const JSONRPCRequest& request)
             "[\n"
             "  [\n"
             "    [\n"
-            "      \"yieldsakingwalletaddress\",     (string) The yieldstakingwallet address\n"
+            "      \"yieldstakingwalletaddress\",     (string) The yieldstakingwallet address\n"
             "      amount,                 (numeric) The amount in YSW\n"
             "      \"label\"             (string, optional) The label\n"
             "    ]\n"
@@ -1788,12 +1788,12 @@ UniValue signmessage(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
-            "signmessage \"yieldsakingwalletaddress\" \"message\"\n"
+            "signmessage \"yieldstakingwalletaddress\" \"message\"\n"
             "\nSign a message with the private key of an address" +
             HelpRequiringPassphrase() + "\n"
 
             "\nArguments:\n"
-            "1. \"yieldsakingwalletaddress\"  (string, required) The yieldstakingwallet address to use for the private key.\n"
+            "1. \"yieldstakingwalletaddress\"  (string, required) The yieldstakingwallet address to use for the private key.\n"
             "2. \"message\"         (string, required) The message to create a signature of.\n"
 
             "\nResult:\n"
@@ -1843,11 +1843,11 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "getreceivedbyaddress \"yieldsakingwalletaddress\" ( minconf )\n"
-            "\nReturns the total amount received by the given yieldsakingwalletaddress in transactions with at least minconf confirmations.\n"
+            "getreceivedbyaddress \"yieldstakingwalletaddress\" ( minconf )\n"
+            "\nReturns the total amount received by the given yieldstakingwalletaddress in transactions with at least minconf confirmations.\n"
 
             "\nArguments:\n"
-            "1. \"yieldsakingwalletaddress\"  (string, required) The yieldstakingwallet address for transactions.\n"
+            "1. \"yieldstakingwalletaddress\"  (string, required) The yieldstakingwallet address for transactions.\n"
             "2. minconf             (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
 
             "\nResult:\n"
@@ -2207,7 +2207,7 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
             "3. \"label\"      (string, optional) A label to assign the addresses to.\n"
 
             "\nResult:\n"
-            "\"yieldsakingwalletaddress\"  (string) A yieldstakingwallet address associated with the keys.\n"
+            "\"yieldstakingwalletaddress\"  (string) A yieldstakingwallet address associated with the keys.\n"
 
             "\nExamples:\n"
             "\nAdd a multisig address from 2 addresses\n" +
@@ -2706,7 +2706,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"address\":\"yieldsakingwalletaddress\",    (string) The yieldstakingwallet address of the transaction.\n"
+            "    \"address\":\"yieldstakingwalletaddress\",    (string) The yieldstakingwallet address of the transaction.\n"
             "    \"category\":\"category\",      (string) The transaction category (send|receive|orphan|immature|generate).\n"
             "    \"amount\": x.xxx,          (numeric) The amount in YSW. This is negative for the 'send' category, and positive\n"
             "                                         for the 'receive' category,\n"
@@ -2815,7 +2815,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
             "\nResult:\n"
             "{\n"
             "  \"transactions\": [\n"
-            "    \"address\":\"yieldsakingwalletaddress\",    (string) The yieldstakingwallet address of the transaction. Not present for move transactions (category = move).\n"
+            "    \"address\":\"yieldstakingwalletaddress\",    (string) The yieldstakingwallet address of the transaction. Not present for move transactions (category = move).\n"
             "    \"category\":\"send|receive\",     (string) The transaction category. 'send' has negative amounts, 'receive' has positive amounts.\n"
             "    \"amount\": x.xxx,          (numeric) The amount in YSW. This is negative for the 'send' category, and for the 'move' category for moves \n"
             "                                          outbound. It is positive for the 'receive' category, and for the 'move' category for inbound funds.\n"
@@ -2912,7 +2912,7 @@ UniValue gettransaction(const JSONRPCRequest& request)
             "  \"timereceived\" : ttt,    (numeric) The time received in seconds since epoch (1 Jan 1970 GMT)\n"
             "  \"details\" : [\n"
             "    {\n"
-            "      \"address\" : \"yieldsakingwalletaddress\",   (string) The yieldstakingwallet address involved in the transaction\n"
+            "      \"address\" : \"yieldstakingwalletaddress\",   (string) The yieldstakingwallet address involved in the transaction\n"
             "      \"category\" : \"send|receive\",    (string) The category, either 'send' or 'receive'\n"
             "      \"amount\" : x.xxx                  (numeric) The amount in YSW\n"
             "      \"label\" : \"label\",              (string) A comment for the address/transaction, if any\n"
@@ -3237,7 +3237,7 @@ UniValue encryptwallet(const JSONRPCRequest& request)
             "\nNow set the passphrase to use the wallet, such as for signing or sending YSWs\n" +
             HelpExampleCli("walletpassphrase", "\"my pass phrase\"") +
             "\nNow we can so something like sign\n" +
-            HelpExampleCli("signmessage", "\"yieldsakingwalletaddress\" \"test message\"") +
+            HelpExampleCli("signmessage", "\"yieldstakingwalletaddress\" \"test message\"") +
             "\nNow lock the wallet again by removing the passphrase\n" +
             HelpExampleCli("walletlock", "") +
             "\nAs a json rpc call\n" +

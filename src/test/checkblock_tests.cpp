@@ -6,7 +6,7 @@
 // Unit tests for block.CheckBlock()
 //
 
-#include "test/test_yieldsakingwallet.h"
+#include "test/test_yieldstakingwallet.h"
 
 #include "clientversion.h"
 #include "fs.h"

@@ -21,7 +21,7 @@ Note: In preparation for the enforcement, upgraded peers will start rejecting no
 How to Upgrade
 ==============
 
-If you are running an older version, shut it down. Wait until it has completely shut down (which might take a few minutes for older versions), then run the installer (on Windows) or just copy over /Applications/YieldStakingWallet-Qt (on Mac) or yieldsakingwalletd/yieldstakingwallet-qt (on Linux).
+If you are running an older version, shut it down. Wait until it has completely shut down (which might take a few minutes for older versions), then run the installer (on Windows) or just copy over /Applications/YieldStakingWallet-Qt (on Mac) or yieldstakingwalletd/yieldstakingwallet-qt (on Linux).
 
 #### Sapling Parameters
 In order to run, YieldStakingWallet Core now requires two files, `sapling-output.params` and `sapling-spend.params` (with total size ~50 MB), to be saved in a specific location.
@@ -471,7 +471,7 @@ Each new command is detailed below:
         "spend" : n,                    (numeric, sapling) the index of the spend within vShieldedSpend
         "txidPrev" : "transactionid",   (string) The id for the transaction this note was created in
         "outputPrev" : n,               (numeric, sapling) the index of the output within the vShieldedOutput
-        "address" : "yieldsakingwalletaddress",      (string) The YieldStakingWallet address involved in the transaction
+        "address" : "yieldstakingwalletaddress",      (string) The YieldStakingWallet address involved in the transaction
         "value" : x.xxx                 (numeric) The amount in YSW
         "valueSat" : xxxx               (numeric) The amount in satoshis
       }
@@ -480,7 +480,7 @@ Each new command is detailed below:
     "outputs" : [
       {
         "output" : n,                   (numeric, sapling) the index of the output within the vShieldedOutput
-        "address" : "yieldsakingwalletaddress",      (string) The YieldStakingWallet address involved in the transaction
+        "address" : "yieldstakingwalletaddress",      (string) The YieldStakingWallet address involved in the transaction
         "outgoing" : true|false         (boolean, sapling) True if the output is not for an address in the wallet
         "value" : x.xxx                 (numeric) The amount in YSW
         "valueSat" : xxxx               (numeric) The amount in satoshis
@@ -878,7 +878,7 @@ Detailed release notes follow. This overview includes changes that affect behavi
 - #2112 `e7283dec9e` [Consensus] Set v5 enforcement height for mainnet (furszy)
 
 ### Build Systems
-- #1856 `1bbb906059` [CMake] Add test_yieldsakingwallet unit test target (Fuzzbawls)
+- #1856 `1bbb906059` [CMake] Add test_yieldstakingwallet unit test target (Fuzzbawls)
 - #1877 `a59e8273fb` [Misc] Fixing recurrent compiler warnings (furszy)
 - #1882 `5bd7d52c2c` [Build][Doc] Post branch-off/release maintenance (Fuzzbawls)
 - #1883 `e7d78bd2c2` [Build] Clean lcov artifacts from all paths (Fuzzbawls)
@@ -891,7 +891,7 @@ Detailed release notes follow. This overview includes changes that affect behavi
 - #2021 `3845c18723` [GA] Reduce number of concurrent jobs (Fuzzbawls)
 - #2022 `8385a96f94` [Build] Package sapling params in repo/release (Fuzzbawls)
 - #2036 `a3e75c2afa` [Build] Proper coverage for ppa (Fuzzbawls)
-- #2041 `a15dc3417d` [Build] CMake yieldsakingwalletd and unit tests: fixing missing MacOS framework. (furszy)
+- #2041 `a15dc3417d` [Build] CMake yieldstakingwalletd and unit tests: fixing missing MacOS framework. (furszy)
 - #2087 `869b621c2c` [Build] Unify header file extensions (Fuzzbawls)
 
 ### P2P/Network

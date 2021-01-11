@@ -4,7 +4,7 @@
 
 #include "cuckoocache.h"
 #include "script/sigcache.h"
-#include "test/test_yieldsakingwallet.h"
+#include "test/test_yieldstakingwallet.h"
 #include "random.h"
 
 #include <thread>

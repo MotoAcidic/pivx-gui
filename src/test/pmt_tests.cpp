@@ -9,7 +9,7 @@
 #include "uint256.h"
 #include "version.h"
 #include "consensus/merkle.h"
-#include "test/test_yieldsakingwallet.h"
+#include "test/test_yieldstakingwallet.h"
 
 #include <vector>
 

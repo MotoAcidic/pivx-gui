@@ -177,7 +177,7 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
             "         \"reqSigs\" : n,            (numeric) The required sigs\n"
             "         \"type\" : \"pubkeyhash\",  (string) The type, eg 'pubkeyhash'\n"
             "         \"addresses\" : [           (json array of string)\n"
-            "           \"yieldsakingwalletaddress\"        (string) yieldstakingwallet address\n"
+            "           \"yieldstakingwalletaddress\"        (string) yieldstakingwallet address\n"
             "           ,...\n"
             "         ]\n"
             "       }\n"

@@ -12,7 +12,7 @@
 #include "script/sign.h"
 #include "script/ismine.h"
 #include "uint256.h"
-#include "test_yieldsakingwallet.h"
+#include "test_yieldstakingwallet.h"
 
 
 #include <boost/test/unit_test.hpp>

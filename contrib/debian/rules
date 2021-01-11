@@ -1,9 +1,9 @@
 #!/usr/bin/make -f
 # -*- mode: makefile; coding: utf-8 -*-
 
-#DEB_MAKE_CHECK_TARGET = test_yieldsakingwallet
+#DEB_MAKE_CHECK_TARGET = test_yieldstakingwallet
 #build/bitcoind::
-#	$(if $(filter nocheck,$(DEB_BUILD_OPTIONS)),,src/test_yieldsakingwallet)
+#	$(if $(filter nocheck,$(DEB_BUILD_OPTIONS)),,src/test_yieldstakingwallet)
 
 DEB_INSTALL_EXAMPLES_bitcoind += debian/examples/*
 DEB_INSTALL_MANPAGES_bitcoind += debian/manpages/*

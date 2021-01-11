@@ -5,7 +5,7 @@
 
 #define BOOST_TEST_MODULE YieldStakingWallet Test Suite
 
-#include "test/test_yieldsakingwallet.h"
+#include "test/test_yieldstakingwallet.h"
 
 #include "guiinterface.h"
 #include "net_processing.h"
@@ -47,7 +47,7 @@ BasicTestingSetup::~BasicTestingSetup()
 TestingSetup::TestingSetup()
 {
         ClearDatadirCache();
-        pathTemp = GetTempPath() / strprintf("test_yieldsakingwallet_%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(100000)));
+        pathTemp = GetTempPath() / strprintf("test_yieldstakingwallet_%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(100000)));
         fs::create_directories(pathTemp);
         gArgs.ForceSetArg("-datadir", pathTemp.string());
         // Ideally we'd move all the RPC tests to the functional testing framework

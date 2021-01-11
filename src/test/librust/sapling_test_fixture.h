@@ -5,7 +5,7 @@
 #ifndef YieldSakingWallet_SAPLING_TEST_FIXTURE_H
 #define YieldSakingWallet_SAPLING_TEST_FIXTURE_H
 
-#include "test/test_yieldsakingwallet.h"
+#include "test/test_yieldstakingwallet.h"
 
 /**
  * Testing setup that configures a complete environment for Sapling testing.

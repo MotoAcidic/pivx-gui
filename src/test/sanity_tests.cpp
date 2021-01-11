@@ -4,7 +4,7 @@
 
 #include "compat/sanity.h"
 #include "key.h"
-#include "test_yieldsakingwallet.h"
+#include "test_yieldstakingwallet.h"
 
 #include <boost/test/unit_test.hpp>
 

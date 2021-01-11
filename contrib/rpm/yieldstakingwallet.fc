@@ -1,8 +1,8 @@
-/usr/bin/yieldstakingwallet-cli		--	gen_context(system_u:object_r:yieldsakingwallet_exec_t,s0)
-/usr/sbin/yieldsakingwalletd		--	gen_context(system_u:object_r:yieldsakingwallet_exec_t,s0)
-/usr/lib(64)?/yieldstakingwallet/yieldsakingwalletd		--	gen_context(system_u:object_r:yieldsakingwallet_exec_t,s0)
+/usr/bin/yieldstakingwallet-cli		--	gen_context(system_u:object_r:yieldstakingwallet_exec_t,s0)
+/usr/sbin/yieldstakingwalletd		--	gen_context(system_u:object_r:yieldstakingwallet_exec_t,s0)
+/usr/lib(64)?/yieldstakingwallet/yieldstakingwalletd		--	gen_context(system_u:object_r:yieldstakingwallet_exec_t,s0)
 
-/etc/yieldstakingwallet(/.*)?		gen_context(system_u:object_r:yieldsakingwallet_conf_t,s0)
-/var/lib/yieldstakingwallet(/.*)?		gen_context(system_u:object_r:yieldsakingwallet_var_lib_t,s0)
+/etc/yieldstakingwallet(/.*)?		gen_context(system_u:object_r:yieldstakingwallet_conf_t,s0)
+/var/lib/yieldstakingwallet(/.*)?		gen_context(system_u:object_r:yieldstakingwallet_var_lib_t,s0)
 
-(/var)?/run/yieldsakingwalletd(/.*)?   gen_context(system_u:object_r:yieldsakingwallet_var_run_t,s0)
+(/var)?/run/yieldstakingwalletd(/.*)?   gen_context(system_u:object_r:yieldstakingwallet_var_run_t,s0)

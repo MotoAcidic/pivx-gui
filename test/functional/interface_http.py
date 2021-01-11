@@ -88,7 +88,7 @@ class HTTPBasicsTest (YieldSakingWalletTestFramework):
         conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
         out1 = conn.getresponse().read()
         assert(b'"error":null' in out1)
-        assert(conn.sock!=None) #connection must be closed because yieldsakingwalletd should use keep-alive by default
+        assert(conn.sock!=None) #connection must be closed because yieldstakingwalletd should use keep-alive by default
 
         # Check excessive request size
         conn = http.client.HTTPConnection(urlNode2.hostname, urlNode2.port)

@@ -7,7 +7,7 @@
 #  spendfrom.py  # Lists available funds
 #  spendfrom.py --from=ADDRESS --to=ADDRESS --amount=11.00
 #
-# Assumes it will talk to a yieldsakingwalletd or yieldstakingwallet-Qt running
+# Assumes it will talk to a yieldstakingwalletd or yieldstakingwallet-Qt running
 # on localhost.
 #
 # Depends on jsonrpc
@@ -72,7 +72,7 @@ def connect_JSON(config):
     try:
         result = ServiceProxy(connect)
         # ServiceProxy is lazy-connect, so send an RPC command mostly to catch connection errors,
-        # but also make sure the yieldsakingwalletd we're talking to is/isn't testnet:
+        # but also make sure the yieldstakingwalletd we're talking to is/isn't testnet:
         if result.getmininginfo()['testnet'] != testnet:
             sys.stderr.write("RPC server at "+connect+" testnet setting mismatch\n")
             sys.exit(1)
@@ -81,32 +81,32 @@ def connect_JSON(config):
         sys.stderr.write("Error connecting to RPC server at "+connect+"\n")
         sys.exit(1)
 
-def unlock_wallet(yieldsakingwalletd):
-    info = yieldsakingwalletd.getinfo()
+def unlock_wallet(yieldstakingwalletd):
+    info = yieldstakingwalletd.getinfo()
     if 'unlocked_until' not in info:
         return True # wallet is not encrypted
     t = int(info['unlocked_until'])
     if t <= time.time():
         try:
             passphrase = getpass.getpass("Wallet is locked; enter passphrase: ")
-            yieldsakingwalletd.walletpassphrase(passphrase, 5)
+            yieldstakingwalletd.walletpassphrase(passphrase, 5)
         except:
             sys.stderr.write("Wrong passphrase\n")
 
-    info = yieldsakingwalletd.getinfo()
+    info = yieldstakingwalletd.getinfo()
     return int(info['unlocked_until']) > time.time()
 
-def list_available(yieldsakingwalletd):
+def list_available(yieldstakingwalletd):
     address_summary = dict()
 
     address_to_account = dict()
-    for info in yieldsakingwalletd.listreceivedbyaddress(0):
+    for info in yieldstakingwalletd.listreceivedbyaddress(0):
         address_to_account[info["address"]] = info["account"]
 
-    unspent = yieldsakingwalletd.listunspent(0)
+    unspent = yieldstakingwalletd.listunspent(0)
     for output in unspent:
         # listunspent doesn't give addresses, so:
-        rawtx = yieldsakingwalletd.getrawtransaction(output['txid'], 1)
+        rawtx = yieldstakingwalletd.getrawtransaction(output['txid'], 1)
         vout = rawtx["vout"][output['vout']]
         pk = vout["scriptPubKey"]
 
@@ -139,8 +139,8 @@ def select_coins(needed, inputs):
         n += 1
     return (outputs, have-needed)
 
-def create_tx(yieldsakingwalletd, fromaddresses, toaddress, amount, fee):
-    all_coins = list_available(yieldsakingwalletd)
+def create_tx(yieldstakingwalletd, fromaddresses, toaddress, amount, fee):
+    all_coins = list_available(yieldstakingwalletd)
 
     total_available = Decimal("0.0")
     needed = amount+fee
@@ -159,7 +159,7 @@ def create_tx(yieldsakingwalletd, fromaddresses, toaddress, amount, fee):
     # Note:
     # Python's json/jsonrpc modules have inconsistent support for Decimal numbers.
     # Instead of wrestling with getting json.dumps() (used by jsonrpc) to encode
-    # Decimals, I'm casting amounts to float before sending them to yieldsakingwalletd.
+    # Decimals, I'm casting amounts to float before sending them to yieldstakingwalletd.
     #
     outputs = { toaddress : float(amount) }
     (inputs, change_amount) = select_coins(needed, potential_inputs)
@@ -170,8 +170,8 @@ def create_tx(yieldsakingwalletd, fromaddresses, toaddress, amount, fee):
         else:
             outputs[change_address] = float(change_amount)
 
-    rawtx = yieldsakingwalletd.createrawtransaction(inputs, outputs)
-    signed_rawtx = yieldsakingwalletd.signrawtransaction(rawtx)
+    rawtx = yieldstakingwalletd.createrawtransaction(inputs, outputs)
+    signed_rawtx = yieldstakingwalletd.signrawtransaction(rawtx)
     if not signed_rawtx["complete"]:
         sys.stderr.write("signrawtransaction failed\n")
         sys.exit(1)
@@ -179,10 +179,10 @@ def create_tx(yieldsakingwalletd, fromaddresses, toaddress, amount, fee):
 
     return txdata
 
-def compute_amount_in(yieldsakingwalletd, txinfo):
+def compute_amount_in(yieldstakingwalletd, txinfo):
     result = Decimal("0.0")
     for vin in txinfo['vin']:
-        in_info = yieldsakingwalletd.getrawtransaction(vin['txid'], 1)
+        in_info = yieldstakingwalletd.getrawtransaction(vin['txid'], 1)
         vout = in_info['vout'][vin['vout']]
         result = result + vout['value']
     return result
@@ -193,12 +193,12 @@ def compute_amount_out(txinfo):
         result = result + vout['value']
     return result
 
-def sanity_test_fee(yieldsakingwalletd, txdata_hex, max_fee):
+def sanity_test_fee(yieldstakingwalletd, txdata_hex, max_fee):
     class FeeError(RuntimeError):
         pass
     try:
-        txinfo = yieldsakingwalletd.decoderawtransaction(txdata_hex)
-        total_in = compute_amount_in(yieldsakingwalletd, txinfo)
+        txinfo = yieldstakingwalletd.decoderawtransaction(txdata_hex)
+        total_in = compute_amount_in(yieldstakingwalletd, txinfo)
         total_out = compute_amount_out(txinfo)
         if total_in-total_out > max_fee:
             raise FeeError("Rejecting transaction, unreasonable fee of "+str(total_in-total_out))
@@ -240,10 +240,10 @@ def main():
     check_json_precision()
     config = read_bitcoin_config(options.datadir)
     if options.testnet: config['testnet'] = True
-    yieldsakingwalletd = connect_JSON(config)
+    yieldstakingwalletd = connect_JSON(config)
 
     if options.amount is None:
-        address_summary = list_available(yieldsakingwalletd)
+        address_summary = list_available(yieldstakingwalletd)
         for address,info in address_summary.iteritems():
             n_transactions = len(info['outputs'])
             if n_transactions > 1:
@@ -253,14 +253,14 @@ def main():
     else:
         fee = Decimal(options.fee)
         amount = Decimal(options.amount)
-        while unlock_wallet(yieldsakingwalletd) == False:
+        while unlock_wallet(yieldstakingwalletd) == False:
             pass # Keep asking for passphrase until they get it right
-        txdata = create_tx(yieldsakingwalletd, options.fromaddresses.split(","), options.to, amount, fee)
-        sanity_test_fee(yieldsakingwalletd, txdata, amount*Decimal("0.01"))
+        txdata = create_tx(yieldstakingwalletd, options.fromaddresses.split(","), options.to, amount, fee)
+        sanity_test_fee(yieldstakingwalletd, txdata, amount*Decimal("0.01"))
         if options.dry_run:
             print(txdata)
         else:
-            txid = yieldsakingwalletd.sendrawtransaction(txdata)
+            txid = yieldstakingwalletd.sendrawtransaction(txdata)
             print(txid)
 
 if __name__ == '__main__':

@@ -5,7 +5,7 @@
 #ifndef QTUTILS_H
 #define QTUTILS_H
 
-#include "qt/yieldstakingwallet/yieldsakingwalletgui.h"
+#include "qt/yieldstakingwallet/yieldstakingwalletgui.h"
 
 #include <QAbstractAnimation>
 #include <QColor>

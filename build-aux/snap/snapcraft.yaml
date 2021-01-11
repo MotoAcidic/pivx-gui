@@ -17,16 +17,16 @@ confinement: strict
 
 apps:
   daemon:
-    command: yieldsakingwalletd
+    command: yieldstakingwalletd
     plugs: [network, network-bind, home, removable-media]
-    desktop: yieldsakingwalletd.desktop
+    desktop: yieldstakingwalletd.desktop
     environment:
       XDG_DATA_DIRS: $SNAP_USER_DATA:$SNAP/usr/share:$XDG_DATA_DIRS
       HOME: $SNAP_USER_COMMON
   daemon-testnet:
-    command: yieldsakingwalletd --testnet
+    command: yieldstakingwalletd --testnet
     plugs: [network, network-bind, home, removable-media]
-    desktop: yieldsakingwalletd_testnet.desktop
+    desktop: yieldstakingwalletd_testnet.desktop
     environment:
       XDG_DATA_DIRS: $SNAP_USER_DATA:$SNAP/usr/share:$XDG_DATA_DIRS
       HOME: $SNAP_USER_COMMON
@@ -62,10 +62,10 @@ apps:
     command: yieldstakingwallet-tx
     plugs: [home]
   test:
-    command: test_yieldsakingwallet
+    command: test_yieldstakingwallet
     plugs: [home]
   testqt:
-    command: test_yieldsakingwallet-qt
+    command: test_yieldstakingwallet-qt
     plugs: [home]
 
 layout:
@@ -228,7 +228,7 @@ parts:
       echo "+++++++++++++++++++++++++++++++++++++++++++++++"
       make install prefix=${SNAPCRAFT_PART_INSTALL}
       install -m 0644 -D -T $SNAPCRAFT_PART_BUILD/src/qt/res/icons/bitcoin.png $SNAPCRAFT_PART_INSTALL/share/pixmaps/yieldstakingwallet.png
-      install -m 0644 -D -T $SNAPCRAFT_PART_BUILD/src/qt/res/icons/bitcoin_testnet.png $SNAPCRAFT_PART_INSTALL/share/pixmaps/yieldsakingwallet_testnet.png
+      install -m 0644 -D -T $SNAPCRAFT_PART_BUILD/src/qt/res/icons/bitcoin_testnet.png $SNAPCRAFT_PART_INSTALL/share/pixmaps/yieldstakingwallet_testnet.png
       echo "-----------------------------------------------"
       echo "+++++++++++++++++++++++++++++++++++++++++++++++"
       echo "POST INSTALL SCRIPTS OF ${BINPREF}-${SNAPCRAFT_PROJECT_VERSION}" # run make install with a prefix where to install

@@ -1,4 +1,4 @@
-#include "test/test_yieldsakingwallet.h"
+#include "test/test_yieldstakingwallet.h"
 #include "crypto/sha256.h"
 #include "uint256.h"
 

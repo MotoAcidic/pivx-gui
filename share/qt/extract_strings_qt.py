@@ -10,7 +10,7 @@ import operator
 import os
 import sys
 
-OUT_CPP="qt/yieldsakingwalletstrings.cpp"
+OUT_CPP="qt/yieldstakingwalletstrings.cpp"
 EMPTY=['""']
 
 def parse_po(text):
@@ -74,7 +74,7 @@ f.write("""
 #define UNUSED
 #endif
 """)
-f.write('static const char UNUSED *yieldsakingwallet_strings[] = {\n')
+f.write('static const char UNUSED *yieldstakingwallet_strings[] = {\n')
 messages.sort(key=operator.itemgetter(0))
 for (msgid, msgstr) in messages:
     if msgid != EMPTY:

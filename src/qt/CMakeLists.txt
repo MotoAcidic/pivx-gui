@@ -111,7 +111,7 @@ SET(QT_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/transactiontablemodel.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/walletmodel.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/walletmodeltransaction.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/yieldstakingwallet/yieldsakingwalletgui.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/yieldstakingwallet/yieldstakingwalletgui.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/yieldstakingwallet/loadingdialog.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/yieldstakingwallet/pwidget.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/yieldstakingwallet/focuseddialog.cpp
@@ -214,7 +214,7 @@ QT5_ADD_TRANSLATION(QM ${QT_TRANSLATIONS_FILES})
 add_custom_target(translations_target ALL DEPENDS ${QM})
 
 QT5_ADD_RESOURCES(QRC_RESOURCE yieldstakingwallet.qrc)
-QT5_ADD_RESOURCES(QRC_LOCALE_RESOURCE yieldsakingwallet_locale.qrc)
+QT5_ADD_RESOURCES(QRC_LOCALE_RESOURCE yieldstakingwallet_locale.qrc)
 
 add_executable(yieldstakingwallet-qt yieldstakingwallet.cpp ${QM} ${QRC_RESOURCE} ${QRC_LOCALE_RESOURCE})
 add_dependencies(yieldstakingwallet-qt translations_target libunivalue libsecp256k1 libzcashrust leveldb crc32c)

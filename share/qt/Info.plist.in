@@ -71,7 +71,7 @@
         <string>application/x-yieldstakingwallet-payment-request</string>
         <key>public.filename-extension</key>
         <array>
-          <string>yieldsakingwalletpaymentrequest</string>
+          <string>yieldstakingwalletpaymentrequest</string>
         </array>
       </dict>
     </dict>

@@ -6,7 +6,7 @@
 #include "chainparams.h"
 #include "consensus/upgrades.h"
 #include "optional.h"
-#include "test/test_yieldsakingwallet.h"
+#include "test/test_yieldstakingwallet.h"
 
 #include <boost/test/unit_test.hpp>
 

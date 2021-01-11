@@ -7,7 +7,7 @@
 
 #include "key.h"
 #include "key_io.h"
-#include "test/test_yieldsakingwallet.h"
+#include "test/test_yieldstakingwallet.h"
 
 #include <string>
 #include <vector>

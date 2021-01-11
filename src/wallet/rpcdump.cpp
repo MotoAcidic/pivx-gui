@@ -83,12 +83,12 @@ UniValue importprivkey(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 4)
         throw std::runtime_error(
-            "importprivkey \"yieldsakingwalletprivkey\" ( \"label\" rescan fStakingAddress )\n"
+            "importprivkey \"yieldstakingwalletprivkey\" ( \"label\" rescan fStakingAddress )\n"
             "\nAdds a private key (as returned by dumpprivkey) to your wallet.\n" +
             HelpRequiringPassphrase() + "\n"
 
             "\nArguments:\n"
-            "1. \"yieldsakingwalletprivkey\"      (string, required) The private key (see dumpprivkey)\n"
+            "1. \"yieldstakingwalletprivkey\"      (string, required) The private key (see dumpprivkey)\n"
             "2. \"label\"            (string, optional, default=\"\") An optional label\n"
             "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
             "4. fStakingAddress      (boolean, optional, default=false) Whether this key refers to a (cold) staking address\n"
@@ -412,13 +412,13 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "dumpprivkey \"yieldsakingwalletaddress\"\n"
-            "\nReveals the private key corresponding to 'yieldsakingwalletaddress'.\n"
+            "dumpprivkey \"yieldstakingwalletaddress\"\n"
+            "\nReveals the private key corresponding to 'yieldstakingwalletaddress'.\n"
             "Then the importprivkey can be used with this output\n" +
             HelpRequiringPassphrase() + "\n"
 
             "\nArguments:\n"
-            "1. \"yieldsakingwalletaddress\"   (string, required) The yieldstakingwallet address for the private key\n"
+            "1. \"yieldstakingwalletaddress\"   (string, required) The yieldstakingwallet address for the private key\n"
 
             "\nResult:\n"
             "\"key\"                (string) The private key\n"
@@ -591,12 +591,12 @@ UniValue bip38encrypt(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
-            "bip38encrypt \"yieldsakingwalletaddress\" \"passphrase\"\n"
-            "\nEncrypts a private key corresponding to 'yieldsakingwalletaddress'.\n" +
+            "bip38encrypt \"yieldstakingwalletaddress\" \"passphrase\"\n"
+            "\nEncrypts a private key corresponding to 'yieldstakingwalletaddress'.\n" +
             HelpRequiringPassphrase() + "\n"
 
             "\nArguments:\n"
-            "1. \"yieldsakingwalletaddress\"   (string, required) The yieldstakingwallet address for the private key (you must hold the key already)\n"
+            "1. \"yieldstakingwalletaddress\"   (string, required) The yieldstakingwallet address for the private key (you must hold the key already)\n"
             "2. \"passphrase\"   (string, required) The passphrase you want the private key to be encrypted with - Valid special chars: !#$%&'()*+,-./:;<=>?`{|}~ \n"
 
             "\nResult:\n"
@@ -637,7 +637,7 @@ UniValue bip38decrypt(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
-            "bip38decrypt \"yieldsakingwalletaddress\" \"passphrase\"\n"
+            "bip38decrypt \"yieldstakingwalletaddress\" \"passphrase\"\n"
             "\nDecrypts and then imports password protected private key.\n" +
             HelpRequiringPassphrase() + "\n"
 

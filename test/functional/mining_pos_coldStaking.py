@@ -9,7 +9,7 @@ from time import sleep
 
 from test_framework.messages import CTransaction, CTxIn, CTxOut, COIN, COutPoint
 from test_framework.mininode import network_thread_start
-from test_framework.yieldsakingwallet_node import YieldSakingWalletTestNode
+from test_framework.yieldstakingwallet_node import YieldSakingWalletTestNode
 from test_framework.script import CScript, OP_CHECKSIG
 from test_framework.test_framework import YieldSakingWalletTestFramework
 from test_framework.util import (

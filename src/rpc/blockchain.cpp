@@ -806,7 +806,7 @@ UniValue gettxout(const JSONRPCRequest& request)
             "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
             "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
             "     \"addresses\" : [          (array of string) array of yieldstakingwallet addresses\n"
-            "     \"yieldsakingwalletaddress\"            (string) yieldstakingwallet address\n"
+            "     \"yieldstakingwalletaddress\"            (string) yieldstakingwallet address\n"
             "        ,...\n"
             "     ]\n"
             "  },\n"

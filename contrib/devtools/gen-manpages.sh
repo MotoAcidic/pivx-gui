@@ -7,7 +7,7 @@ BUILDDIR=${BUILDDIR:-$TOPDIR}
 BINDIR=${BINDIR:-$BUILDDIR/src}
 MANDIR=${MANDIR:-$TOPDIR/doc/man}
 
-BITCOIND=${BITCOIND:-$BINDIR/yieldsakingwalletd}
+BITCOIND=${BITCOIND:-$BINDIR/yieldstakingwalletd}
 BITCOINCLI=${BITCOINCLI:-$BINDIR/yieldstakingwallet-cli}
 BITCOINTX=${BITCOINTX:-$BINDIR/yieldstakingwallet-tx}
 BITCOINQT=${BITCOINQT:-$BINDIR/qt/yieldstakingwallet-qt}

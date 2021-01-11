@@ -12,7 +12,7 @@
 #include "ui_addressbookpage.h"
 
 #include "addresstablemodel.h"
-#include "qt/yieldstakingwallet/yieldsakingwalletgui.h"
+#include "qt/yieldstakingwallet/yieldstakingwalletgui.h"
 #include "csvmodelwriter.h"
 #include "editaddressdialog.h"
 #include "guiutil.h"

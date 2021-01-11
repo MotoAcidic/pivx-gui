@@ -5,23 +5,23 @@
 if [ -d "/var/lib/yieldstakingwallet/.yieldstakingwallet" ]; then
 	BITCOIND_DEFAULT_DATADIR="/var/lib/yieldstakingwallet/.yieldstakingwallet"
 else
-	BITCOIND_DEFAULT_DATADIR="/var/lib/yieldsakingwalletd"
+	BITCOIND_DEFAULT_DATADIR="/var/lib/yieldstakingwalletd"
 fi
 
 BITCOIND_CONFIGFILE=${BITCOIND_CONFIGFILE:-/etc/yieldstakingwallet/yieldstakingwallet.conf}
-BITCOIND_PIDDIR=${BITCOIND_PIDDIR:-/var/run/yieldsakingwalletd}
-BITCOIND_PIDFILE=${BITCOIND_PIDFILE:-${BITCOIND_PIDDIR}/yieldsakingwalletd.pid}
+BITCOIND_PIDDIR=${BITCOIND_PIDDIR:-/var/run/yieldstakingwalletd}
+BITCOIND_PIDFILE=${BITCOIND_PIDFILE:-${BITCOIND_PIDDIR}/yieldstakingwalletd.pid}
 BITCOIND_DATADIR=${BITCOIND_DATADIR:-${BITCOIND_DEFAULT_DATADIR}}
 BITCOIND_USER=${BITCOIND_USER:-${BITCOIN_USER:-yieldstakingwallet}
 BITCOIND_GROUP=${BITCOIND_GROUP:-yieldstakingwallet}
-BITCOIND_BIN=${BITCOIND_BIN:-/usr/bin/yieldsakingwalletd}
+BITCOIND_BIN=${BITCOIND_BIN:-/usr/bin/yieldstakingwalletd}
 BITCOIND_NICE=${BITCOIND_NICE:-${NICELEVEL:-0}}
 BITCOIND_OPTS="${BITCOIND_OPTS:-${BITCOIN_OPTS}}"
 
 name="YieldStakingWallet Core Daemon"
 description="YieldStakingWallet crypto-currency p2p network daemon"
 
-command="/usr/bin/yieldsakingwalletd"
+command="/usr/bin/yieldstakingwalletd"
 command_args="-pid=\"${BITCOIND_PIDFILE}\" \
 		-conf=\"${BITCOIND_CONFIGFILE}\" \
 		-datadir=\"${BITCOIND_DATADIR}\" \
@@ -71,7 +71,7 @@ checkconfig()
 {
 	if ! grep -qs '^rpcpassword=' "${BITCOIND_CONFIGFILE}" ; then
 		eerror ""
-		eerror "ERROR: You must set a secure rpcpassword to run yieldsakingwalletd."
+		eerror "ERROR: You must set a secure rpcpassword to run yieldstakingwalletd."
 		eerror "The setting must appear in ${BITCOIND_CONFIGFILE}"
 		eerror ""
 		eerror "This password is security critical to securing wallets "

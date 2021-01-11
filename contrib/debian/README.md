@@ -1,8 +1,8 @@
 
 Debian
 ====================
-This directory contains files used to package yieldsakingwalletd/yieldstakingwallet-qt
-for Debian-based Linux systems. If you compile yieldsakingwalletd/yieldstakingwallet-qt yourself, there are some useful files here.
+This directory contains files used to package yieldstakingwalletd/yieldstakingwallet-qt
+for Debian-based Linux systems. If you compile yieldstakingwalletd/yieldstakingwallet-qt yourself, there are some useful files here.
 
 ## yieldstakingwallet: URI support ##
 
@@ -15,7 +15,7 @@ To install:
 
 If you build yourself, you will either need to modify the paths in
 the .desktop file or copy or symlink your yieldstakingwallet-qt binary to `/usr/bin`
-and the `../../share/pixmaps/yieldsakingwallet128.png` to `/usr/share/pixmaps`
+and the `../../share/pixmaps/yieldstakingwallet128.png` to `/usr/share/pixmaps`
 
 yieldstakingwallet-qt.protocol (KDE)
 

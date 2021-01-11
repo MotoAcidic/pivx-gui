@@ -471,7 +471,7 @@ SOURCES += src/activemasternode.cpp \
            src/qt/csvmodelwriter.cpp \
            src/qt/obfuscationconfig.cpp \
            src/qt/yieldstakingwallet.cpp \
-           src/qt/yieldsakingwalletstrings.cpp \
+           src/qt/yieldstakingwalletstrings.cpp \
            src/qt/editaddressdialog.cpp \
            src/qt/guiutil.cpp \
            src/qt/intro.cpp \
@@ -549,7 +549,7 @@ SOURCES += src/activemasternode.cpp \
            src/test/sighash_tests.cpp \
            src/test/sigopcount_tests.cpp \
            src/test/skiplist_tests.cpp \
-           src/test/test_yieldsakingwallet.cpp \
+           src/test/test_yieldstakingwallet.cpp \
            src/test/timedata_tests.cpp \
            src/test/transaction_tests.cpp \
            src/test/uint256_tests.cpp \
@@ -640,24 +640,24 @@ SOURCES += src/activemasternode.cpp \
            src/leveldb/helpers/memenv/memenv.cc \
            src/leveldb/helpers/memenv/memenv_test.cc \
            src/secp256k1/src/java/org_bitcoin_NativeSecp256k1.c
-RESOURCES += src/qt/yieldstakingwallet.qrc src/qt/yieldsakingwallet_locale.qrc
+RESOURCES += src/qt/yieldstakingwallet.qrc src/qt/yieldstakingwallet_locale.qrc
 
-TRANSLATIONS += src/qt/locale/yieldsakingwallet_bg.ts \
-                src/qt/locale/yieldsakingwallet_de.ts \
-                src/qt/locale/yieldsakingwallet_en.ts \
-                src/qt/locale/yieldsakingwallet_es.ts \
-                src/qt/locale/yieldsakingwallet_fi.ts \
-                src/qt/locale/yieldsakingwallet_fr.ts \
-                src/qt/locale/yieldsakingwallet_it.ts \
-                src/qt/locale/yieldsakingwallet_ja.ts \
-                src/qt/locale/yieldsakingwallet_pl.ts \
-                src/qt/locale/yieldsakingwallet_pt.ts \
-                src/qt/locale/yieldsakingwallet_ru.ts \
-                src/qt/locale/yieldsakingwallet_sk.ts \
-                src/qt/locale/yieldsakingwallet_sv.ts \
-                src/qt/locale/yieldsakingwallet_vi.ts \
-                src/qt/locale/yieldsakingwallet_zh_CN.ts \
-                src/qt/locale/yieldsakingwallet_zh_TW.ts
+TRANSLATIONS += src/qt/locale/yieldstakingwallet_bg.ts \
+                src/qt/locale/yieldstakingwallet_de.ts \
+                src/qt/locale/yieldstakingwallet_en.ts \
+                src/qt/locale/yieldstakingwallet_es.ts \
+                src/qt/locale/yieldstakingwallet_fi.ts \
+                src/qt/locale/yieldstakingwallet_fr.ts \
+                src/qt/locale/yieldstakingwallet_it.ts \
+                src/qt/locale/yieldstakingwallet_ja.ts \
+                src/qt/locale/yieldstakingwallet_pl.ts \
+                src/qt/locale/yieldstakingwallet_pt.ts \
+                src/qt/locale/yieldstakingwallet_ru.ts \
+                src/qt/locale/yieldstakingwallet_sk.ts \
+                src/qt/locale/yieldstakingwallet_sv.ts \
+                src/qt/locale/yieldstakingwallet_vi.ts \
+                src/qt/locale/yieldstakingwallet_zh_CN.ts \
+                src/qt/locale/yieldstakingwallet_zh_TW.ts
 
 DISTFILES += \
     README.md

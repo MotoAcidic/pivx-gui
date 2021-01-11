@@ -1,2 +1,2 @@
-contrib/yieldsakingwalletd.bash-completion	yieldsakingwalletd
+contrib/yieldstakingwalletd.bash-completion	yieldstakingwalletd
 contrib/yieldstakingwallet-cli.bash-completion yieldstakingwallet-cli

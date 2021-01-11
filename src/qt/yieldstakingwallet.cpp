@@ -8,7 +8,7 @@
 #include "config/yieldstakingwallet-config.h"
 #endif
 
-#include "qt/yieldstakingwallet/yieldsakingwalletgui.h"
+#include "qt/yieldstakingwallet/yieldstakingwalletgui.h"
 
 #include "clientmodel.h"
 #include "guiconstants.h"
@@ -537,7 +537,7 @@ int main(int argc, char* argv[])
 // Do not refer to data directory yet, this can be overridden by Intro::pickDataDirectory
 
 /// 2. Basic Qt initialization (not dependent on parameters or configuration)
-    Q_INIT_RESOURCE(yieldsakingwallet_locale);
+    Q_INIT_RESOURCE(yieldstakingwallet_locale);
     Q_INIT_RESOURCE(yieldstakingwallet);
 
     // Generate high-dpi pixmaps

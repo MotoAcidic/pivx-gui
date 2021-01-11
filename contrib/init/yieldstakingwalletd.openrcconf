@@ -1,25 +1,25 @@
-# /etc/conf.d/yieldsakingwalletd: config file for /etc/init.d/yieldsakingwalletd
+# /etc/conf.d/yieldstakingwalletd: config file for /etc/init.d/yieldstakingwalletd
 
 # Config file location
 #BITCOIND_CONFIGFILE="/etc/yieldstakingwallet/yieldstakingwallet.conf"
 
 # What directory to write pidfile to?  (created and owned by $BITCOIND_USER)
-#BITCOIND_PIDDIR="/var/run/yieldsakingwalletd"
+#BITCOIND_PIDDIR="/var/run/yieldstakingwalletd"
 
 # What filename to give the pidfile
-#BITCOIND_PIDFILE="${BITCOIND_PIDDIR}/yieldsakingwalletd.pid"
+#BITCOIND_PIDFILE="${BITCOIND_PIDDIR}/yieldstakingwalletd.pid"
 
-# Where to write yieldsakingwalletd data (be mindful that the blockchain is large)
-#BITCOIND_DATADIR="/var/lib/yieldsakingwalletd"
+# Where to write yieldstakingwalletd data (be mindful that the blockchain is large)
+#BITCOIND_DATADIR="/var/lib/yieldstakingwalletd"
 
-# User and group to own yieldsakingwalletd process
+# User and group to own yieldstakingwalletd process
 #BITCOIND_USER="yieldstakingwallet"
 #BITCOIND_GROUP="yieldstakingwallet"
 
-# Path to yieldsakingwalletd executable
-#BITCOIND_BIN="/usr/bin/yieldsakingwalletd"
+# Path to yieldstakingwalletd executable
+#BITCOIND_BIN="/usr/bin/yieldstakingwalletd"
 
-# Nice value to run yieldsakingwalletd under
+# Nice value to run yieldstakingwalletd under
 #BITCOIND_NICE=0
 
 # Additional options (avoid -conf and -datadir, use flags above)

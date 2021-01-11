@@ -67,7 +67,7 @@ bool AppInit(int argc, char* argv[])
             strUsage += LicenseInfo();
         } else {
             strUsage += "\n" + _("Usage:") + "\n" +
-                        "  yieldsakingwalletd [options]                     " + _("Start YieldStakingWallet Core Daemon") + "\n";
+                        "  yieldstakingwalletd [options]                     " + _("Start YieldStakingWallet Core Daemon") + "\n";
 
             strUsage += "\n" + HelpMessage(HMM_BITCOIND);
         }
@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
 {
     SetupEnvironment();
 
-    // Connect yieldsakingwalletd signal handlers
+    // Connect yieldstakingwalletd signal handlers
     noui_connect();
 
     return (AppInit(argc, argv) ? 0 : 1);

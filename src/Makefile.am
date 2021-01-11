@@ -117,7 +117,7 @@ TESTS =
 BENCHMARKS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += yieldsakingwalletd
+  bin_PROGRAMS += yieldstakingwalletd
 endif
 
 if BUILD_BITCOIN_UTILS
@@ -306,7 +306,7 @@ obj/build.h: FORCE
 	  "$(abs_top_srcdir)"
 libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
-# server: shared between yieldsakingwalletd and yieldstakingwallet-qt
+# server: shared between yieldstakingwalletd and yieldstakingwallet-qt
 libbitcoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_server_a_SOURCES = \
@@ -366,7 +366,7 @@ libbitcoin_zmq_a_SOURCES = \
   zmq/zmqpublishnotifier.cpp
 endif
 
-# wallet: shared between yieldsakingwalletd and yieldstakingwallet-qt, but only linked
+# wallet: shared between yieldstakingwalletd and yieldstakingwallet-qt, but only linked
 # when wallet enabled
 libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -480,7 +480,7 @@ if USE_NUM_OPENSSL
   libzerocoin_libbitcoin_zerocoin_a_SOURCES += libzerocoin/bignum_openssl.cpp
 endif
 
-# common: shared between yieldsakingwalletd, and yieldstakingwallet-qt and non-server tools
+# common: shared between yieldstakingwalletd, and yieldstakingwallet-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
@@ -590,16 +590,16 @@ libbitcoin_cli_a_SOURCES = \
 nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
-# yieldsakingwalletd binary #
-yieldsakingwalletd_SOURCES = yieldsakingwalletd.cpp
-yieldsakingwalletd_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-yieldsakingwalletd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-yieldsakingwalletd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# yieldstakingwalletd binary #
+yieldstakingwalletd_SOURCES = yieldstakingwalletd.cpp
+yieldstakingwalletd_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+yieldstakingwalletd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+yieldstakingwalletd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-yieldsakingwalletd_SOURCES += yieldsakingwalletd-res.rc
+yieldstakingwalletd_SOURCES += yieldstakingwalletd-res.rc
 endif
-yieldsakingwalletd_LDADD = \
+yieldstakingwalletd_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
@@ -616,19 +616,19 @@ yieldsakingwalletd_LDADD = \
   $(LIBRUSTZCASH) \
   $(LIBZCASH_LIBS)
 
-yieldsakingwalletd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+yieldstakingwalletd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
 # yieldstakingwallet-cli binary #
-yieldsakingwallet_cli_SOURCES = yieldstakingwallet-cli.cpp
-yieldsakingwallet_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
-yieldsakingwallet_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-yieldsakingwallet_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+yieldstakingwallet_cli_SOURCES = yieldstakingwallet-cli.cpp
+yieldstakingwallet_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+yieldstakingwallet_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+yieldstakingwallet_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-yieldsakingwallet_cli_SOURCES += yieldstakingwallet-cli-res.rc
+yieldstakingwallet_cli_SOURCES += yieldstakingwallet-cli-res.rc
 endif
 
-yieldsakingwallet_cli_LDADD = \
+yieldstakingwallet_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
@@ -637,20 +637,20 @@ yieldsakingwallet_cli_LDADD = \
   $(LIBRUSTZCASH) \
   $(LIBZCASH_LIBS)
 
-yieldsakingwallet_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+yieldstakingwallet_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # yieldstakingwallet-tx binary #
-yieldsakingwallet_tx_SOURCES = yieldstakingwallet-tx.cpp
-yieldsakingwallet_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-yieldsakingwallet_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-yieldsakingwallet_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+yieldstakingwallet_tx_SOURCES = yieldstakingwallet-tx.cpp
+yieldstakingwallet_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+yieldstakingwallet_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+yieldstakingwallet_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-yieldsakingwallet_tx_SOURCES += yieldstakingwallet-tx-res.rc
+yieldstakingwallet_tx_SOURCES += yieldstakingwallet-tx-res.rc
 endif
 
-yieldsakingwallet_tx_LDADD = \
+yieldstakingwallet_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_ZEROCOIN) \
@@ -661,7 +661,7 @@ yieldsakingwallet_tx_LDADD = \
   $(LIBRUSTZCASH) \
   $(LIBZCASH_LIBS)
 
-yieldsakingwallet_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+yieldstakingwallet_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
 # bitcoinconsensus library #

@@ -9,7 +9,7 @@
 #include "qt/yieldstakingwallet/tooltipmenu.h"
 
 #include "qt/yieldstakingwallet/addnewcontactdialog.h"
-#include "qt/yieldstakingwallet/yieldsakingwalletgui.h"
+#include "qt/yieldstakingwallet/yieldstakingwalletgui.h"
 #include "guiutil.h"
 #include "qt/yieldstakingwallet/qtutils.h"
 #include "walletmodel.h"

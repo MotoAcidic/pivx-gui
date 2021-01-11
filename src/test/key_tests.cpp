@@ -10,7 +10,7 @@
 #include "uint256.h"
 #include "util.h"
 #include "utilstrencodings.h"
-#include "test_yieldsakingwallet.h"
+#include "test_yieldstakingwallet.h"
 
 #include <string>
 #include <vector>
