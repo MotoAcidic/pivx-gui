@@ -7,10 +7,10 @@ BUILDDIR=${BUILDDIR:-$TOPDIR}
 BINDIR=${BINDIR:-$BUILDDIR/src}
 MANDIR=${MANDIR:-$TOPDIR/doc/man}
 
-BITCOIND=${BITCOIND:-$BINDIR/yieldstakingwalletd}
-BITCOINCLI=${BITCOINCLI:-$BINDIR/yieldstakingwallet-cli}
-BITCOINTX=${BITCOINTX:-$BINDIR/yieldstakingwallet-tx}
-BITCOINQT=${BITCOINQT:-$BINDIR/qt/yieldstakingwallet-qt}
+BITCOIND=${BITCOIND:-$BINDIR/yswd}
+BITCOINCLI=${BITCOINCLI:-$BINDIR/ysw-cli}
+BITCOINTX=${BITCOINTX:-$BINDIR/ysw-tx}
+BITCOINQT=${BITCOINQT:-$BINDIR/qt/ysw-qt}
 
 [ ! -x $BITCOIND ] && echo "$BITCOIND not found or not executable." && exit 1
 

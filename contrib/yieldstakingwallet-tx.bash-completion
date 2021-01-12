@@ -1,15 +1,15 @@
-# bash programmable completion for yieldstakingwallet-tx(1)
+# bash programmable completion for ysw-tx(1)
 # Copyright (c) 2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 _yieldstakingwallet_tx() {
     local cur prev words=() cword
-    local yieldstakingwallet_tx
+    local ysw_tx
 
-    # save and use original argument to invoke yieldstakingwallet-tx for -help
+    # save and use original argument to invoke ysw-tx for -help
     # it might not be in $PATH
-    yieldstakingwallet_tx="$1"
+    ysw_tx="$1"
 
     COMPREPLY=()
     _get_comp_words_by_ref -n =: cur prev words cword
@@ -27,7 +27,7 @@ _yieldstakingwallet_tx() {
 
     if [[ "$cword" == 1 || ( "$prev" != "-create" && "$prev" == -* ) ]]; then
         # only options (or an uncompletable hex-string) allowed
-        # parse yieldstakingwallet-tx -help for options
+        # parse ysw-tx -help for options
         local helpopts
         helpopts=$($yieldstakingwallet_tx -help | sed -e '/^  -/ p' -e d )
         COMPREPLY=( $( compgen -W "$helpopts" -- "$cur" ) )
@@ -46,7 +46,7 @@ _yieldstakingwallet_tx() {
 
     return 0
 } &&
-complete -F _yieldstakingwallet_tx yieldstakingwallet-tx
+complete -F _yieldstakingwallet_tx ysw-tx
 
 # Local variables:
 # mode: shell-script

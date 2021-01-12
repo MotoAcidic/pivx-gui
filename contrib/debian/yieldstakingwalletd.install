@@ -1,3 +1,0 @@
-usr/local/bin/yieldstakingwalletd usr/bin
-usr/local/bin/yieldstakingwallet-cli usr/bin
-debian/examples/yieldstakingwallet.conf etc/yieldstakingwallet

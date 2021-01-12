@@ -459,7 +459,7 @@ CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build yieldstakingwallet-cli yieldstakingwallet-tx (default=yes)])],
+  [build ysw-cli ysw-tx (default=yes)])],
   [build_bitcoin_utils=$withval],
   [build_bitcoin_utils=yes])
 
@@ -471,7 +471,7 @@ AC_ARG_WITH([libs],
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
-  [build yieldstakingwalletd daemon (default=yes)])],
+  [build yswd daemon (default=yes)])],
   [build_bitcoind=$withval],
   [build_bitcoind=yes])
 
@@ -1220,11 +1220,11 @@ AX_CHECK_COMPILE_FLAG([-Wno-builtin-declaration-mismatch],[CXXFLAGS="$CXXFLAGS -
 
 LIBZCASH_LIBS="$BOOST_SYSTEM_LIB $CRYPTO_LIBS $SODIUM_LIBS $RUST_LIBS"
 
-AC_MSG_CHECKING([whether to build yieldstakingwalletd])
+AC_MSG_CHECKING([whether to build yswd])
 AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_bitcoind = xyes])
 AC_MSG_RESULT($build_bitcoind)
 
-AC_MSG_CHECKING([whether to build utils (yieldstakingwallet-cli yieldstakingwallet-tx)])
+AC_MSG_CHECKING([whether to build utils (ysw-cli ysw-tx)])
 AM_CONDITIONAL([BUILD_BITCOIN_UTILS], [test x$build_bitcoin_utils = xyes])
 AC_MSG_RESULT($build_bitcoin_utils)
 
@@ -1352,7 +1352,7 @@ if test x$bitcoin_enable_qt != xno; then
     AC_MSG_WARN("xgettext is required to update qt translations")
   fi
 
-  AC_MSG_CHECKING([whether to build test_yieldstakingwallet-qt])
+  AC_MSG_CHECKING([whether to build test_ysw-qt])
   if test x$use_gui_tests$bitcoin_enable_qt_test = xyesyes; then
     AC_MSG_RESULT([yes])
     BUILD_TEST_QT="yes"

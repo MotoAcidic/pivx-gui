@@ -32,7 +32,7 @@ Homepage: http://www.yieldstakingwallet.org
 Vcs-Git: git://github.com/YieldStakingWallet-Project/YieldStakingWallet.git
 Vcs-Browser: http://github.com/YieldStakingWallet-Project/YieldStakingWallet
 
-Package: yieldstakingwalletd
+Package: yswd
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
@@ -45,10 +45,10 @@ Description: peer-to-peer network based digital currency - daemon
  Full transaction history is stored locally at each client.  This
  requires 18.5+ GB of space, slowly growing.
  .
- This package provides the daemon, yieldstakingwalletd, and the CLI tool
- yieldstakingwallet-cli to interact with the daemon.
+ This package provides the daemon, yswd, and the CLI tool
+ ysw-cli to interact with the daemon.
 
-Package: yieldstakingwallet-qt
+Package: ysw-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI

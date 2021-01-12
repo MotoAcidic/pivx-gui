@@ -72,9 +72,9 @@ static bool AppInitRPC(int argc, char* argv[])
         std::string strUsage = _("YieldStakingWallet Core RPC client version") + " " + FormatFullVersion() + "\n";
         if (!gArgs.IsArgSet("-version")) {
             strUsage += "\n" + _("Usage:") + "\n" +
-                        "  yieldstakingwallet-cli [options] <command> [params]  " + _("Send command to YieldStakingWallet Core") + "\n" +
-                        "  yieldstakingwallet-cli [options] help                " + _("List commands") + "\n" +
-                        "  yieldstakingwallet-cli [options] help <command>      " + _("Get help for a command") + "\n";
+                        "  ysw-cli [options] <command> [params]  " + _("Send command to YieldStakingWallet Core") + "\n" +
+                        "  ysw-cli [options] help                " + _("List commands") + "\n" +
+                        "  ysw-cli [options] help <command>      " + _("Get help for a command") + "\n";
 
             strUsage += "\n" + HelpMessageCli();
         }

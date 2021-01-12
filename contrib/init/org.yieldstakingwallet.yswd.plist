@@ -3,10 +3,10 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-	<string>org.yieldstakingwallet.yieldstakingwalletd</string>
+	<string>org.yieldstakingwallet.yswd</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/usr/local/bin/yieldstakingwalletd</string>
+		<string>/usr/local/bin/yswd</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>

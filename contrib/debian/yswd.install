@@ -1,0 +1,3 @@
+usr/local/bin/yswd usr/bin
+usr/local/bin/ysw-cli usr/bin
+debian/examples/yieldstakingwallet.conf etc/yieldstakingwallet

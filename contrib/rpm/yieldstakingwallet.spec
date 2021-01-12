@@ -27,13 +27,13 @@ Source1:	http://download.oracle.com/berkeley-db/db-%{bdbv}.NC.tar.gz
 Source10:	https://raw.githubusercontent.com/yieldstakingwallet-project/yieldstakingwallet/v%{version}/contrib/debian/examples/yieldstakingwallet.conf
 
 #man pages
-Source20:	https://raw.githubusercontent.com/yieldstakingwallet-project/yieldstakingwallet/v%{version}/doc/man/yieldstakingwalletd.1
-Source21:	https://raw.githubusercontent.com/yieldstakingwallet-project/yieldstakingwallet/v%{version}/doc/man/yieldstakingwallet-cli.1
-Source22:	https://raw.githubusercontent.com/yieldstakingwallet-project/yieldstakingwallet/v%{version}/doc/man/yieldstakingwallet-qt.1
+Source20:	https://raw.githubusercontent.com/yieldstakingwallet-project/yieldstakingwallet/v%{version}/doc/man/yswd.1
+Source21:	https://raw.githubusercontent.com/yieldstakingwallet-project/yieldstakingwallet/v%{version}/doc/man/ysw-cli.1
+Source22:	https://raw.githubusercontent.com/yieldstakingwallet-project/yieldstakingwallet/v%{version}/doc/man/ysw-qt.1
 
 #selinux
 Source30:	https://raw.githubusercontent.com/yieldstakingwallet-project/yieldstakingwallet/v%{version}/contrib/rpm/yieldstakingwallet.te
-# Source31 - what about yieldstakingwallet-tx and bench_yieldstakingwallet ???
+# Source31 - what about ysw-tx and bench_yieldstakingwallet ???
 Source31:	https://raw.githubusercontent.com/yieldstakingwallet-project/yieldstakingwallet/v%{version}/contrib/rpm/yieldstakingwallet.fc
 Source32:	https://raw.githubusercontent.com/yieldstakingwallet-project/yieldstakingwallet/v%{version}/contrib/rpm/yieldstakingwallet.if
 
@@ -141,8 +141,8 @@ Group:		Applications/System
 This package provides several command line utilities for interacting with a
 yieldstakingwallet-core daemon.
 
-The yieldstakingwallet-cli utility allows you to communicate and control a yieldstakingwallet daemon
-over RPC, the yieldstakingwallet-tx utility allows you to create a custom transaction, and
+The ysw-cli utility allows you to communicate and control a yieldstakingwallet daemon
+over RPC, the ysw-tx utility allows you to create a custom transaction, and
 the bench_yieldstakingwallet utility can be used to perform some benchmarks.
 
 This package contains utilities needed by the yieldstakingwallet-server package.
@@ -182,12 +182,12 @@ popd
 make install DESTDIR=%{buildroot}
 
 mkdir -p -m755 %{buildroot}%{_sbindir}
-mv %{buildroot}%{_bindir}/yieldstakingwalletd %{buildroot}%{_sbindir}/yieldstakingwalletd
+mv %{buildroot}%{_bindir}/yswd %{buildroot}%{_sbindir}/yswd
 
 # systemd stuff
 mkdir -p %{buildroot}%{_tmpfilesdir}
 cat <<EOF > %{buildroot}%{_tmpfilesdir}/yieldstakingwallet.conf
-d /run/yieldstakingwalletd 0750 yieldstakingwallet yieldstakingwallet -
+d /run/yswd 0750 yieldstakingwallet yieldstakingwallet -
 EOF
 touch -a -m -t 201504280000 %{buildroot}%{_tmpfilesdir}/yieldstakingwallet.conf
 
@@ -202,7 +202,7 @@ OPTIONS=""
 # Don't change these unless you know what you're doing.
 CONFIG_FILE="%{_sysconfdir}/yieldstakingwallet/yieldstakingwallet.conf"
 DATA_DIR="%{_localstatedir}/lib/yieldstakingwallet"
-PID_FILE="/run/yieldstakingwalletd/yieldstakingwalletd.pid"
+PID_FILE="/run/yswd/yswd.pid"
 EOF
 touch -a -m -t 201504280000 %{buildroot}%{_sysconfdir}/sysconfig/yieldstakingwallet
 
@@ -214,7 +214,7 @@ After=syslog.target network.target
 
 [Service]
 Type=forking
-ExecStart=%{_sbindir}/yieldstakingwalletd -daemon -conf=\${CONFIG_FILE} -datadir=\${DATA_DIR} -pid=\${PID_FILE} \$OPTIONS
+ExecStart=%{_sbindir}/yswd -daemon -conf=\${CONFIG_FILE} -datadir=\${DATA_DIR} -pid=\${PID_FILE} \$OPTIONS
 EnvironmentFile=%{_sysconfdir}/sysconfig/yieldstakingwallet
 User=yieldstakingwallet
 Group=yieldstakingwallet
@@ -269,7 +269,7 @@ Name=Bitcoin
 Comment=Bitcoin P2P Cryptocurrency
 Comment[fr]=Bitcoin, monnaie virtuelle cryptographique pair à pair
 Comment[tr]=Bitcoin, eşten eşe kriptografik sanal para birimi
-Exec=yieldstakingwallet-qt %u
+Exec=ysw-qt %u
 Terminal=false
 Type=Application
 Icon=yieldstakingwallet128
@@ -284,7 +284,7 @@ touch -a -m -t 201511100546 %{buildroot}%{_datadir}/applications/yieldstakingwal
 mkdir -p %{buildroot}%{_datadir}/kde4/services
 cat <<EOF > %{buildroot}%{_datadir}/kde4/services/yieldstakingwallet-core.protocol
 [Protocol]
-exec=yieldstakingwallet-qt '%u'
+exec=ysw-qt '%u'
 protocol=yieldstakingwallet
 input=none
 output=none
@@ -300,10 +300,10 @@ touch -a -m -t 201511100546 %{buildroot}%{_datadir}/kde4/services/yieldstakingwa
 %endif
 
 # man pages
-install -D -p %{SOURCE20} %{buildroot}%{_mandir}/man1/yieldstakingwalletd.1
-install -p %{SOURCE21} %{buildroot}%{_mandir}/man1/yieldstakingwallet-cli.1
+install -D -p %{SOURCE20} %{buildroot}%{_mandir}/man1/yswd.1
+install -p %{SOURCE21} %{buildroot}%{_mandir}/man1/ysw-cli.1
 %if %{_buildqt}
-install -p %{SOURCE22} %{buildroot}%{_mandir}/man1/yieldstakingwallet-qt.1
+install -p %{SOURCE22} %{buildroot}%{_mandir}/man1/ysw-qt.1
 %endif
 
 # nuke these, we do extensive testing of binaries in %%check before packaging
@@ -376,7 +376,7 @@ rm -rf %{buildroot}
 %defattr(-,root,root,-)
 %license COPYING db-%{bdbv}.NC-LICENSE
 %doc COPYING yieldstakingwallet.conf.example doc/README.md doc/bips.md doc/files.md doc/multiwallet-qt.md doc/reduce-traffic.md doc/release-notes.md doc/tor.md
-%attr(0755,root,root) %{_bindir}/yieldstakingwallet-qt
+%attr(0755,root,root) %{_bindir}/ysw-qt
 %attr(0644,root,root) %{_datadir}/applications/yieldstakingwallet-core.desktop
 %attr(0644,root,root) %{_datadir}/kde4/services/yieldstakingwallet-core.protocol
 %attr(0644,root,root) %{_datadir}/pixmaps/*.ico
@@ -384,7 +384,7 @@ rm -rf %{buildroot}
 %attr(0644,root,root) %{_datadir}/pixmaps/*.svg
 %attr(0644,root,root) %{_datadir}/pixmaps/*.png
 %attr(0644,root,root) %{_datadir}/pixmaps/*.xpm
-%attr(0644,root,root) %{_mandir}/man1/yieldstakingwallet-qt.1*
+%attr(0644,root,root) %{_mandir}/man1/ysw-qt.1*
 %endif
 
 %files libs
@@ -407,23 +407,23 @@ rm -rf %{buildroot}
 %defattr(-,root,root,-)
 %license COPYING db-%{bdbv}.NC-LICENSE
 %doc COPYING yieldstakingwallet.conf.example doc/README.md doc/REST-interface.md doc/bips.md doc/dnsseed-policy.md doc/files.md doc/reduce-traffic.md doc/release-notes.md doc/tor.md
-%attr(0755,root,root) %{_sbindir}/yieldstakingwalletd
+%attr(0755,root,root) %{_sbindir}/yswd
 %attr(0644,root,root) %{_tmpfilesdir}/yieldstakingwallet.conf
 %attr(0644,root,root) %{_unitdir}/yieldstakingwallet.service
 %dir %attr(0750,yieldstakingwallet,yieldstakingwallet) %{_sysconfdir}/yieldstakingwallet
 %dir %attr(0750,yieldstakingwallet,yieldstakingwallet) %{_localstatedir}/lib/yieldstakingwallet
 %config(noreplace) %attr(0600,root,root) %{_sysconfdir}/sysconfig/yieldstakingwallet
 %attr(0644,root,root) %{_datadir}/selinux/*/*.pp
-%attr(0644,root,root) %{_mandir}/man1/yieldstakingwalletd.1*
+%attr(0644,root,root) %{_mandir}/man1/yswd.1*
 
 %files utils
 %defattr(-,root,root,-)
 %license COPYING
 %doc COPYING yieldstakingwallet.conf.example doc/README.md
-%attr(0755,root,root) %{_bindir}/yieldstakingwallet-cli
-%attr(0755,root,root) %{_bindir}/yieldstakingwallet-tx
+%attr(0755,root,root) %{_bindir}/ysw-cli
+%attr(0755,root,root) %{_bindir}/ysw-tx
 %attr(0755,root,root) %{_bindir}/bench_yieldstakingwallet
-%attr(0644,root,root) %{_mandir}/man1/yieldstakingwallet-cli.1*
+%attr(0644,root,root) %{_mandir}/man1/ysw-cli.1*
 
 
 

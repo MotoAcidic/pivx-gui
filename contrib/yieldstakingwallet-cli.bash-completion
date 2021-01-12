@@ -1,9 +1,9 @@
-# bash programmable completion for yieldstakingwallet-cli(1)
+# bash programmable completion for ysw-cli(1)
 # Copyright (c) 2012-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-# call $yieldstakingwallet-cli for RPC
+# call $ysw-cli for RPC
 _yieldstakingwallet_rpc() {
     # determine already specified args necessary for RPC
     local rpcargs=()
@@ -26,11 +26,11 @@ _yieldstakingwallet_accounts() {
 
 _yieldstakingwallet_cli() {
     local cur prev words=() cword
-    local yieldstakingwallet_cli
+    local ysw_tx
 
-    # save and use original argument to invoke yieldstakingwallet-cli for -help, help and RPC
-    # as yieldstakingwallet-cli might not be in $PATH
-    yieldstakingwallet_cli="$1"
+    # save and use original argument to invoke ysw-cli for -help, help and RPC
+    # as ysw-cli might not be in $PATH
+    ysw_tx="$1"
 
     COMPREPLY=()
     _get_comp_words_by_ref -n = cur prev words cword
@@ -143,7 +143,7 @@ _yieldstakingwallet_cli() {
             ;;
     esac
 } &&
-complete -F _yieldstakingwallet_cli yieldstakingwallet-cli
+complete -F _yieldstakingwallet_cli ysw-cli
 
 # Local variables:
 # mode: shell-script

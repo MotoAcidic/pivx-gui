@@ -39,9 +39,9 @@ OSX_PLIST=$(top_builddir)/share/qt/Info.plist #not installed
 OSX_QT_TRANSLATIONS = da,de,es,hu,ru,uk,zh_CN,zh_TW
 
 DIST_DOCS = $(wildcard doc/*.md) $(wildcard doc/release-notes/*.md)
-DIST_CONTRIB = $(top_srcdir)/contrib/yieldstakingwallet-cli.bash-completion \
-	       $(top_srcdir)/contrib/yieldstakingwallet-tx.bash-completion \
-	       $(top_srcdir)/contrib/yieldstakingwalletd.bash-completion \
+DIST_CONTRIB = $(top_srcdir)/contrib/ysw-cli.bash-completion \
+	       $(top_srcdir)/contrib/ysw-tx.bash-completion \
+	       $(top_srcdir)/contrib/yswd.bash-completion \
            $(top_srcdir)/contrib/init \
            $(top_srcdir)/contrib/install_db4.sh
 

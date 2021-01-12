@@ -5,18 +5,18 @@ and tests weren't explicitly disabled.
 
 After configuring, they can be run with `make check`.
 
-To run the yieldstakingwalletd tests manually, launch `src/test/test_yieldstakingwallet`. To recompile
+To run the yswd tests manually, launch `src/test/test_yieldstakingwallet`. To recompile
 after a test file was modified, run `make` and then run the test again. If you
 modify a non-test file, use `make -C src/test` to recompile only what's needed
-to run the yieldstakingwalletd tests.
+to run the yswd tests.
 
-To add more yieldstakingwalletd tests, add `BOOST_AUTO_TEST_CASE` functions to the existing
+To add more yswd tests, add `BOOST_AUTO_TEST_CASE` functions to the existing
 .cpp files in the `test/` directory or add new .cpp files that
 implement new BOOST_FIXTURE_TEST_SUITE sections.
 
-To run the yieldstakingwallet-qt tests manually, launch `src/qt/test/test_yieldstakingwallet-qt`
+To run the ysw-qt tests manually, launch `src/qt/test/test_ysw-qt`
 
-To add more yieldstakingwallet-qt tests, add them to the `src/qt/test/` directory and
+To add more ysw-qt tests, add them to the `src/qt/test/` directory and
 the `src/qt/test/test_main.cpp` file.
 
 ### Running individual tests

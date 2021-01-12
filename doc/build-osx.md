@@ -79,7 +79,7 @@ In this case there is no dependency on Berkeley DB 4.8.
 Running
 -------
 
-YieldStakingWallet Core is now available at `./src/yieldstakingwalletd`
+YieldStakingWallet Core is now available at `./src/yswd`
 
 Before running, you may create an empty configuration file:
 
@@ -89,7 +89,7 @@ Before running, you may create an empty configuration file:
 
     chmod 600 "/Users/${USER}/Library/Application Support/YieldStakingWallet/yieldstakingwallet.conf"
 
-The first time you run yieldstakingwalletd, it will start downloading the blockchain. This process could take many hours, or even days on slower than average systems.
+The first time you run yswd, it will start downloading the blockchain. This process could take many hours, or even days on slower than average systems.
 
 You can monitor the download process by looking at the debug.log file:
 
@@ -98,9 +98,9 @@ You can monitor the download process by looking at the debug.log file:
 Other commands:
 -------
 
-    ./src/yieldstakingwalletd -daemon # Starts the yieldstakingwallet daemon.
-    ./src/yieldstakingwallet-cli --help # Outputs a list of command-line options.
-    ./src/yieldstakingwallet-cli help # Outputs a list of RPC commands when the daemon is running.
+    ./src/yswd -daemon # Starts the yieldstakingwallet daemon.
+    ./src/ysw-cli --help # Outputs a list of command-line options.
+    ./src/ysw-cli help # Outputs a list of RPC commands when the daemon is running.
 
 Notes
 -----

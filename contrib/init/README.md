@@ -1,11 +1,11 @@
 Sample configuration files for:
 ```
-SystemD: yieldstakingwalletd.service
-Upstart: yieldstakingwalletd.conf
-OpenRC:  yieldstakingwalletd.openrc
-         yieldstakingwalletd.openrcconf
-CentOS:  yieldstakingwalletd.init
-macOS:    org.yieldstakingwallet.yieldstakingwalletd.plist
+SystemD: yswd.service
+Upstart: yswd.conf
+OpenRC:  yswd.openrc
+         yswd.openrcconf
+CentOS:  yswd.init
+macOS:    org.yieldstakingwallet.yswd.plist
 ```
 have been made available to assist packagers in creating node packages here.
 

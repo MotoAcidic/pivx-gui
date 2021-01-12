@@ -17,55 +17,55 @@ confinement: strict
 
 apps:
   daemon:
-    command: yieldstakingwalletd
+    command: yswd
     plugs: [network, network-bind, home, removable-media]
-    desktop: yieldstakingwalletd.desktop
+    desktop: yswd.desktop
     environment:
       XDG_DATA_DIRS: $SNAP_USER_DATA:$SNAP/usr/share:$XDG_DATA_DIRS
       HOME: $SNAP_USER_COMMON
   daemon-testnet:
-    command: yieldstakingwalletd --testnet
+    command: yswd --testnet
     plugs: [network, network-bind, home, removable-media]
-    desktop: yieldstakingwalletd_testnet.desktop
+    desktop: yswd_testnet.desktop
     environment:
       XDG_DATA_DIRS: $SNAP_USER_DATA:$SNAP/usr/share:$XDG_DATA_DIRS
       HOME: $SNAP_USER_COMMON
   qt:
-    command: desktop-launch yieldstakingwallet-qt
+    command: desktop-launch ysw-qt
     plugs: [network, network-bind, network-status, unity7, desktop, desktop-legacy, wayland, x11, mir, opengl, home, gsettings, removable-media, screen-inhibit-control, pulseaudio, media-hub]
-    desktop: yieldstakingwallet-qt.desktop
+    desktop: ysw-qt.desktop
     environment:
       QT_XKB_CONFIG_ROOT: $SNAP_USER_DATA:$SNAP/usr/share:$QT_XKB_CONFIG_ROOT
       XDG_DATA_DIRS: $SNAP_USER_DATA:$SNAP/usr/share:$XDG_DATA_DIRS
       HOME: $SNAP_USER_COMMON
   qt-testnet:
-    command: desktop-launch yieldstakingwallet-qt --testnet
+    command: desktop-launch ysw-qt --testnet
     plugs: [network, network-bind, network-status, unity7, desktop, desktop-legacy, wayland, x11, mir, opengl, home, gsettings, removable-media, screen-inhibit-control, pulseaudio, media-hub]
-    desktop: yieldstakingwallet-qt_testnet.desktop
+    desktop: ysw-qt_testnet.desktop
     environment:
       QT_XKB_CONFIG_ROOT: $SNAP_USER_DATA:$SNAP/usr/share:$QT_XKB_CONFIG_ROOT
       XDG_DATA_DIRS: $SNAP_USER_DATA:$SNAP/usr/share:$XDG_DATA_DIRS
       HOME: $SNAP_USER_COMMON
   cli:
-    command: yieldstakingwallet-cli
+    command: ysw-cli
     plugs: [network, network-bind, home, removable-media]
     environment:
       XDG_DATA_DIRS: $SNAP_USER_DATA:$SNAP/usr/share:$XDG_DATA_DIRS
       HOME: $SNAP_USER_COMMON
   cli-testnet:
-    command: yieldstakingwallet-cli --testnet
+    command: ysw-cli --testnet
     plugs: [network, network-bind, home, removable-media]
     environment:
       XDG_DATA_DIRS: $SNAP_USER_DATA:$SNAP/usr/share:$XDG_DATA_DIRS
       HOME: $SNAP_USER_COMMON
   tx:
-    command: yieldstakingwallet-tx
+    command: ysw-tx
     plugs: [home]
   test:
     command: test_yieldstakingwallet
     plugs: [home]
   testqt:
-    command: test_yieldstakingwallet-qt
+    command: test_ysw-qt
     plugs: [home]
 
 layout:

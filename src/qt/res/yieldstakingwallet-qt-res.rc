@@ -22,10 +22,10 @@ BEGIN
             VALUE "CompanyName",        "YieldStakingWallet"
             VALUE "FileDescription",    "YieldStakingWallet Core (OSS GUI client for YieldStakingWallet)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
-            VALUE "InternalName",       "yieldstakingwallet-qt"
+            VALUE "InternalName",       "ysw-qt"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
-            VALUE "OriginalFilename",   "yieldstakingwallet-qt.exe"
+            VALUE "OriginalFilename",   "ysw-qt.exe"
             VALUE "ProductName",        "YieldStakingWallet Core"
             VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
         END

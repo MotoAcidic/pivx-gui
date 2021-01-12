@@ -10,7 +10,7 @@
 #include <vector>
 
 /**
- * CBaseChainParams defines the base parameters (shared between yieldstakingwallet-cli and yieldstakingwalletd)
+ * CBaseChainParams defines the base parameters (shared between ysw-cli and yswd)
  * of a given instance of the YieldStakingWallet system.
  */
 class CBaseChainParams

@@ -12,7 +12,7 @@ Please report bugs using the issue tracker at github:
 How to Upgrade
 ==============
 
-If you are running an older version, shut it down. Wait until it has completely shut down (which might take a few minutes for older versions), then run the installer (on Windows) or just copy over /Applications/YieldStakingWallet-Qt (on Mac) or yieldstakingwalletd/yieldstakingwallet-qt (on Linux).
+If you are running an older version, shut it down. Wait until it has completely shut down (which might take a few minutes for older versions), then run the installer (on Windows) or just copy over /Applications/YieldStakingWallet-Qt (on Mac) or yswd/ysw-qt (on Linux).
 
 Compatibility
 ==============
@@ -98,7 +98,7 @@ Result: (for other sets):
 }
 
 Examples:
-> yieldstakingwallet-cli startmasternode "alias" true "my_mn"
+> ysw-cli startmasternode "alias" true "my_mn"
 > curl --user myusername --data-binary '{"jsonrpc": "1.0", "id":"curltest", "method": "startmasternode", "params": ["alias" true "my_mn"] }' -H 'content-type: text/plain;' http://127.0.0.1:51473/
 ```
 
@@ -133,7 +133,7 @@ Result:
 }
 
 Examples:
-> yieldstakingwallet-cli mnbudgetvote "local" "ed2f83cedee59a91406f5f47ec4d60bf5a7f9ee6293913c82976bd2d3a658041" "yes"
+> ysw-cli mnbudgetvote "local" "ed2f83cedee59a91406f5f47ec4d60bf5a7f9ee6293913c82976bd2d3a658041" "yes"
 > curl --user myusername --data-binary '{"jsonrpc": "1.0", "id":"curltest", "method": "mnbudgetvote", "params": ["local" "ed2f83cedee59a91406f5f47ec4d60bf5a7f9ee6293913c82976bd2d3a658041" "yes"] }' -H 'content-type: text/plain;' http://127.0.0.1:51473/
 ```
 
@@ -175,7 +175,7 @@ Result:
 ]
 
 Examples:
-> yieldstakingwallet-cli getbudgetinfo
+> ysw-cli getbudgetinfo
 > curl --user myusername --data-binary '{"jsonrpc": "1.0", "id":"curltest", "method": "getbudgetinfo", "params": [] }' -H 'content-type: text/plain;' http://127.0.0.1:51473/
 ```
 

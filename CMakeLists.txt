@@ -483,13 +483,13 @@ link_directories(
 
 link_directories(${CMAKE_BINARY_DIR})
 
-set(yieldstakingwallet-cli_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/yieldstakingwallet-cli.cpp)
+set(ysw-cli_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/ysw-cli.cpp)
 if($ENV{target} MATCHES "Windows")
-    list(APPEND yieldstakingwallet-cli_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/yieldstakingwallet-cli-res.rc)
+    list(APPEND ysw-cli_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/ysw-cli-res.rc)
 endif()
-add_executable(yieldstakingwallet-cli ${yieldstakingwallet-cli_SOURCES})
-add_dependencies(yieldstakingwallet-cli libunivalue libzcashrust)
-target_link_libraries(yieldstakingwallet-cli
+add_executable(ysw-cli ${ysw-cli_SOURCES})
+add_dependencies(ysw-cli libunivalue libzcashrust)
+target_link_libraries(ysw-cli
         CLI_A
         univalue
         UTIL_A
@@ -499,16 +499,16 @@ target_link_libraries(yieldstakingwallet-cli
         ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES} ${LIBEVENT_LIB} ${sodium_LIBRARY_RELEASE} -ldl pthread
         )
 if($ENV{target} MATCHES "Windows")
-    target_link_libraries(yieldstakingwallet-cli ${WINDOWS_LDADD})
+    target_link_libraries(ysw-cli ${WINDOWS_LDADD})
 endif()
 
-set(yieldstakingwallet-tx_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/yieldstakingwallet-tx.cpp)
+set(ysw-tx_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/ysw-tx.cpp)
 if($ENV{target} MATCHES "Windows")
-    list(APPEND yieldstakingwallet-tx_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/yieldstakingwallet-tx-res.rc)
+    list(APPEND ysw-tx_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/ysw-tx-res.rc)
 endif()
-add_executable(yieldstakingwallet-tx ${yieldstakingwallet-tx_SOURCES})
-add_dependencies(yieldstakingwallet-tx libunivalue libsecp256k1 libzcashrust)
-target_link_libraries(yieldstakingwallet-tx
+add_executable(ysw-tx ${ysw-tx_SOURCES})
+add_dependencies(ysw-tx libunivalue libsecp256k1 libzcashrust)
+target_link_libraries(ysw-tx
         univalue
         COMMON_A
         ZEROCOIN_A
@@ -520,24 +520,24 @@ target_link_libraries(yieldstakingwallet-tx
         ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES} ${LIBEVENT_LIB} ${sodium_LIBRARY_RELEASE} -ldl pthread
         )
 if($ENV{target} MATCHES "Windows")
-    target_link_libraries(yieldstakingwallet-tx ${WINDOWS_LDADD})
+    target_link_libraries(ysw-tx ${WINDOWS_LDADD})
 endif()
 if(GMP_FOUND)
-    target_link_libraries(yieldstakingwallet-tx ${GMP_LIBRARY})
+    target_link_libraries(ysw-tx ${GMP_LIBRARY})
 endif()
 
-set(yieldstakingwalletd_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/yieldstakingwalletd.cpp)
+set(yswd_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/yswd.cpp)
 if($ENV{target} MATCHES "Windows")
-    list(APPEND yieldstakingwalletd_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/yieldstakingwalletd-res.rc)
+    list(APPEND yswd_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/yswd-res.rc)
 endif()
-add_executable(yieldstakingwalletd ${yieldstakingwalletd_SOURCES} ${BitcoinHeaders})
-add_dependencies(yieldstakingwalletd libunivalue libsecp256k1 libzcashrust leveldb crc32c)
-target_include_directories(yieldstakingwalletd PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
+add_executable(yswd ${yswd_SOURCES} ${BitcoinHeaders})
+add_dependencies(yswd libunivalue libsecp256k1 libzcashrust leveldb crc32c)
+target_include_directories(yswd PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb
         ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb/helpers/memenv
         ${LIBEVENT_INCLUDE_DIR})
-target_link_libraries(yieldstakingwalletd
+target_link_libraries(yswd
         pthread
         SERVER_A
         WALLET_A
@@ -555,27 +555,27 @@ target_link_libraries(yieldstakingwalletd
         )
 if($ENV{target} MATCHES "Windows")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wstack-protector -fstack-protector-all -fPIE -pipe -O2 -pthread -Wl,--dynamicbase -Wl,--nxcompat -Wl,--high-entropy-va -pie --static")
-    target_link_libraries(yieldstakingwalletd ${WINDOWS_LDADD})
+    target_link_libraries(yswd ${WINDOWS_LDADD})
 endif()
 if(GMP_FOUND)
-    target_link_libraries(yieldstakingwalletd ${GMP_LIBRARY})
-    target_include_directories(yieldstakingwalletd PUBLIC ${GMP_INCLUDE_DIR})
+    target_link_libraries(yswd ${GMP_LIBRARY})
+    target_include_directories(yswd PUBLIC ${GMP_INCLUDE_DIR})
 endif()
 if(ZMQ_FOUND)
-    target_link_libraries(yieldstakingwalletd ZMQ_A ${ZMQ_LIB})
-    target_include_directories(yieldstakingwalletd PUBLIC ${ZMQ_INCLUDE_DIR})
+    target_link_libraries(yswd ZMQ_A ${ZMQ_LIB})
+    target_include_directories(yswd PUBLIC ${ZMQ_INCLUDE_DIR})
 endif()
 if(MINIUPNP_FOUND)
-    target_compile_definitions(yieldstakingwalletd PUBLIC "-DSTATICLIB -DMINIUPNP_STATICLIB")
-    target_link_libraries(yieldstakingwalletd ${MINIUPNP_LIBRARY})
-    target_include_directories(yieldstakingwalletd PUBLIC ${MINIUPNP_INCLUDE_DIR})
+    target_compile_definitions(yswd PUBLIC "-DSTATICLIB -DMINIUPNP_STATICLIB")
+    target_link_libraries(yswd ${MINIUPNP_LIBRARY})
+    target_include_directories(yswd PUBLIC ${MINIUPNP_INCLUDE_DIR})
 endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    target_link_libraries(yieldstakingwalletd "-framework Cocoa")
+    target_link_libraries(yswd "-framework Cocoa")
 endif()
 
-target_link_libraries(yieldstakingwalletd ${sodium_LIBRARY_RELEASE} -ldl -lpthread)
+target_link_libraries(yswd ${sodium_LIBRARY_RELEASE} -ldl -lpthread)
 
 add_subdirectory(src/qt)
 add_subdirectory(src/test)

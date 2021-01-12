@@ -13,14 +13,14 @@ The following are some helpful notes on how to run YieldStakingWallet Core on yo
 
 Unpack the files into a directory and run:
 
-- `bin/yieldstakingwallet-qt` (GUI) or
-- `bin/yieldstakingwalletd` (headless)
+- `bin/ysw-qt` (GUI) or
+- `bin/yswd` (headless)
 
 If this is the first time running YieldStakingWallet Core (since v5.0.0), you'll need to install the sapling params by running the included `install-params.sh` script, which copies the two params files to `$HOME/.yieldstakingwallet-params`
 
 ### Windows
 
-Unpack the files into a directory, and then run yieldstakingwallet-qt.exe.
+Unpack the files into a directory, and then run ysw-qt.exe.
 
 ### macOS
 

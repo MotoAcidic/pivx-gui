@@ -5,10 +5,10 @@
 """Test bitcoind with different proxy configuration.
 
 Test plan:
-- Start yieldstakingwalletd's with different proxy configurations
+- Start yswd's with different proxy configurations
 - Use addnode to initiate connections
 - Verify that proxies are connected to, and the right connection command is given
-- Proxy configurations to test on yieldstakingwalletd side:
+- Proxy configurations to test on yswd side:
     - `-proxy` (proxy everything)
     - `-onion` (proxy just onions)
     - `-proxyrandomize` Circuit randomization
@@ -18,8 +18,8 @@ Test plan:
     - proxy on IPv6
 
 - Create various proxies (as threads)
-- Create yieldstakingwalletds that connect to them
-- Manipulate the yieldstakingwalletds using addnode (onetry) an observe effects
+- Create yswds that connect to them
+- Manipulate the yswds using addnode (onetry) an observe effects
 
 addnode connect to IPv4
 addnode connect to IPv6

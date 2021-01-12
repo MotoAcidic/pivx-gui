@@ -373,8 +373,8 @@ SOURCES += src/activemasternode.cpp \
            src/crypter.cpp \
            src/obfuscation-relay.cpp \
            src/obfuscation.cpp \
-           src/yieldstakingwallet-cli.cpp \
-           src/yieldstakingwallet-tx.cpp \
+           src/ysw-cli.cpp \
+           src/ysw-tx.cpp \
            src/yieldstakingwallet.cpp \
            src/db.cpp \
            src/eccryptoverify.cpp \

@@ -1,5 +1,5 @@
 [Protocol]
-exec=yieldstakingwallet-qt '%u'
+exec=ysw-qt '%u'
 protocol=yieldstakingwallet
 input=none
 output=none
