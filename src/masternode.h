@@ -121,15 +121,28 @@ public:
         MASTERNODE_VIN_SPENT,
     };
 
+    enum LevelValue : unsigned {
+        UNSPECIFIED = 0u,
+        MIN = 1u,
+        MAX = 3u,
+    };
+
     CTxIn vin;
     CService addr;
     CPubKey pubKeyCollateralAddress;
     CPubKey pubKeyMasternode;
+    CAmount deposit;
     int64_t sigTime; //mnb message time
     int protocolVersion;
     int nScanningErrorCount;
     int nLastScanningErrorBlockHeight;
     CMasternodePing lastPing;
+
+    static unsigned Level(CAmount vin_val);
+    static unsigned Level(const CTxIn& vin);
+
+    static bool IsDepositCoins(CAmount);
+    static bool IsDepositCoins(const CTxIn& vin, CAmount& vin_val);
 
     explicit CMasternode();
     CMasternode(const CMasternode& other);
@@ -155,6 +168,7 @@ public:
         swap(first.addr, second.addr);
         swap(first.pubKeyCollateralAddress, second.pubKeyCollateralAddress);
         swap(first.pubKeyMasternode, second.pubKeyMasternode);
+        swap(first.deposit, second.deposit);
         swap(first.sigTime, second.sigTime);
         swap(first.lastPing, second.lastPing);
         swap(first.protocolVersion, second.protocolVersion);
@@ -192,6 +206,7 @@ public:
         READWRITE(vchSig);
         READWRITE(sigTime);
         READWRITE(protocolVersion);
+        READWRITE(deposit);
         READWRITE(lastPing);
         READWRITE(nScanningErrorCount);
         READWRITE(nLastScanningErrorBlockHeight);
@@ -251,6 +266,11 @@ public:
         if (activeState == CMasternode::MASTERNODE_VIN_SPENT)   return "VIN_SPENT";
         if (activeState == CMasternode::MASTERNODE_REMOVE)      return "REMOVE";
         return strprintf("INVALID_%d", activeState);
+    }
+
+    unsigned Level() const
+    {
+        return Level(deposit);
     }
 
     bool IsValidNetAddr() const;
