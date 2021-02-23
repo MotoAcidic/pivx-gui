@@ -73,6 +73,7 @@ CMasternode::CMasternode() :
     addr = CService();
     pubKeyCollateralAddress = CPubKey();
     pubKeyMasternode = CPubKey();
+    deposit = 0 * COIN;
     sigTime = 0;
     lastPing = CMasternodePing();
     protocolVersion = PROTOCOL_VERSION;
@@ -88,6 +89,7 @@ CMasternode::CMasternode(const CMasternode& other) :
     addr = other.addr;
     pubKeyCollateralAddress = other.pubKeyCollateralAddress;
     pubKeyMasternode = other.pubKeyMasternode;
+    deposit = other.deposit;
     sigTime = other.sigTime;
     lastPing = other.lastPing;
     protocolVersion = other.protocolVersion;
@@ -178,6 +180,51 @@ CMasternode::state CMasternode::GetActiveState() const
     return MASTERNODE_ENABLED;
 }
 
+unsigned CMasternode::Level(CAmount vin_val)
+{
+    switch(vin_val) {
+        case 10000 * COIN: return 1;
+        case 100000 * COIN: return 2;
+        case 1000000 * COIN: return 3;
+        default: return LevelValue::UNSPECIFIED;
+    }
+}
+
+unsigned CMasternode::Level(const CTxIn& vin)
+{
+    CAmount vin_val;
+
+    if (!IsDepositCoins(vin, vin_val))
+        return LevelValue::UNSPECIFIED;
+
+    return Level(vin_val);
+}
+
+bool CMasternode::IsDepositCoins(CAmount vin_val)
+{
+    return Level(vin_val) > LevelValue::UNSPECIFIED;
+}
+
+bool CMasternode::IsDepositCoins(const CTxIn& vin, CAmount& vin_val)
+{
+    CTransaction prevout_tx;
+    uint256 hashBlock;
+
+    const bool vin_valid = GetTransaction(vin.prevout.hash, prevout_tx, hashBlock, true)
+                   && (vin.prevout.n < prevout_tx.vout.size());
+
+    if (!vin_valid)
+        return false;
+
+    const CAmount vin_amount = prevout_tx.vout[vin.prevout.n].nValue;
+
+    if (!IsDepositCoins(vin_amount))
+        return false;
+
+    vin_val = vin_amount;
+    return true;
+}
+
 bool CMasternode::IsValidNetAddr() const
 {
     // TODO: regtest is fine with any addresses for now,
@@ -194,8 +241,8 @@ bool CMasternode::IsInputAssociatedWithPubkey() const
     CTransaction txVin;
     uint256 hash;
     if(GetTransaction(vin.prevout.hash, txVin, hash, true)) {
-        for (CTxOut out : txVin.vout) {
-            if (out.nValue == 10000 * COIN && out.scriptPubKey == payee) return true;
+        for (const CTxOut& out : txVin.vout) {
+            if (CMasternode::IsDepositCoins(out.nValue) && out.scriptPubKey == payee) return true;
         }
     }
 
@@ -281,6 +328,15 @@ bool CMasternodeBroadcast::Create(const CTxIn& txin,
 {
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
+
+    CMasternode* mnode = mnodeman.Find(service);
+
+    if (mnode && mnode->vin != txin) {
+        strErrorRet = strprintf("Duplicate Masternode address: %s", service.ToString());
+        LogPrint(BCLog::MASTERNODE,"CMasternodeBroadcast::Create -- %s\n", strErrorRet);
+        mnbRet = CMasternodeBroadcast();
+        return false;
+    }
 
     LogPrint(BCLog::MASTERNODE, "CMasternodeBroadcast::Create -- pubKeyCollateralAddressNew = %s, pubKeyMasternodeNew.GetID() = %s\n",
              EncodeDestination(pubKeyCollateralAddressNew.GetID()),
@@ -606,7 +662,8 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireAvailable, bool fCh
     if (!mnodeman.IsWithinDepth(blockHash, 2 * MNPING_DEPTH)) {
         LogPrint(BCLog::MNPING,"%s: Masternode %s block hash %s is too old or has an invalid block hash\n",
                                         __func__, vin.prevout.hash.ToString(), blockHash.ToString());
-        nDos = 33;
+        // don't ban peers relaying stale data before the active protocol enforcement
+        nDos = (ActiveProtocol() < MIN_PEER_CACHEDVERSION ? 0 : 33);
         return false;
     }
 

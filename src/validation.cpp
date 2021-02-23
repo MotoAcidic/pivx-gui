@@ -810,9 +810,14 @@ CAmount GetBlockValue(int nHeight)
     return 60001 * COIN;
 }
 
-int64_t GetMasternodePayment()
+int64_t GetMasternodePayment(unsigned mnlevel)
 {
-    return 3 * COIN;
+    switch(mnlevel) {
+        case 1: return COIN / 2; // 0.5
+        case 2: return 1 * COIN; // 1
+        case 3: return 2 * COIN; // 2
+        default: return 0;
+    }
 }
 
 bool IsInitialBlockDownload()
@@ -2624,8 +2629,10 @@ bool CheckColdStakeFreeOutput(const CTransaction& tx, const int nHeight)
     const unsigned int outs = tx.vout.size();
     const CTxOut& lastOut = tx.vout[outs-1];
     if (outs >=3 && lastOut.scriptPubKey != tx.vout[outs-2].scriptPubKey) {
-        if (lastOut.nValue == GetMasternodePayment())
-            return true;
+        for (unsigned mnlevel = CMasternode::LevelValue::MIN; mnlevel <= CMasternode::LevelValue::MAX; ++mnlevel) {
+            if (lastOut.nValue == GetMasternodePayment(mnlevel))
+                return true;
+        }
 
         // This could be a budget block.
         if (Params().IsRegTestNet())

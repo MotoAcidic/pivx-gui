@@ -114,7 +114,7 @@ public:
     CMasternodeMan();
 
     /// Add an entry
-    bool Add(CMasternode& mn);
+    bool Add(const CMasternode& mn);
 
     /// Ask (source) node for mnb
     void AskForMN(CNode* pnode, const CTxIn& vin);
@@ -128,7 +128,8 @@ public:
     void SetBestHeight(int height) { nBestHeight.store(height, std::memory_order_release); };
     int GetBestHeight() const { return nBestHeight.load(std::memory_order_acquire); }
 
-    int CountEnabled(int protocolVersion = -1) const;
+    unsigned CountEnabled(unsigned mnlevel = CMasternode::LevelValue::UNSPECIFIED, int protocolVersion = -1) const;
+    std::map<unsigned, int> CountEnabledByLevels(int protocolVersion = -1) const;
 
     /// Count the number of nodes with a specific proto version for each network. Return the total.
     int CountNetworks(int& ipv4, int& ipv6, int& onion) const;
@@ -139,15 +140,17 @@ public:
     CMasternode* Find(const COutPoint& collateralOut);
     const CMasternode* Find(const COutPoint& collateralOut) const;
     CMasternode* Find(const CPubKey& pubKeyMasternode);
+    CMasternode* Find(const CScript& payee);
+    CMasternode* Find(const CService& service);
 
     /// Check all transactions in a block, for spent masternode collateral outpoints (marking them as spent)
     void CheckSpentCollaterals(const std::vector<CTransactionRef>& vtx);
 
     /// Find an entry in the masternode list that is next to be paid
-    const CMasternode* GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount) const;
+    const CMasternode* GetNextMasternodeInQueueForPayment(int nBlockHeight, unsigned mnlevel, bool fFilterSigTime, int& nCount) const;
 
     /// Get the current winner for this block
-    const CMasternode* GetCurrentMasterNode(int mod = 1, int64_t nBlockHeight = 0, int minProtocol = 0) const;
+    const CMasternode* GetCurrentMasterNode(unsigned mnlevel, int mod = 1, int64_t nBlockHeight = 0, int minProtocol = 0) const;
 
     /// vector of pairs <masternode winner, height>
     std::vector<std::pair<MasternodeRef, int>> GetMnScores(int nLast) const;
@@ -162,7 +165,7 @@ public:
     int ProcessGetMNList(CNode* pfrom, CTxIn& vin);
 
     /// Return the number of Masternodes older than (default) 8000 seconds
-    int stable_size() const;
+    int stable_size(unsigned mnlevel = CMasternode::LevelValue::UNSPECIFIED) const;
 
     std::string ToString() const;
 

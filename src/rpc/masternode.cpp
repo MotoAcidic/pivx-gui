@@ -180,10 +180,13 @@ UniValue listmasternodes(const JSONRPCRequest& request)
 
 UniValue getmasternodecount (const JSONRPCRequest& request)
 {
-    if (request.fHelp || (request.params.size() > 0))
+    if (request.fHelp || (request.params.size() != 1))
         throw std::runtime_error(
-            "getmasternodecount\n"
+            "getmasternodecount level\n"
             "\nGet masternode count values\n"
+
+            "\nArguments:\n"
+            "1. level       (numeric, required) Specify which masternode tier to check.\n"
 
             "\nResult:\n"
             "{\n"
@@ -206,12 +209,16 @@ UniValue getmasternodecount (const JSONRPCRequest& request)
     int nChainHeight = WITH_LOCK(cs_main, return chainActive.Height());
     if (nChainHeight < 0) return "unknown";
 
-    mnodeman.GetNextMasternodeInQueueForPayment(nChainHeight, true, nCount);
+    const unsigned mnlevel = AmountFromValue(request.params[0]);
+    if (mnlevel < CMasternode::LevelValue::MIN || mnlevel > CMasternode::LevelValue::MAX) throw std::runtime_error("Invalid masternode level\n");
+    mnodeman.GetNextMasternodeInQueueForPayment(nChainHeight, mnlevel, true, nCount);
     int total = mnodeman.CountNetworks(ipv4, ipv6, onion);
 
     obj.pushKV("total", total);
     obj.pushKV("stable", mnodeman.stable_size());
-    obj.pushKV("enabled", mnodeman.CountEnabled());
+    obj.pushKV("enabled", (uint64_t)mnodeman.CountEnabled());
+    obj.pushKV("levelstable", mnodeman.stable_size(mnlevel));
+    obj.pushKV("levelenabled", (uint64_t)mnodeman.CountEnabled(mnlevel));
     obj.pushKV("inqueue", nCount);
     obj.pushKV("ipv4", ipv4);
     obj.pushKV("ipv6", ipv6);
@@ -222,10 +229,13 @@ UniValue getmasternodecount (const JSONRPCRequest& request)
 
 UniValue masternodecurrent (const JSONRPCRequest& request)
 {
-    if (request.fHelp || (request.params.size() != 0))
+    if (request.fHelp || (request.params.size() != 1))
         throw std::runtime_error(
-            "masternodecurrent\n"
+            "masternodecurrent level\n"
             "\nGet current masternode winner (scheduled to be paid next).\n"
+
+            "\nArguments:\n"
+            "1. level       (numeric, required) Specify which masternode tier to check.\n"
 
             "\nResult:\n"
             "{\n"
@@ -241,7 +251,9 @@ UniValue masternodecurrent (const JSONRPCRequest& request)
 
     const int nHeight = WITH_LOCK(cs_main, return chainActive.Height() + 1);
     int nCount = 0;
-    const CMasternode* winner = mnodeman.GetNextMasternodeInQueueForPayment(nHeight, true, nCount);
+    const unsigned mnlevel = AmountFromValue(request.params[0]);
+    if (mnlevel < CMasternode::LevelValue::MIN || mnlevel > CMasternode::LevelValue::MAX) throw std::runtime_error("Invalid masternode level\n");
+    const CMasternode* winner = mnodeman.GetNextMasternodeInQueueForPayment(nHeight, mnlevel, true, nCount);
     if (winner) {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("protocol", (int64_t)winner->protocolVersion);
