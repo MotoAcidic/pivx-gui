@@ -1,23 +1,22 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin Core developers
-// Copyright (c) 2017-2019 The PIVX developers
+// Copyright (c) 2017-2019 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chain.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
-#include "main.h"
 #include "httpserver.h"
 #include "rpc/server.h"
 #include "streams.h"
 #include "sync.h"
 #include "txmempool.h"
 #include "utilstrencodings.h"
+#include "validation.h"
 #include "version.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/dynamic_bitset.hpp>
 
 #include <univalue.h>
 
@@ -267,6 +266,9 @@ static bool rest_block_notxdetails(HTTPRequest* req, const std::string& strURIPa
     return rest_block(req, strURIPart, false);
 }
 
+// A bit of a hack - dependency on a function defined in rpc/blockchain.cpp
+UniValue getblockchaininfo(const JSONRPCRequest& request);
+
 static bool rest_chaininfo(HTTPRequest* req, const std::string& strURIPart)
 {
     if (!CheckWarmup(req))
@@ -440,7 +442,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
                 return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Parse error");
 
             txid.SetHex(strTxid);
-            vOutPoints.push_back(COutPoint(txid, (uint32_t)nOutput));
+            vOutPoints.emplace_back(txid, (uint32_t)nOutput);
         }
 
         if (vOutPoints.size() > 0)
@@ -494,7 +496,8 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
     std::vector<unsigned char> bitmap;
     std::vector<CCoin> outs;
     std::string bitmapStringRepresentation;
-    boost::dynamic_bitset<unsigned char> hits(vOutPoints.size());
+    std::vector<bool> hits;
+    bitmap.resize((vOutPoints.size() + 7) / 8);
     {
         LOCK2(cs_main, mempool.cs);
 
@@ -517,9 +520,9 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
 
             hits.push_back(hit);
             bitmapStringRepresentation.append(hit ? "1" : "0"); // form a binary string representation (human-readable for json output)
+            bitmap[i / 8] |= ((uint8_t)hit) << (i % 8);
         }
     }
-    boost::to_block_range(hits, std::back_inserter(bitmap));
 
     switch (rf) {
     case RF_BINARY: {
@@ -549,23 +552,23 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
 
         // pack in some essentials
         // use more or less the same output as mentioned in Bip64
-        objGetUTXOResponse.push_back(Pair("chainHeight", chainActive.Height()));
-        objGetUTXOResponse.push_back(Pair("chaintipHash", chainActive.Tip()->GetBlockHash().GetHex()));
-        objGetUTXOResponse.push_back(Pair("bitmap", bitmapStringRepresentation));
+        objGetUTXOResponse.pushKV("chainHeight", chainActive.Height());
+        objGetUTXOResponse.pushKV("chaintipHash", chainActive.Tip()->GetBlockHash().GetHex());
+        objGetUTXOResponse.pushKV("bitmap", bitmapStringRepresentation);
 
         UniValue utxos(UniValue::VARR);
         for (const CCoin& coin : outs) {
             UniValue utxo(UniValue::VOBJ);
-            utxo.push_back(Pair("height", (int32_t)coin.nHeight));
-            utxo.push_back(Pair("value", ValueFromAmount(coin.out.nValue)));
+            utxo.pushKV("height", (int32_t)coin.nHeight);
+            utxo.pushKV("value", ValueFromAmount(coin.out.nValue));
 
             // include the script in a json output
             UniValue o(UniValue::VOBJ);
             ScriptPubKeyToJSON(coin.out.scriptPubKey, o, true);
-            utxo.push_back(Pair("scriptPubKey", o));
+            utxo.pushKV("scriptPubKey", o);
             utxos.push_back(utxo);
         }
-        objGetUTXOResponse.push_back(Pair("utxos", utxos));
+        objGetUTXOResponse.pushKV("utxos", utxos);
 
         // return json string
         std::string strJSON = objGetUTXOResponse.write() + "\n";

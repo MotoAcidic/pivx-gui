@@ -1,0 +1,6 @@
+usr/local/bin/ysw-qt usr/bin
+share/pixmaps/yieldstakingwallet32.xpm usr/share/pixmaps
+share/pixmaps/yieldstakingwallet16.xpm usr/share/pixmaps
+share/pixmaps/yieldstakingwallet128.png usr/share/pixmaps
+debian/ysw-qt.desktop usr/share/applications
+debian/ysw-qt.protocol usr/share/kde4/services/

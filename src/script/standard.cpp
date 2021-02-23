@@ -1,15 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2017-2020 The PIVX developers
+// Copyright (c) 2017-2020 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 #include "script/standard.h"
 
 #include "pubkey.h"
 #include "script/script.h"
-#include "util.h"
-#include "utilstrencodings.h"
 
 typedef std::vector<unsigned char> valtype;
 
@@ -94,6 +92,9 @@ static bool MatchMultisig(const CScript& script, unsigned int& required, std::ve
  */
 bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet)
 {
+    if (scriptPubKey.empty())
+        return false;
+
     vSolutionsRet.clear();
 
     // Shortcut for pay-to-script-hash, which are more constrained than the other types:
@@ -326,6 +327,14 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
     return script;
 }
 
+CScript GetScriptForOpReturn(const uint256& message)
+{
+    CScript script;
+    script << OP_RETURN << ToByteVector(message);
+    return script;
+}
+
 bool IsValidDestination(const CTxDestination& dest) {
     return dest.which() != 0;
 }
+

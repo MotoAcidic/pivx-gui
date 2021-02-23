@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2016-2020 The PIVX developers
+// Copyright (c) 2016-2020 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,8 +17,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#include <boost/function.hpp>
 
 class CCoinsViewDBCursor;
 class uint256;
@@ -76,12 +74,26 @@ public:
     bool GetCoin(const COutPoint& outpoint, Coin& coin) const override;
     bool HaveCoin(const COutPoint& outpoint) const override;
     uint256 GetBestBlock() const override;
-    bool BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock) override;
     CCoinsViewCursor* Cursor() const override;
 
     //! Attempt to update from an older database format. Returns whether an error occurred.
     bool Upgrade();
     size_t EstimateSize() const override;
+
+    bool BatchWrite(CCoinsMap& mapCoins,
+                    const uint256& hashBlock,
+                    const uint256& hashSaplingAnchor,
+                    CAnchorsSaplingMap& mapSaplingAnchors,
+                    CNullifiersMap& mapSaplingNullifiers) override;
+
+    // Sapling, the implementation of the following functions can be found in sapling_txdb.cpp.
+    bool GetSaplingAnchorAt(const uint256 &rt, SaplingMerkleTree &tree) const override;
+    bool GetNullifier(const uint256 &nf) const override;
+    uint256 GetBestAnchor() const override;
+    bool BatchWriteSapling(const uint256& hashSaplingAnchor,
+                           CAnchorsSaplingMap& mapSaplingAnchors,
+                           CNullifiersMap& mapSaplingNullifiers,
+                           CDBBatch& batch);
 };
 
 /** Specialization of CCoinsViewCursor to iterate over a CCoinsViewDB */
@@ -100,7 +112,7 @@ public:
 private:
     CCoinsViewDBCursor(CDBIterator* pcursorIn, const uint256& hashBlockIn):
         CCoinsViewCursor(hashBlockIn), pcursor(pcursorIn) {}
-    boost::scoped_ptr<CDBIterator> pcursor;
+    std::unique_ptr<CDBIterator> pcursor;
     std::pair<char, COutPoint> keyTmp;
 
     friend class CCoinsViewDB;
@@ -129,10 +141,8 @@ public:
     bool ReadFlag(const std::string& name, bool& fValue);
     bool WriteInt(const std::string& name, int nValue);
     bool ReadInt(const std::string& name, int& nValue);
-    bool LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256&)> insertBlockIndex);
+    bool LoadBlockIndexGuts(std::function<CBlockIndex*(const uint256&)> insertBlockIndex);
     bool ReadLegacyBlockIndex(const uint256& blockHash, CLegacyBlockIndex& biRet);
-    bool WriteMoneySupply(const int64_t& nSupply);
-    bool ReadMoneySupply(int64_t& nSupply) const;
 };
 
 /** Zerocoin database (zerocoin/) */
@@ -146,11 +156,11 @@ private:
     void operator=(const CZerocoinDB&);
 
 public:
-    /** Write zPIV mints to the zerocoinDB in a batch */
+    /** Write zYSW mints to the zerocoinDB in a batch */
     bool WriteCoinMintBatch(const std::vector<std::pair<libzerocoin::PublicCoin, uint256> >& mintInfo);
     bool ReadCoinMint(const CBigNum& bnPubcoin, uint256& txHash);
     bool ReadCoinMint(const uint256& hashPubcoin, uint256& hashTx);
-    /** Write zPIV spends to the zerocoinDB in a batch */
+    /** Write zYSW spends to the zerocoinDB in a batch */
     bool WriteCoinSpendBatch(const std::vector<std::pair<libzerocoin::CoinSpend, uint256> >& spendInfo);
     bool ReadCoinSpend(const CBigNum& bnSerial, uint256& txHash);
     bool ReadCoinSpend(const uint256& hashSerial, uint256 &txHash);

@@ -1,5 +1,5 @@
 // Copyright (c) 2015 The Bitcoin Core developers
-// Copyright (c) 2017-2019 The PIVX developers
+// Copyright (c) 2017-2019 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -89,7 +89,7 @@ void CScheduler::schedule(CScheduler::Function f, boost::chrono::system_clock::t
 {
     {
         boost::unique_lock<boost::mutex> lock(newTaskMutex);
-        taskQueue.insert(std::make_pair(t, f));
+        taskQueue.emplace(t, f);
     }
     newTaskScheduled.notify_one();
 }

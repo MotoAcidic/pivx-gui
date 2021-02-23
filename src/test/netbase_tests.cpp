@@ -1,12 +1,12 @@
 // Copyright (c) 2012-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2015 The Dash Core developers
-// Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2015-2020 The YieldStakingWallet developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "net.h"    // validateMasternodeIP
 #include "netbase.h"
-#include "test/test_pivx.h"
+#include "test/test_yieldstakingwallet.h"
 
 #include <string>
 
@@ -78,15 +78,15 @@ BOOST_AUTO_TEST_CASE(netbase_splithost)
     BOOST_CHECK(TestSplitHost("www.bitcoin.org:80", "www.bitcoin.org", 80));
     BOOST_CHECK(TestSplitHost("[www.bitcoin.org]:80", "www.bitcoin.org", 80));
     BOOST_CHECK(TestSplitHost("127.0.0.1", "127.0.0.1", -1));
-    BOOST_CHECK(TestSplitHost("127.0.0.1:51472", "127.0.0.1", 51472));
+    BOOST_CHECK(TestSplitHost("127.0.0.1:51479", "127.0.0.1", 51479));
     BOOST_CHECK(TestSplitHost("[127.0.0.1]", "127.0.0.1", -1));
-    BOOST_CHECK(TestSplitHost("[127.0.0.1]:51472", "127.0.0.1", 51472));
+    BOOST_CHECK(TestSplitHost("[127.0.0.1]:51479", "127.0.0.1", 51479));
     BOOST_CHECK(TestSplitHost("::ffff:127.0.0.1", "::ffff:127.0.0.1", -1));
-    BOOST_CHECK(TestSplitHost("[::ffff:127.0.0.1]:51472", "::ffff:127.0.0.1", 51472));
-    BOOST_CHECK(TestSplitHost("[::]:51472", "::", 51472));
-    BOOST_CHECK(TestSplitHost("::51472", "::51472", -1));
-    BOOST_CHECK(TestSplitHost(":51472", "", 51472));
-    BOOST_CHECK(TestSplitHost("[]:51472", "", 51472));
+    BOOST_CHECK(TestSplitHost("[::ffff:127.0.0.1]:51479", "::ffff:127.0.0.1", 51479));
+    BOOST_CHECK(TestSplitHost("[::]:51479", "::", 51479));
+    BOOST_CHECK(TestSplitHost("::51479", "::51479", -1));
+    BOOST_CHECK(TestSplitHost(":51479", "", 51479));
+    BOOST_CHECK(TestSplitHost("[]:51479", "", 51479));
     BOOST_CHECK(TestSplitHost("", "", -1));
 }
 
@@ -99,10 +99,10 @@ bool static TestParse(std::string src, std::string canon)
 BOOST_AUTO_TEST_CASE(netbase_lookupnumeric)
 {
     BOOST_CHECK(TestParse("127.0.0.1", "127.0.0.1:65535"));
-    BOOST_CHECK(TestParse("127.0.0.1:51472", "127.0.0.1:51472"));
+    BOOST_CHECK(TestParse("127.0.0.1:51479", "127.0.0.1:51479"));
     BOOST_CHECK(TestParse("::ffff:127.0.0.1", "127.0.0.1:65535"));
     BOOST_CHECK(TestParse("::", "[::]:65535"));
-    BOOST_CHECK(TestParse("[::]:51472", "[::]:51472"));
+    BOOST_CHECK(TestParse("[::]:51479", "[::]:51479"));
     BOOST_CHECK(TestParse("[127.0.0.1]", "127.0.0.1:65535"));
     BOOST_CHECK(TestParse(":::", "[::]:0"));
 }
@@ -303,6 +303,24 @@ BOOST_AUTO_TEST_CASE(netbase_getgroup)
     BOOST_CHECK(ResolveIP("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").GetGroup() == boost::assign::list_of((unsigned char)NET_TOR)(239)); // Tor
     BOOST_CHECK(ResolveIP("2001:470:abcd:9999:9999:9999:9999:9999").GetGroup() == boost::assign::list_of((unsigned char)NET_IPV6)(32)(1)(4)(112)(175)); //he.net
     BOOST_CHECK(ResolveIP("2001:2001:9999:9999:9999:9999:9999:9999").GetGroup() == boost::assign::list_of((unsigned char)NET_IPV6)(32)(1)(32)(1)); //IPv6
+}
+
+BOOST_AUTO_TEST_CASE(netbase_parsenetwork)
+{
+    BOOST_CHECK_EQUAL(ParseNetwork("ipv4"), NET_IPV4);
+    BOOST_CHECK_EQUAL(ParseNetwork("ipv6"), NET_IPV6);
+    BOOST_CHECK_EQUAL(ParseNetwork("onion"), NET_TOR);
+    BOOST_CHECK_EQUAL(ParseNetwork("tor"), NET_TOR);
+
+    BOOST_CHECK_EQUAL(ParseNetwork("IPv4"), NET_IPV4);
+    BOOST_CHECK_EQUAL(ParseNetwork("IPv6"), NET_IPV6);
+    BOOST_CHECK_EQUAL(ParseNetwork("ONION"), NET_TOR);
+    BOOST_CHECK_EQUAL(ParseNetwork("TOR"), NET_TOR);
+
+    BOOST_CHECK_EQUAL(ParseNetwork(":)"), NET_UNROUTABLE);
+    BOOST_CHECK_EQUAL(ParseNetwork("tÖr"), NET_UNROUTABLE);
+    BOOST_CHECK_EQUAL(ParseNetwork("\xfe\xff"), NET_UNROUTABLE);
+    BOOST_CHECK_EQUAL(ParseNetwork(""), NET_UNROUTABLE);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

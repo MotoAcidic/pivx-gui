@@ -1,5 +1,5 @@
 // Copyright (c) 2017-2020 The Bitcoin Core developers
-// Copyright (c) 2020 The PIVX developers
+// Copyright (c) 2020 The YieldStakingWallet developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,7 +12,6 @@
 #define BOOST_FILESYSTEM_NO_DEPRECATED
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 
 /** Filesystem operations and types */
 namespace fs = boost::filesystem;

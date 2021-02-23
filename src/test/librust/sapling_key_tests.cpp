@@ -1,14 +1,16 @@
 // Copyright (c) 2016-2020 The ZCash developers
-// Copyright (c) 2020 The PIVX developers
+// Copyright (c) 2020 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "test/test_pivx.h"
+#include "test/test_yieldstakingwallet.h"
 
-#include "sapling/address.hpp"
+#include "sapling/address.h"
 #include "sapling/key_io_sapling.h"
+
 #include <string>
 #include <vector>
+
 #include <boost/test/unit_test.hpp>
 
 
@@ -74,6 +76,22 @@ BOOST_AUTO_TEST_CASE(EncodeAndDecodeSapling)
             auto sk2 = boost::get<libzcash::SaplingExtendedSpendingKey>(spendingkey2);
             BOOST_CHECK(sk == sk2);
         }
+
+        {
+            auto extfvk = sk.ToXFVK();
+            std::string vk_string = KeyIO::EncodeViewingKey(extfvk);
+            BOOST_CHECK(
+                vk_string.substr(0, 7) ==
+                Params().Bech32HRP(CChainParams::SAPLING_EXTENDED_FVK));
+
+            auto viewingkey2 = KeyIO::DecodeViewingKey(vk_string);
+            BOOST_CHECK(IsValidViewingKey(viewingkey2));
+
+            BOOST_CHECK(boost::get<libzcash::SaplingExtendedFullViewingKey>(&viewingkey2) != nullptr);
+            auto extfvk2 = boost::get<libzcash::SaplingExtendedFullViewingKey>(viewingkey2);
+            BOOST_CHECK(extfvk == extfvk2);
+        }
+
         {
             auto addr = sk.DefaultAddress();
 

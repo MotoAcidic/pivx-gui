@@ -6,7 +6,7 @@
 
 import os
 
-from test_framework.test_framework import PivxTestFramework
+from test_framework.test_framework import YieldSakingWalletTestFramework
 from test_framework.util import (assert_equal, assert_raises_rpc_error)
 
 
@@ -68,7 +68,7 @@ def read_dump(file_name, addrs, hd_master_addr_old):
         return found_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret
 
 
-class WalletDumpTest(PivxTestFramework):
+class WalletDumpTest(YieldSakingWalletTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [["-keypool=90"]]
@@ -122,6 +122,10 @@ class WalletDumpTest(PivxTestFramework):
 
         # Overwriting should fail
         assert_raises_rpc_error(-8, "already exists", self.nodes[0].dumpwallet, dumpUnencrypted)
+
+        # Keyword matching should fail
+        assert_raises_rpc_error(-1, "Scam attempt detected!", self.nodes[0].dumpwallet, "debug")
+        assert_raises_rpc_error(-1, "Scam attempt detected!", self.nodes[0].dumpwallet, "wallet.log")
 
 if __name__ == '__main__':
     WalletDumpTest().main ()

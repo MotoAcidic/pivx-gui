@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2013 The Bitcoin developers
-// Copyright (c) 2017-2020 The PIVX developers
+// Copyright (c) 2017-2020 The YieldStakingWallet developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -53,6 +53,8 @@ public:
     static const QString Delegable; /**< Specifies cold staking addresses which delegated tokens to this wallet*/
     static const QString ColdStaking; /**< Specifies cold staking own addresses */
     static const QString ColdStakingSend; /**< Specifies send cold staking addresses (simil 'contacts')*/
+    static const QString ShieldedReceive; /**< Specifies shielded send address */
+    static const QString ShieldedSend; /**< Specifies shielded receive address */
 
     /** @name Methods overridden from QAbstractTableModel
         @{*/
@@ -62,6 +64,7 @@ public:
     int sizeRecv() const;
     int sizeDell() const;
     int sizeColdSend() const;
+    int sizeShieldedSend() const;
     void notifyChange(const QModelIndex &index);
     QVariant data(const QModelIndex& index, int role) const;
     bool setData(const QModelIndex& index, const QVariant& value, int role);
@@ -98,7 +101,7 @@ public:
     /**
      * Return last unused address
      */
-    QString getAddressToShow() const;
+    QString getAddressToShow(bool shielded = false) const;
 
     EditStatus getEditStatus() const { return editStatus; }
 

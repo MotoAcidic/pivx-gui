@@ -33,7 +33,7 @@ enum UpgradeIndex : uint32_t {
     UPGRADE_ZC_PUBLIC,
     UPGRADE_V3_4,
     UPGRADE_V4_0,
-    UPGRADE_V5_DUMMY,
+    UPGRADE_V5_0,
     UPGRADE_TESTDUMMY,
     // NOTE: Also add new upgrades to NetworkUpgradeInfo in upgrades.cpp
     MAX_NETWORK_UPGRADES
@@ -105,6 +105,7 @@ struct Params {
     int64_t nTargetTimespanV2;
     int64_t nTargetSpacing;
     int nTimeSlotLength;
+    int nMaxProposalPayments;
 
     // spork keys
     std::string strSporkPubKey;
@@ -121,8 +122,8 @@ struct Params {
     int height_ZC_RecalcAccumulators;
 
     // validation by-pass
-    int64_t nPivxBadBlockTime;
-    unsigned int nPivxBadBlockBits;
+    int64_t nYieldSakingWalletBadBlockTime;
+    unsigned int nYieldSakingWalletBadBlockBits;
 
     // Map with network updates
     NetworkUpgrade vUpgrades[MAX_NETWORK_UPGRADES];
@@ -169,7 +170,6 @@ struct Params {
     CAmount ZC_MinMintFee;
     int ZC_MinStakeDepth;
     int ZC_TimeStart;
-    CAmount ZC_WrappedSerialsSupply;
 
     libzerocoin::ZerocoinParams* Zerocoin_Params(bool useModulusV1) const
     {

@@ -2,15 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIVX_ZIP32_H
-#define PIVX_ZIP32_H
+#ifndef YieldSakingWallet_ZIP32_H
+#define YieldSakingWallet_ZIP32_H
 
 #include "serialize.h"
 #include "allocators.h"
 #include "blob_uint256.h"
 #include "key.h"
 #include "uint256.h"
-#include "sapling/address.hpp"
+#include "sapling/address.h"
 
 #include <boost/optional.hpp>
 
@@ -41,6 +41,9 @@ public:
         return !(a == b);
     }
 };
+
+// This is not part of ZIP 32, but is here because it's linked to the seed (for now).
+uint256 ovkForShieldingFromTaddr(HDSeed& seed);
 
 namespace libzcash {
 
@@ -131,11 +134,15 @@ struct SaplingExtendedSpendingKey {
     }
 };
 
-typedef boost::variant<InvalidEncoding, SproutSpendingKey, SaplingExtendedSpendingKey> SpendingKey;
+typedef boost::variant<InvalidEncoding, SaplingExtendedSpendingKey> SpendingKey;
+typedef boost::variant<InvalidEncoding, SaplingExtendedFullViewingKey> ViewingKey;
 
 }
 
 /** Check whether a SpendingKey is not an InvalidEncoding. */
 bool IsValidSpendingKey(const libzcash::SpendingKey& zkey);
 
-#endif // PIVX_ZIP32_H
+/** Check whether a ViewingKey is not an InvalidEncoding. */
+bool IsValidViewingKey(const libzcash::ViewingKey& vk);
+
+#endif // YieldSakingWallet_ZIP32_H

@@ -5,7 +5,7 @@
 """Test the listreceivedbyaddress RPC."""
 from decimal import Decimal
 
-from test_framework.test_framework import PivxTestFramework
+from test_framework.test_framework import YieldSakingWalletTestFramework
 from test_framework.util import (
     assert_array_result,
     assert_equal,
@@ -14,7 +14,7 @@ from test_framework.util import (
 )
 
 
-class ReceivedByTest(PivxTestFramework):
+class ReceivedByTest(YieldSakingWalletTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 
@@ -143,7 +143,7 @@ class ReceivedByTest(PivxTestFramework):
         # listreceivedbylabel should return updated received list
         assert_array_result(self.nodes[1].listreceivedbylabel(),
                             {"label": label},
-                            {"label": received_by_label_json["account"], "amount": (received_by_label_json["amount"] + Decimal("0.1"))})
+                            {"label": received_by_label_json["label"], "amount": (received_by_label_json["amount"] + Decimal("0.1"))})
 
         # getreceivedbylabel should return updated receive total
         balance = self.nodes[1].getreceivedbylabel(label)

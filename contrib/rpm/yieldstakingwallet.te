@@ -1,0 +1,81 @@
+policy_module(yieldstakingwallet, 1.100.1)
+
+########################################
+#
+# Declarations
+#
+
+type yieldstakingwallet_t;
+type yieldstakingwallet_exec_t;
+init_daemon_domain(yieldstakingwallet_t, yieldstakingwallet_exec_t)
+
+permissive yieldstakingwallet_t;
+
+type yieldstakingwallet_initrc_exec_t;
+init_script_file(yieldstakingwallet_initrc_exec_t)
+
+type yieldstakingwallet_conf_t;
+files_type(yieldstakingwallet_conf_t)
+
+type yieldstakingwallet_var_lib_t;
+files_type(yieldstakingwallet_var_lib_t)
+
+type yieldstakingwallet_var_run_t;
+files_type(yieldstakingwallet_var_run_t)
+
+type yieldstakingwallet_port_t;
+corenet_port(yieldstakingwallet_port_t)
+
+########################################
+#
+# yieldstakingwallet local policy
+#
+allow yieldstakingwallet_t self:process { fork };
+
+allow yieldstakingwallet_t self:fifo_file rw_fifo_file_perms;
+allow yieldstakingwallet_t self:unix_stream_socket create_stream_socket_perms;
+
+manage_dirs_pattern(yieldstakingwallet_t, yieldstakingwallet_conf_t, yieldstakingwallet_conf_t)
+manage_files_pattern(yieldstakingwallet_t, yieldstakingwallet_conf_t, yieldstakingwallet_conf_t)
+
+manage_dirs_pattern(yieldstakingwallet_t, yieldstakingwallet_var_lib_t, yieldstakingwallet_var_lib_t)
+manage_files_pattern(yieldstakingwallet_t, yieldstakingwallet_var_lib_t, yieldstakingwallet_var_lib_t)
+files_var_lib_filetrans(yieldstakingwallet_t, yieldstakingwallet_var_lib_t, { dir file })
+
+manage_dirs_pattern(yieldstakingwallet_t, yieldstakingwallet_var_run_t, yieldstakingwallet_var_run_t)
+manage_files_pattern(yieldstakingwallet_t, yieldstakingwallet_var_run_t, yieldstakingwallet_var_run_t)
+
+sysnet_dns_name_resolve(yieldstakingwallet_t)
+corenet_all_recvfrom_unlabeled(yieldstakingwallet_t)
+
+allow yieldstakingwallet_t self:tcp_socket create_stream_socket_perms;
+corenet_tcp_sendrecv_generic_if(yieldstakingwallet_t)
+corenet_tcp_sendrecv_generic_node(yieldstakingwallet_t)
+corenet_tcp_sendrecv_all_ports(yieldstakingwallet_t)
+corenet_tcp_bind_generic_node(yieldstakingwallet_t)
+
+gen_require(`
+    type yieldstakingwallet_port_t;
+')
+allow yieldstakingwallet_t yieldstakingwallet_port_t:tcp_socket name_bind;
+
+gen_require(`
+    type yieldstakingwallet_port_t;
+')
+allow yieldstakingwallet_t yieldstakingwallet_port_t:tcp_socket name_connect;
+
+domain_use_interactive_fds(yieldstakingwallet_t)
+
+files_read_etc_files(yieldstakingwallet_t)
+
+miscfiles_read_localization(yieldstakingwallet_t)
+
+sysnet_dns_name_resolve(yieldstakingwallet_t)
+
+allow yieldstakingwallet_t yieldstakingwallet_exec_t:file execute_no_trans;
+allow yieldstakingwallet_t self:process setsched;
+corecmd_exec_ls(yieldstakingwallet_t)
+corenet_tcp_connect_http_port(yieldstakingwallet_t)
+dev_read_urand(yieldstakingwallet_t)
+fs_getattr_xattr_fs(yieldstakingwallet_t)
+kernel_read_system_state(yieldstakingwallet_t)

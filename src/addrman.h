@@ -1,6 +1,6 @@
 // Copyright (c) 2012 Pieter Wuille
 // Copyright (c) 2012-2015 The Bitcoin developers
-// Copyright (c) 2017-2020 The PIVX developers
+// Copyright (c) 2017-2020 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -463,6 +463,7 @@ public:
 
     void Clear()
     {
+        LOCK(cs);
         std::vector<int>().swap(vRandom);
         nKey = GetRandHash();
         for (size_t bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++) {
@@ -480,6 +481,8 @@ public:
         nTried = 0;
         nNew = 0;
         nLastGood = 1; //Initially at 1 so that "never" is strictly worse.
+        mapInfo.clear();
+        mapAddr.clear();
     }
 
     CAddrMan()

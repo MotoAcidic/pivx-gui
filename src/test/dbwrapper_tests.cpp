@@ -5,10 +5,8 @@
 #include "dbwrapper.h"
 #include "uint256.h"
 #include "random.h"
-#include "test/test_pivx.h"
+#include "test/test_yieldstakingwallet.h"
 
-#include <boost/assign/std/vector.hpp> // for 'operator+=()'
-#include <boost/assert.hpp>
 #include <boost/test/unit_test.hpp>
 
 // Test if a string consists entirely of null characters
@@ -88,7 +86,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
         uint256 in2 = GetRandHash();
         BOOST_CHECK(dbw.Write(key2, in2));
 
-        boost::scoped_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
+        std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
 
         // Be sure to seek past any earlier key (if it exists)
         it->Seek(key);

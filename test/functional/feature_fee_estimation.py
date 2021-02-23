@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test fee estimation code."""
 
-from test_framework.test_framework import PivxTestFramework
+from test_framework.test_framework import YieldSakingWalletTestFramework
 from test_framework.util import *
 from test_framework.script import CScript, OP_1, OP_DROP, OP_2, OP_HASH160, OP_EQUAL, hash160, OP_TRUE
 from test_framework.mininode import CTransaction, CTxIn, CTxOut, COutPoint, ToHex, COIN
@@ -145,7 +145,7 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
     return all_estimates
 
 
-class EstimateFeeTest(PivxTestFramework):
+class EstimateFeeTest(YieldSakingWalletTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
 
@@ -155,9 +155,9 @@ class EstimateFeeTest(PivxTestFramework):
         But first we need to use one node to create a lot of outputs
         which we will use to generate our transactions.
         """
-        self.add_nodes(3, extra_args=[[],
-                                      ["-blockmaxsize=18000"],
-                                      ["-blockmaxsize=9000"]])
+        self.add_nodes(3, extra_args=[["-minrelaytxfee=0.000001"],
+                                      ["-minrelaytxfee=0.000001", "-blockmaxsize=18000"],
+                                      ["-minrelaytxfee=0.000001", "-blockmaxsize=9000"]])
         # Use node0 to mine blocks for input splitting
         # Node1 mines small blocks but that are bigger than the expected transaction rate.
         # NOTE: the CreateNewBlock code starts counting block size at 1,000 bytes,

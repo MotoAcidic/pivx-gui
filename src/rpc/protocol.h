@@ -1,6 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2017-2019 The PIVX developers
+// Copyright (c) 2017-2019 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -28,7 +28,7 @@ enum HTTPStatusCode {
     HTTP_SERVICE_UNAVAILABLE   = 503,
 };
 
-//! PIVX RPC error codes
+//! YieldStakingWallet RPC error codes
 enum RPCErrorCode {
     //! Standard JSON-RPC 2.0 errors
     RPC_INVALID_REQUEST     = -32600,
@@ -58,7 +58,7 @@ enum RPCErrorCode {
     RPC_TRANSACTION_ALREADY_IN_CHAIN    = RPC_VERIFY_ALREADY_IN_CHAIN,
 
     //! P2P client errors
-    RPC_CLIENT_NOT_CONNECTED            = -9, //! PIVX is not connected
+    RPC_CLIENT_NOT_CONNECTED            = -9, //! YieldStakingWallet is not connected
     RPC_CLIENT_IN_INITIAL_DOWNLOAD      = -10, //! Still downloading initial blocks
     RPC_CLIENT_NODE_ALREADY_ADDED       = -23, //! Node is already added
     RPC_CLIENT_NODE_NOT_ADDED           = -24, //! Node has not been added before
@@ -68,7 +68,7 @@ enum RPCErrorCode {
 
     //! Wallet errors
     RPC_WALLET_ERROR                    = -4, //! Unspecified problem with wallet (key not found etc.)
-    RPC_WALLET_INSUFFICIENT_FUNDS       = -6, //! Not enough funds in wallet or account
+    RPC_WALLET_INSUFFICIENT_FUNDS       = -6, //! Not enough funds in wallet
     RPC_WALLET_INVALID_LABEL_NAME       = -11, //! Invalid label name
     RPC_WALLET_KEYPOOL_RAN_OUT          = -12, //! Keypool ran out, call keypoolrefill first
     RPC_WALLET_UNLOCK_NEEDED            = -13, //! Enter the wallet passphrase with walletpassphrase first
@@ -76,9 +76,6 @@ enum RPCErrorCode {
     RPC_WALLET_WRONG_ENC_STATE          = -15, //! Command given in wrong wallet encryption state (encrypting an encrypted wallet etc.)
     RPC_WALLET_ENCRYPTION_FAILED        = -16, //! Failed to encrypt the wallet
     RPC_WALLET_ALREADY_UNLOCKED         = -17, //! Wallet is already unlocked
-
-    //! Backwards compatible aliases
-    RPC_WALLET_INVALID_ACCOUNT_NAME = RPC_WALLET_INVALID_LABEL_NAME,
 };
 
 UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id);

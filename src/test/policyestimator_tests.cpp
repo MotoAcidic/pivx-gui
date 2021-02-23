@@ -2,12 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "policy/feerate.h"
 #include "policy/fees.h"
 #include "txmempool.h"
 #include "uint256.h"
 #include "util.h"
 
-#include "test/test_pivx.h"
+#include "test/test_yieldstakingwallet.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -37,7 +38,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     for (unsigned int i = 0; i < 128; i++)
         garbage.push_back('X');
     CMutableTransaction tx;
-    std::list<CTransaction> dummyConflicted;
+    std::list<CTransactionRef> dummyConflicted;
     tx.vin.resize(1);
     tx.vin[0].scriptSig = garbage;
     tx.vout.resize(1);
@@ -45,7 +46,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     CFeeRate baseRate(basefee, ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION));
 
     // Create a fake block
-    std::vector<CTransaction> block;
+    std::vector<CTransactionRef> block;
     int blocknum = 0;
 
     // Loop through 200 blocks
@@ -68,7 +69,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             while (txHashes[9-h].size()) {
                 CTransaction btx;
                 if (mpool.lookup(txHashes[9-h].back(), btx))
-                    block.push_back(btx);
+                    block.push_back(std::make_shared<const CTransaction>(btx));
                 txHashes[9-h].pop_back();
             }
         }
@@ -145,7 +146,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
         while(txHashes[j].size()) {
             CTransaction btx;
             if (mpool.lookup(txHashes[j].back(), btx))
-                block.push_back(btx);
+                block.push_back(std::make_shared<const CTransaction>(btx));
             txHashes[j].pop_back();
         }
     }
@@ -165,7 +166,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                 mpool.addUnchecked(hash, entry.Fee(feeV[j]).Time(GetTime()).Priority(0).Height(blocknum).FromTx(tx, &mpool));
                 CTransaction btx;
                 if (mpool.lookup(hash, btx))
-                    block.push_back(btx);
+                    block.push_back(std::make_shared<const CTransaction>(btx));
             }
         }
         mpool.removeForBlock(block, ++blocknum, dummyConflicted);

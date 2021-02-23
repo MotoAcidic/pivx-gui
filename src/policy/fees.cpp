@@ -309,7 +309,7 @@ CBlockPolicyEstimator::CBlockPolicyEstimator(const CFeeRate& _minRelayFee)
 
 void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, bool fCurrentEstimate)
 {
-    if(entry.HasZerocoins()) {
+    if(entry.HasZerocoins() || entry.IsShielded()) {
         // Zerocoin spends/mints had fixed feerate. Skip them for the estimates.
         return;
     }
@@ -319,7 +319,7 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     if (mapMemPoolTxs.count(hash)) {
         LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy error mempool tx %s already being tracked\n",
                  hash.ToString().c_str());
-    return;
+        return;
     }
 
     if (txHeight < nBestSeenHeight) {
@@ -340,7 +340,7 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
         return;
     }
 
-    // Feerates are stored and reported as PIV-per-kb:
+    // Feerates are stored and reported as YSW-per-kb:
     CFeeRate feeRate(entry.GetFee(), entry.GetTxSize());
 
     mapMemPoolTxs[hash].blockHeight = txHeight;
@@ -349,7 +349,7 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
 
 void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry& entry)
 {
-    if(entry.HasZerocoins()) {
+    if(entry.HasZerocoins() || entry.IsShielded()) {
         // Zerocoin spends/mints had fixed feerate. Skip them for the estimates.
         return;
     }
@@ -372,7 +372,7 @@ void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
         return;
     }
 
-    // Feerates are stored and reported as PIV-per-kb:
+    // Feerates are stored and reported as YSW-per-kb:
     CFeeRate feeRate(entry.GetFee(), entry.GetTxSize());
 
     feeStats.Record(blocksToConfirm, (double)feeRate.GetFeePerK());
@@ -441,7 +441,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, int *answerFoun
         *answerFoundAtTarget = confTarget - 1;
 
     // If mempool is limiting txs , return at least the min feerate from the mempool
-    CAmount minPoolFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
+    CAmount minPoolFee = pool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
     if (minPoolFee > 0 && minPoolFee > median)
         return CFeeRate(minPoolFee);
 
@@ -462,7 +462,7 @@ double CBlockPolicyEstimator::estimateSmartPriority(int confTarget, int *answerF
         *answerFoundAtTarget = confTarget;
 
     // If mempool is limiting txs, no priority txs are allowed
-    CAmount minPoolFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
+    CAmount minPoolFee = pool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
     if (minPoolFee > 0)
         return INF_PRIORITY;
 

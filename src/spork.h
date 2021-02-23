@@ -1,5 +1,5 @@
 // Copyright (c) 2014-2016 The Dash developers
-// Copyright (c) 2016-2020 The PIVX developers
+// Copyright (c) 2016-2020 The YieldStakingWallet developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +9,6 @@
 #include "base58.h"
 #include "hash.h"
 #include "key.h"
-#include "main.h"
 #include "messagesigner.h"
 #include "net.h"
 #include "sporkid.h"
@@ -119,6 +118,12 @@ public:
 
     bool SetPrivKey(std::string strPrivKey);
     std::string ToString() const;
+
+    // Process SPORK message, returning the banning score (or 0 if no banning is needed)
+    int ProcessSporkMsg(CDataStream& vRecv);
+    int ProcessSporkMsg(CSporkMessage& spork);
+    // Process GETSPORKS message
+    void ProcessGetSporks(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 };
 
 #endif

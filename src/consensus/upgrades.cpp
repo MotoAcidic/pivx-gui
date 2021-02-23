@@ -1,5 +1,5 @@
 // Copyright (c) 2018 The Zcash developers
-// Copyright (c) 2020 The PIVX developers
+// Copyright (c) 2020 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,7 +15,7 @@
 const struct NUInfo NetworkUpgradeInfo[Consensus::MAX_NETWORK_UPGRADES] = {
         {
                 /*.strName =*/ "Base",
-                /*.strInfo =*/ "PIVX network",
+                /*.strInfo =*/ "YieldStakingWallet network",
         },
         {
                 /*.strName =*/ "PoS",
@@ -42,16 +42,16 @@ const struct NUInfo NetworkUpgradeInfo[Consensus::MAX_NETWORK_UPGRADES] = {
                 /*.strInfo =*/ "activation of zerocoin public spends (spend v3)",
         },
         {
-                /*.strName =*/ "PIVX_v3.4",
+                /*.strName =*/ "YieldSakingWallet_v3.4",
                 /*.strInfo =*/ "new 256-bit stake modifier - start block v6",
         },
         {
-                /*.strName =*/ "PIVX_v4.0",
+                /*.strName =*/ "YieldSakingWallet_v4.0",
                 /*.strInfo =*/ "new message sigs - start block v7 - time protocol - zc spend v4",
         },
         {
-                /*.strName =*/ "v5_dummy",
-                /*.strInfo =*/ "Placeholder for future PIVX version 5.0 upgrade",
+                /*.strName =*/ "v5_shield",
+                /*.strInfo =*/ "Sapling Shield - start block v8 - start transaction v3",
         },
         {
                 /*.strName =*/ "Test_dummy",

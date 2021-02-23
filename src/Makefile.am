@@ -117,27 +117,33 @@ TESTS =
 BENCHMARKS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += pivxd
+  bin_PROGRAMS += yswd
 endif
 
 if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += pivx-cli pivx-tx
+  bin_PROGRAMS += ysw-cli ysw-tx
 endif
 
 LIBSAPLING_H = \
   sapling/sapling.h \
   bech32.h \
   sapling/key_io_sapling.h \
-  sapling/util.h \
+  sapling/sapling_core_write.h \
+  sapling/sapling_util.h \
   sapling/prf.h \
-  sapling/noteencryption.hpp \
-  sapling/address.hpp \
-  sapling/note.hpp \
+  sapling/noteencryption.h \
+  sapling/address.h \
+  sapling/note.h \
   sapling/zip32.h \
-  sapling/saplingscriptpubkeyman.h
+  sapling/saplingscriptpubkeyman.h \
+  sapling/incrementalmerkletree.h \
+  sapling/proof.h \
+  sapling/sapling_transaction.h \
+  sapling/transaction_builder.h \
+  sapling/sapling_operation.h
 
 .PHONY: FORCE cargo-build check-symbols check-security
-# pivx core #
+# yieldstakingwallet core #
 BITCOIN_CORE_H = \
   activemasternode.h \
   addrdb.h \
@@ -175,9 +181,9 @@ BITCOIN_CORE_H = \
   core_io.h \
   cuckoocache.h \
   crypter.h \
+  cyclingvector.h \
   pairresult.h \
   addressbook.h \
-  denomination_functions.h \
   wallet/db.h \
   fs.h \
   hash.h \
@@ -190,7 +196,6 @@ BITCOIN_CORE_H = \
   invalid_serials.json.h \
   legacy/stakemodifier.h \
   kernel.h \
-  swifttx.h \
   key.h \
   key_io.h \
   keystore.h \
@@ -198,25 +203,34 @@ BITCOIN_CORE_H = \
   limitedmap.h \
   logging.h \
   legacy/validation_zerocoin_legacy.h \
-  main.h \
+  sapling/sapling_validation.h \
+  budget/budgetdb.h \
+  budget/budgetmanager.h \
+  budget/budgetproposal.h \
+  budget/budgetvote.h \
+  budget/finalizedbudget.h \
+  budget/finalizedbudgetvote.h \
   memusage.h \
   masternode.h \
   masternode-payments.h \
-  masternode-budget.h \
   masternode-sync.h \
   masternodeman.h \
   masternodeconfig.h \
   merkleblock.h \
   messagesigner.h \
   miner.h \
+  moneysupply.h \
   net.h \
+  net_processing.h \
   netaddress.h \
   netbase.h \
   netmessagemaker.h \
   noui.h \
+  policy/feerate.h \
   policy/fees.h \
   policy/policy.h \
   optional.h \
+  operationresult.h \
   pow.h \
   prevector.h \
   protocol.h \
@@ -226,7 +240,9 @@ BITCOIN_CORE_H = \
   reverse_iterate.h \
   rpc/client.h \
   rpc/protocol.h \
+  rpc/register.h \
   rpc/server.h \
+  tiertwo/specialtx_validation.h \
   scheduler.h \
   script/interpreter.h \
   script/keyorigin.h \
@@ -254,7 +270,6 @@ BITCOIN_CORE_H = \
   guiinterface.h \
   guiinterfaceutil.h \
   uint256.h \
-  sapling/uint252.h \
   uint512.h \
   blob_uint256.h \
   undo.h \
@@ -265,21 +280,21 @@ BITCOIN_CORE_H = \
   utilstrencodings.h \
   utilmoneystr.h \
   utiltime.h \
+  validation.h \
   validationinterface.h \
   version.h \
   wallet/hdchain.h \
   wallet/rpcwallet.h \
   wallet/scriptpubkeyman.h \
+  destination_io.h \
   wallet/wallet.h \
   wallet/walletdb.h \
-  zpivchain.h \
-  zpiv/deterministicmint.h \
-  zpiv/mintpool.h \
-  zpiv/zerocoin.h \
-  zpiv/zpivtracker.h \
-  zpiv/zpivwallet.h \
-  zpiv/zpivmodule.h \
-  zpiv/zpos.h \
+  warnings.h \
+  zyswchain.h \
+  zysw/deterministicmint.h \
+  zysw/mintpool.h \
+  zysw/zerocoin.h \
+  zysw/zpos.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h \
   zmq/zmqnotificationinterface.h \
@@ -291,7 +306,7 @@ obj/build.h: FORCE
 	  "$(abs_top_srcdir)"
 libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
-# server: shared between pivxd and pivx-qt
+# server: shared between yswd and ysw-qt
 libbitcoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_server_a_SOURCES = \
@@ -309,10 +324,11 @@ libbitcoin_server_a_SOURCES = \
   init.cpp \
   dbwrapper.cpp \
   legacy/validation_zerocoin_legacy.cpp \
-  main.cpp \
+  sapling/sapling_validation.cpp \
   merkleblock.cpp \
   miner.cpp \
   net.cpp \
+  net_processing.cpp \
   noui.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
@@ -326,15 +342,18 @@ libbitcoin_server_a_SOURCES = \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
+  tiertwo/specialtx_validation.cpp \
   script/sigcache.cpp \
   script/ismine.cpp \
   sporkdb.cpp \
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
+  sapling/sapling_txdb.cpp \
   txmempool.cpp \
+  validation.cpp \
   validationinterface.cpp \
-  zpivchain.cpp \
+  zyswchain.cpp \
   $(BITCOIN_CORE_H) \
   $(LIBSAPLING_H)
 
@@ -347,22 +366,26 @@ libbitcoin_zmq_a_SOURCES = \
   zmq/zmqpublishnotifier.cpp
 endif
 
-# wallet: shared between pivxd and pivx-qt, but only linked
+# wallet: shared between yswd and ysw-qt, but only linked
 # when wallet enabled
 libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
   activemasternode.cpp \
   bip38.cpp \
-  denomination_functions.cpp \
   interface/wallet.cpp \
   addressbook.cpp \
   crypter.cpp \
   key_io.cpp \
-  swifttx.cpp \
+  budget/budgetdb.cpp \
+  budget/budgetmanager.cpp \
+  budget/budgetproposal.cpp \
+  budget/budgetvote.cpp \
+  budget/finalizedbudget.cpp \
+  budget/finalizedbudgetvote.cpp \
   masternode.cpp \
-  masternode-budget.cpp \
   masternode-payments.cpp \
+  tiertwo_networksync.cpp \
   masternode-sync.cpp \
   masternodeconfig.cpp \
   masternodeman.cpp \
@@ -374,17 +397,14 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/rpcwallet.cpp \
   wallet/hdchain.cpp \
   wallet/scriptpubkeyman.cpp \
+  destination_io.cpp \
   wallet/wallet.cpp \
-  wallet/wallet_zerocoin.cpp \
   wallet/walletdb.cpp \
-  zpiv/deterministicmint.cpp \
-  zpiv/zerocoin.cpp \
-  zpiv/mintpool.cpp \
-  zpiv/zpivwallet.cpp \
-  zpiv/zpivtracker.cpp \
+  zysw/deterministicmint.cpp \
+  zysw/zerocoin.cpp \
+  zysw/mintpool.cpp \
   stakeinput.cpp \
-  zpiv/zpivmodule.cpp \
-  zpiv/zpos.cpp \
+  zysw/zpos.cpp \
   $(BITCOIN_CORE_H) \
   $(LIBSAPLING_H)
 
@@ -443,6 +463,7 @@ libzerocoin_libbitcoin_zerocoin_a_SOURCES = \
   libzerocoin/Params.h \
   libzerocoin/SpendType.h \
   libzerocoin/ZerocoinDefines.h \
+  zysw/zyswmodule.h \
   libzerocoin/bignum.cpp \
   libzerocoin/Accumulator.cpp \
   libzerocoin/Coin.cpp \
@@ -450,7 +471,8 @@ libzerocoin_libbitcoin_zerocoin_a_SOURCES = \
   libzerocoin/CoinSpend.cpp \
   libzerocoin/Denominations.cpp \
   libzerocoin/ParamGeneration.cpp \
-  libzerocoin/Params.cpp
+  libzerocoin/Params.cpp \
+  zysw/zyswmodule.cpp
 if USE_NUM_GMP
   libzerocoin_libbitcoin_zerocoin_a_SOURCES += libzerocoin/bignum_gmp.cpp
 endif
@@ -458,12 +480,11 @@ if USE_NUM_OPENSSL
   libzerocoin_libbitcoin_zerocoin_a_SOURCES += libzerocoin/bignum_openssl.cpp
 endif
 
-# common: shared between pivxd, and pivx-qt and non-server tools
+# common: shared between yswd, and ysw-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
   allocators.cpp \
-  amount.cpp \
   base58.cpp \
   bip38.cpp \
   chainparams.cpp \
@@ -472,9 +493,9 @@ libbitcoin_common_a_SOURCES = \
   compressor.cpp \
   consensus/merkle.cpp \
   primitives/block.cpp \
-  zpiv/deterministicmint.cpp \
+  zysw/deterministicmint.cpp \
   primitives/transaction.cpp \
-  zpiv/zerocoin.cpp \
+  zysw/zerocoin.cpp \
   core_read.cpp \
   core_write.cpp \
   hash.cpp \
@@ -483,6 +504,7 @@ libbitcoin_common_a_SOURCES = \
   keystore.cpp \
   netaddress.cpp \
   netbase.cpp \
+  policy/feerate.cpp \
   protocol.cpp \
   pubkey.cpp \
   scheduler.cpp \
@@ -490,6 +512,7 @@ libbitcoin_common_a_SOURCES = \
   script/script.cpp \
   script/sign.cpp \
   script/standard.cpp \
+  warnings.cpp \
   script/script_error.cpp \
   spork.cpp \
   sporkdb.cpp \
@@ -536,22 +559,27 @@ libsapling_a_CPPFLAGS = $(AM_CPPFLAGS) $(PIC_FLAGS) $(BITCOIN_INCLUDES)
 libsapling_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsapling_a_SOURCES = \
   bech32.cpp \
-  sapling/util.cpp \
+  sapling/sapling_util.cpp \
   sapling/key_io_sapling.cpp \
+  sapling/sapling_core_write.cpp \
   sapling/prf.cpp \
   sapling/noteencryption.cpp \
   sapling/address.cpp \
   sapling/note.cpp \
   sapling/zip32.cpp \
   sapling/crypter_sapling.cpp \
-  sapling/saplingscriptpubkeyman.cpp
+  sapling/saplingscriptpubkeyman.cpp \
+  sapling/incrementalmerkletree.cpp \
+  sapling/proof.cpp \
+  sapling/transaction_builder.cpp \
+  sapling/sapling_operation.cpp
 
 if GLIBC_BACK_COMPAT
 libsapling_a_SOURCES += compat/glibc_compat.cpp
 AM_LDFLAGS += $(COMPAT_LDFLAGS)
 endif
 
-# cli: shared between pivx-cli and pivx-qt
+# cli: shared between ysw-cli and ysw-qt
 libbitcoin_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_cli_a_SOURCES = \
@@ -562,16 +590,16 @@ libbitcoin_cli_a_SOURCES = \
 nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
-# pivxd binary #
-pivxd_SOURCES = pivxd.cpp
-pivxd_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-pivxd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-pivxd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# yswd binary #
+yswd_SOURCES = yswd.cpp
+yswd_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+yswd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+yswd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-pivxd_SOURCES += pivxd-res.rc
+yswd_SOURCES += yswd-res.rc
 endif
-pivxd_LDADD = \
+yswd_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
@@ -588,19 +616,19 @@ pivxd_LDADD = \
   $(LIBRUSTZCASH) \
   $(LIBZCASH_LIBS)
 
-pivxd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+yswd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
-# pivx-cli binary #
-pivx_cli_SOURCES = pivx-cli.cpp
-pivx_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
-pivx_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-pivx_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# ysw-cli binary #
+ysw_cli_SOURCES = ysw-cli.cpp
+ysw_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+ysw_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+ysw_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-pivx_cli_SOURCES += pivx-cli-res.rc
+ysw_cli_SOURCES += ysw-cli-res.rc
 endif
 
-pivx_cli_LDADD = \
+ysw_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
@@ -609,20 +637,20 @@ pivx_cli_LDADD = \
   $(LIBRUSTZCASH) \
   $(LIBZCASH_LIBS)
 
-pivx_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+ysw_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
-# pivx-tx binary #
-pivx_tx_SOURCES = pivx-tx.cpp
-pivx_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-pivx_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-pivx_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# ysw-tx binary #
+ysw_tx_SOURCES = ysw-tx.cpp
+ysw_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+ysw_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+ysw_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-pivx_tx_SOURCES += pivx-tx-res.rc
+ysw_tx_SOURCES += ysw-tx-res.rc
 endif
 
-pivx_tx_LDADD = \
+ysw_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_ZEROCOIN) \
@@ -633,7 +661,7 @@ pivx_tx_LDADD = \
   $(LIBRUSTZCASH) \
   $(LIBZCASH_LIBS)
 
-pivx_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+ysw_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
 # bitcoinconsensus library #
@@ -675,17 +703,24 @@ CLEANFILES = $(EXTRA_LIBRARIES)
 CLEANFILES += *.gcda *.gcno
 CLEANFILES += compat/*.gcda compat/*.gcno
 CLEANFILES += consensus/*.gcda consensus/*.gcno
+CLEANFILES += crc32c/src/*.gcda crc32c/src/*.gcno
 CLEANFILES += crypto/*.gcda crypto/*.gcno
+CLEANFILES += interfaces/*.gcda interfaces/*.gcno
+CLEANFILES += legacy/*.gcda legacy/*.gcno
 CLEANFILES += libzerocoin/*.gcda libzerocoin/*.gcno
+CLEANFILES += policy/*.gcda policy/*.gcno
 CLEANFILES += primitives/*.gcda primitives/*.gcno
 CLEANFILES += rpc/*.gcda rpc/*.gcno
+CLEANFILES += sapling/*.gcda sapling/*.gcno
 CLEANFILES += script/*.gcda script/*.gcno
 CLEANFILES += support/*.gcda support/*.gcno
+CLEANFILES += test/librust/*.gcda test/librust/*.gcno
 CLEANFILES += univalue/*.gcda univalue/*.gcno
+CLEANFILES += util/*.gcda util/*.gcno
 CLEANFILES += wallet/*.gcda wallet/*.gcno
 CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
-CLEANFILES += zpiv/*.gcda zpiv/*.gcno
+CLEANFILES += zysw/*.gcda zysw/*.gcno
 CLEANFILES += obj/build.h
 
 CTAES_DIST =  crypto/ctaes/bench.c
@@ -697,12 +732,12 @@ CTAES_DIST += crypto/ctaes/test.c
 EXTRA_DIST = $(CTAES_DIST) rust
 
 
-config/pivx-config.h: config/stamp-h1
+config/yieldstakingwallet-config.h: config/stamp-h1
 	@$(MAKE) -C $(top_builddir) $(subdir)/$(@)
-config/stamp-h1: $(top_srcdir)/$(subdir)/config/pivx-config.h.in $(top_builddir)/config.status
+config/stamp-h1: $(top_srcdir)/$(subdir)/config/yieldstakingwallet-config.h.in $(top_builddir)/config.status
 	$(AM_V_at)$(MAKE) -C $(top_builddir) $(subdir)/$(@)
-$(top_srcdir)/$(subdir)/config/pivx-config.h.in:  $(am__configure_deps)
-	$(AM_V_at)$(MAKE) -C $(top_srcdir) $(subdir)/config/pivx-config.h.in
+$(top_srcdir)/$(subdir)/config/yieldstakingwallet-config.h.in:  $(am__configure_deps)
+	$(AM_V_at)$(MAKE) -C $(top_srcdir) $(subdir)/config/yieldstakingwallet-config.h.in
 
 clean-local:
 	-$(MAKE) -C secp256k1 clean

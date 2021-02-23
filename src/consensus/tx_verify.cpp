@@ -6,8 +6,10 @@
 
 #include "consensus/consensus.h"
 #include "consensus/zerocoin_verify.h"
-#include "main.h"
+#include "sapling/sapling_validation.h"
 #include "script/interpreter.h"
+#include "tiertwo/specialtx_validation.h"
+#include "../validation.h"
 
 bool IsFinalTx(const CTransaction& tx, int nBlockHeight, int64_t nBlockTime)
 {
@@ -54,23 +56,46 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
     return nSigOps;
 }
 
-bool CheckTransaction(const CTransaction& tx, bool fZerocoinActive, bool fRejectBadUTXO, CValidationState& state, bool fFakeSerialAttack, bool fColdStakingActive)
+bool CheckTransaction(const CTransaction& tx, bool fZerocoinActive, bool fRejectBadUTXO, CValidationState& state, bool fFakeSerialAttack, bool fColdStakingActive, bool fSaplingActive)
 {
     // Basic checks that don't depend on any context
-    if (tx.vin.empty())
+    // Transactions containing empty `vin` must have non-empty `vShieldedSpend`.
+    if (tx.vin.empty() && (tx.sapData && tx.sapData->vShieldedSpend.empty()))
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vin-empty");
-    if (tx.vout.empty())
+    // Transactions containing empty `vout` must have non-empty `vShieldedOutput`.
+    if (tx.vout.empty() && (tx.sapData && tx.sapData->vShieldedOutput.empty()))
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
 
-    // Size limits
-    unsigned int nMaxSize = MAX_ZEROCOIN_TX_SIZE;
+    // Version check
+    if (fSaplingActive) {
+        // After sapling activation we require 1 <= tx.nVersion < TxVersion::TOOHIGH
+        if (tx.nVersion < 1 || tx.nVersion >= CTransaction::TxVersion::TOOHIGH)
+            return state.DoS(10,
+                    error("%s: Transaction version (%d) too high. Max: %d", __func__, tx.nVersion, int(CTransaction::TxVersion::TOOHIGH) - 1),
+                    REJECT_INVALID, "bad-tx-version-too-high");
+    }
 
-    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > nMaxSize)
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
+    // Size limits
+    static_assert(MAX_BLOCK_SIZE_CURRENT >= MAX_TX_SIZE_AFTER_SAPLING, "Max block size must be bigger than max TX size");    // sanity
+    static_assert(MAX_TX_SIZE_AFTER_SAPLING > MAX_ZEROCOIN_TX_SIZE, "New max TX size must be bigger than old max TX size");  // sanity
+    const unsigned int nMaxSize = tx.IsShieldedTx() ? MAX_TX_SIZE_AFTER_SAPLING : MAX_ZEROCOIN_TX_SIZE;
+    if (tx.GetTotalSize() > nMaxSize) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-txns-oversize");
+    }
+
+    // Dispatch to Sapling validator
+    CAmount nValueOut = 0;
+    if (!SaplingValidation::CheckTransaction(tx, state, nValueOut, fSaplingActive)) {
+        return false;
+    }
+
+    // Dispatch to SpecialTx validator
+    if (!CheckSpecialTx(tx, state, fSaplingActive)) {
+        return false;
+    }
 
     // Check for negative or overflow output values
     const Consensus::Params& consensus = Params().GetConsensus();
-    CAmount nValueOut = 0;
     for (const CTxOut& txout : tx.vout) {
         if (txout.IsEmpty() && !tx.IsCoinBase() && !tx.IsCoinStake())
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-empty");

@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin developers
-// Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2015-2020 The YieldStakingWallet developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -40,11 +40,6 @@ class CAddrMan;
 class CBlockIndex;
 class CScheduler;
 class CNode;
-
-namespace boost
-{
-class thread_group;
-} // namespace boost
 
 /** Time between pings automatically sent out for latency probing and keepalive (in seconds). */
 static const int PING_INTERVAL = 2 * 60;
@@ -90,8 +85,6 @@ static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
 static const unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24;  // Default 24-hour ban
 
-bool RecvLine(SOCKET hSocket, std::string& strLine);
-
 typedef int NodeId;
 
 struct AddedNodeInfo
@@ -100,6 +93,13 @@ struct AddedNodeInfo
     CService resolvedAddress;
     bool fConnected;
     bool fInbound;
+
+    AddedNodeInfo(const std::string& _strAddedNode, const CService& _resolvedAddress, bool _fConnected, bool _fInbound):
+        strAddedNode(_strAddedNode),
+        resolvedAddress(_resolvedAddress),
+        fConnected(_fConnected),
+        fInbound(_fInbound)
+    {}
 };
 
 class CTransaction;
@@ -210,7 +210,6 @@ public:
         post();
     };
 
-    void RelayTransactionLockReq(const CTransaction& tx, bool relayToAll = false);
     void RelayInv(CInv& inv);
 
     // Addrman functions
@@ -385,8 +384,10 @@ private:
     std::thread threadMessageHandler;
 };
 extern std::unique_ptr<CConnman> g_connman;
-void Discover(boost::thread_group& threadGroup);
-void MapPort(bool fUseUPnP);
+void Discover();
+void StartMapPort();
+void InterruptMapPort();
+void StopMapPort();
 unsigned short GetListenPort();
 bool BindListenPort(const CService& bindAddr, std::string& strError, bool fWhitelisted = false);
 void CheckOffsetDisconnectedPeers(const CNetAddr& ip);
@@ -448,10 +449,6 @@ bool validateMasternodeIP(const std::string& addrStr);          // valid, reacha
 
 extern bool fDiscover;
 extern bool fListen;
-
-extern std::map<CInv, CDataStream> mapRelay;
-extern std::deque<std::pair<int64_t, CInv> > vRelayExpiration;
-extern RecursiveMutex cs_mapRelay;
 
 extern limitedmap<CInv, int64_t> mapAlreadyAskedFor;
 

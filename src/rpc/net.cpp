@@ -1,22 +1,22 @@
 // Copyright (c) 2009-2015 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2019 The PIVX developers
+// Copyright (c) 2015-2019 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "rpc/server.h"
 
 #include "clientversion.h"
-#include "main.h"
 #include "net.h"
 #include "netbase.h"
+#include "net_processing.h"
 #include "protocol.h"
 #include "sync.h"
 #include "timedata.h"
 #include "guiinterface.h"
 #include "util.h"
 #include "version.h"
-
+#include "validation.h"
 
 #include <univalue.h>
 
@@ -85,7 +85,7 @@ UniValue getpeerinfo(const JSONRPCRequest& request)
             "    \"pingtime\": n,             (numeric) ping time\n"
             "    \"pingwait\": n,             (numeric) ping wait\n"
             "    \"version\": v,              (numeric) The peer version, such as 7001\n"
-            "    \"subver\": \"/Pivx Core:x.x.x.x/\",  (string) The string version\n"
+            "    \"subver\": \"/YieldStakingWallet Core:x.x.x.x/\",  (string) The string version\n"
             "    \"inbound\": true|false,     (boolean) Inbound (true) or Outbound (false)\n"
             "    \"startingheight\": n,       (numeric) The starting height (block) of the peer\n"
             "    \"banscore\": n,             (numeric) The ban score\n"
@@ -122,38 +122,38 @@ UniValue getpeerinfo(const JSONRPCRequest& request)
         UniValue obj(UniValue::VOBJ);
         CNodeStateStats statestats;
         bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
-        obj.push_back(Pair("id", stats.nodeid));
-        obj.push_back(Pair("addr", stats.addrName));
+        obj.pushKV("id", stats.nodeid);
+        obj.pushKV("addr", stats.addrName);
         if (!(stats.addrLocal.empty()))
-            obj.push_back(Pair("addrlocal", stats.addrLocal));
-        obj.push_back(Pair("services", strprintf("%016x", stats.nServices)));
-        obj.push_back(Pair("lastsend", stats.nLastSend));
-        obj.push_back(Pair("lastrecv", stats.nLastRecv));
-        obj.push_back(Pair("bytessent", stats.nSendBytes));
-        obj.push_back(Pair("bytesrecv", stats.nRecvBytes));
-        obj.push_back(Pair("conntime", stats.nTimeConnected));
-        obj.push_back(Pair("timeoffset", stats.nTimeOffset));
-        obj.push_back(Pair("pingtime", stats.dPingTime));
+            obj.pushKV("addrlocal", stats.addrLocal);
+        obj.pushKV("services", strprintf("%016x", stats.nServices));
+        obj.pushKV("lastsend", stats.nLastSend);
+        obj.pushKV("lastrecv", stats.nLastRecv);
+        obj.pushKV("bytessent", stats.nSendBytes);
+        obj.pushKV("bytesrecv", stats.nRecvBytes);
+        obj.pushKV("conntime", stats.nTimeConnected);
+        obj.pushKV("timeoffset", stats.nTimeOffset);
+        obj.pushKV("pingtime", stats.dPingTime);
         if (stats.dPingWait > 0.0)
-            obj.push_back(Pair("pingwait", stats.dPingWait));
-        obj.push_back(Pair("version", stats.nVersion));
+            obj.pushKV("pingwait", stats.dPingWait);
+        obj.pushKV("version", stats.nVersion);
         // Use the sanitized form of subver here, to avoid tricksy remote peers from
         // corrupting or modifiying the JSON output by putting special characters in
         // their ver message.
-        obj.push_back(Pair("subver", stats.cleanSubVer));
-        obj.push_back(Pair("inbound", stats.fInbound));
-        obj.push_back(Pair("startingheight", stats.nStartingHeight));
+        obj.pushKV("subver", stats.cleanSubVer);
+        obj.pushKV("inbound", stats.fInbound);
+        obj.pushKV("startingheight", stats.nStartingHeight);
         if (fStateStats) {
-            obj.push_back(Pair("banscore", statestats.nMisbehavior));
-            obj.push_back(Pair("synced_headers", statestats.nSyncHeight));
-            obj.push_back(Pair("synced_blocks", statestats.nCommonHeight));
+            obj.pushKV("banscore", statestats.nMisbehavior);
+            obj.pushKV("synced_headers", statestats.nSyncHeight);
+            obj.pushKV("synced_blocks", statestats.nCommonHeight);
             UniValue heights(UniValue::VARR);
             for (int height : statestats.vHeightInFlight) {
                 heights.push_back(height);
             }
-            obj.push_back(Pair("inflight", heights));
+            obj.pushKV("inflight", heights);
         }
-        obj.push_back(Pair("whitelisted", stats.fWhitelisted));
+        obj.pushKV("whitelisted", stats.fWhitelisted);
 
         UniValue sendPerMsgCmd(UniValue::VOBJ);
         for (const mapMsgCmdSize::value_type &i : stats.mapSendBytesPerMsgCmd) {
@@ -192,7 +192,7 @@ UniValue addnode(const JSONRPCRequest& request)
             "2. \"command\"  (string, required) 'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once\n"
 
             "\nExamples:\n" +
-            HelpExampleCli("addnode", "\"192.168.0.6:51472\" \"onetry\"") + HelpExampleRpc("addnode", "\"192.168.0.6:51472\", \"onetry\""));
+            HelpExampleCli("addnode", "\"192.168.0.6:51479\" \"onetry\"") + HelpExampleRpc("addnode", "\"192.168.0.6:51479\", \"onetry\""));
 
     if(!g_connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
@@ -260,7 +260,7 @@ UniValue getaddednodeinfo(const JSONRPCRequest& request)
             "    \"connected\" : true|false,          (boolean) If connected\n"
             "    \"addresses\" : [                    (list of objects) Only when connected = true\n"
             "       {\n"
-            "         \"address\" : \"192.168.0.201:51472\",  (string) The pivx server IP and port we're connected to\n"
+            "         \"address\" : \"192.168.0.201:51479\",  (string) The yieldstakingwallet server IP and port we're connected to\n"
             "         \"connected\" : \"outbound\"           (string) connection, inbound or outbound\n"
             "       }\n"
             "     ]\n"
@@ -294,16 +294,16 @@ UniValue getaddednodeinfo(const JSONRPCRequest& request)
 
     for (const AddedNodeInfo& info : vInfo) {
         UniValue obj(UniValue::VOBJ);
-        obj.push_back(Pair("addednode", info.strAddedNode));
-        obj.push_back(Pair("connected", info.fConnected));
+        obj.pushKV("addednode", info.strAddedNode);
+        obj.pushKV("connected", info.fConnected);
         UniValue addresses(UniValue::VARR);
         if (info.fConnected) {
             UniValue address(UniValue::VOBJ);
-            address.push_back(Pair("address", info.resolvedAddress.ToString()));
-            address.push_back(Pair("connected", info.fInbound ? "inbound" : "outbound"));
+            address.pushKV("address", info.resolvedAddress.ToString());
+            address.pushKV("connected", info.fInbound ? "inbound" : "outbound");
             addresses.push_back(address);
         }
-        obj.push_back(Pair("addresses", addresses));
+        obj.pushKV("addresses", addresses);
         ret.push_back(obj);
     }
 
@@ -332,9 +332,9 @@ UniValue getnettotals(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     UniValue obj(UniValue::VOBJ);
-    obj.push_back(Pair("totalbytesrecv", g_connman->GetTotalBytesRecv()));
-    obj.push_back(Pair("totalbytessent", g_connman->GetTotalBytesSent()));
-    obj.push_back(Pair("timemillis", GetTimeMillis()));
+    obj.pushKV("totalbytesrecv", g_connman->GetTotalBytesRecv());
+    obj.pushKV("totalbytessent", g_connman->GetTotalBytesSent());
+    obj.pushKV("timemillis", GetTimeMillis());
     return obj;
 }
 
@@ -348,11 +348,11 @@ static UniValue GetNetworksInfo()
         proxyType proxy;
         UniValue obj(UniValue::VOBJ);
         GetProxy(network, proxy);
-        obj.push_back(Pair("name", GetNetworkName(network)));
-        obj.push_back(Pair("limited", IsLimited(network)));
-        obj.push_back(Pair("reachable", IsReachable(network)));
-        obj.push_back(Pair("proxy", proxy.IsValid() ? proxy.proxy.ToStringIPPort() : std::string()));
-        obj.push_back(Pair("proxy_randomize_credentials", proxy.randomize_credentials));
+        obj.pushKV("name", GetNetworkName(network));
+        obj.pushKV("limited", IsLimited(network));
+        obj.pushKV("reachable", IsReachable(network));
+        obj.pushKV("proxy", proxy.IsValid() ? proxy.proxy.ToStringIPPort() : std::string());
+        obj.pushKV("proxy_randomize_credentials", proxy.randomize_credentials);
         networks.push_back(obj);
     }
     return networks;
@@ -368,7 +368,7 @@ UniValue getnetworkinfo(const JSONRPCRequest& request)
             "\nResult:\n"
             "{\n"
             "  \"version\": xxxxx,                      (numeric) the server version\n"
-            "  \"subversion\": \"/Pivx Core:x.x.x.x/\",     (string) the server subversion string\n"
+            "  \"subversion\": \"/YieldStakingWallet Core:x.x.x.x/\",     (string) the server subversion string\n"
             "  \"protocolversion\": xxxxx,              (numeric) the protocol version\n"
             "  \"localservices\": \"xxxxxxxxxxxxxxxx\", (string) the services we offer to the network\n"
             "  \"timeoffset\": xxxxx,                   (numeric) the time offset\n"
@@ -382,7 +382,7 @@ UniValue getnetworkinfo(const JSONRPCRequest& request)
             "  }\n"
             "  ,...\n"
             "  ],\n"
-            "  \"relayfee\": x.xxxxxxxx,                (numeric) minimum relay fee for non-free transactions in pivx/kb\n"
+            "  \"relayfee\": x.xxxxxxxx,                (numeric) minimum relay fee for non-free transactions in yieldstakingwallet/kb\n"
             "  \"localaddresses\": [                    (array) list of local addresses\n"
             "  {\n"
             "    \"address\": \"xxxx\",                 (string) network address\n"
@@ -398,28 +398,28 @@ UniValue getnetworkinfo(const JSONRPCRequest& request)
 
     LOCK(cs_main);
     UniValue obj(UniValue::VOBJ);
-    obj.push_back(Pair("version", CLIENT_VERSION));
-    obj.push_back(Pair("subversion",    strSubVersion));
-    obj.push_back(Pair("protocolversion", PROTOCOL_VERSION));
+    obj.pushKV("version", CLIENT_VERSION);
+    obj.pushKV("subversion",    strSubVersion);
+    obj.pushKV("protocolversion", PROTOCOL_VERSION);
     if (g_connman)
-        obj.push_back(Pair("localservices", strprintf("%016x", g_connman->GetLocalServices())));
-    obj.push_back(Pair("timeoffset", GetTimeOffset()));
+        obj.pushKV("localservices", strprintf("%016x", g_connman->GetLocalServices()));
+    obj.pushKV("timeoffset", GetTimeOffset());
     if(g_connman)
-        obj.push_back(Pair("connections",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL)));
-    obj.push_back(Pair("networks", GetNetworksInfo()));
-    obj.push_back(Pair("relayfee", ValueFromAmount(::minRelayTxFee.GetFeePerK())));
+        obj.pushKV("connections",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL));
+    obj.pushKV("networks", GetNetworksInfo());
+    obj.pushKV("relayfee", ValueFromAmount(::minRelayTxFee.GetFeePerK()));
     UniValue localAddresses(UniValue::VARR);
     {
         LOCK(cs_mapLocalHost);
         for (const std::pair<const CNetAddr, LocalServiceInfo> &item : mapLocalHost) {
             UniValue rec(UniValue::VOBJ);
-            rec.push_back(Pair("address", item.first.ToString()));
-            rec.push_back(Pair("port", item.second.nPort));
-            rec.push_back(Pair("score", item.second.nScore));
+            rec.pushKV("address", item.first.ToString());
+            rec.pushKV("port", item.second.nPort);
+            rec.pushKV("score", item.second.nScore);
             localAddresses.push_back(rec);
         }
     }
-    obj.push_back(Pair("localaddresses", localAddresses));
+    obj.pushKV("localaddresses", localAddresses);
     return obj;
 }
 
@@ -431,7 +431,7 @@ UniValue setban(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() < 2 ||
         (strCommand != "add" && strCommand != "remove"))
         throw std::runtime_error(
-            "setban \"ip(/netmask)\" \"add|remove\" (bantime) (absolute)\n"
+            "setban \"ip(/netmask)\" \"add|remove\" ( bantime absolute )\n"
             "\nAttempts add or remove a IP/Subnet from the banned list.\n"
 
             "\nArguments:\n"
@@ -521,10 +521,10 @@ UniValue listbanned(const JSONRPCRequest& request)
     {
         CBanEntry banEntry = (*it).second;
         UniValue rec(UniValue::VOBJ);
-        rec.push_back(Pair("address", (*it).first.ToString()));
-        rec.push_back(Pair("banned_until", banEntry.nBanUntil));
-        rec.push_back(Pair("ban_created", banEntry.nCreateTime));
-        rec.push_back(Pair("ban_reason", banEntry.banReasonToString()));
+        rec.pushKV("address", (*it).first.ToString());
+        rec.pushKV("banned_until", banEntry.nBanUntil);
+        rec.pushKV("ban_created", banEntry.nCreateTime);
+        rec.pushKV("ban_reason", banEntry.banReasonToString());
 
         bannedAddresses.push_back(rec);
     }
@@ -549,4 +549,26 @@ UniValue clearbanned(const JSONRPCRequest& request)
     g_connman->ClearBanned();
 
     return NullUniValue;
+}
+
+static const CRPCCommand commands[] =
+{ //  category              name                      actor (function)         okSafeMode
+  //  --------------------- ------------------------  -----------------------  ----------
+    { "network",            "getnetworkinfo",         &getnetworkinfo,         true  },
+    { "network",            "addnode",                &addnode,                true  },
+    { "network",            "disconnectnode",         &disconnectnode,         true  },
+    { "network",            "getaddednodeinfo",       &getaddednodeinfo,       true  },
+    { "network",            "getconnectioncount",     &getconnectioncount,     true  },
+    { "network",            "getnettotals",           &getnettotals,           true  },
+    { "network",            "getpeerinfo",            &getpeerinfo,            true  },
+    { "network",            "ping",                   &ping,                   true  },
+    { "network",            "setban",                 &setban,                 true  },
+    { "network",            "listbanned",             &listbanned,             true  },
+    { "network",            "clearbanned",            &clearbanned,            true  },
+};
+
+void RegisterNetRPCCommands(CRPCTable &tableRPC)
+{
+    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
+        tableRPC.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }

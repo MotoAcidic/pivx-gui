@@ -1,12 +1,11 @@
 // Copyright (c) 2012-2014 The Bitcoin developers
-// Copyright (c) 2017-2019 The PIVX developers
+// Copyright (c) 2017-2019 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_BLOOM_H
 #define BITCOIN_BLOOM_H
 
-#include "libzerocoin/bignum.h"
 #include "serialize.h"
 
 #include <vector>
@@ -81,8 +80,6 @@ public:
         READWRITE(nTweak);
         READWRITE(nFlags);
     }
-
-    void setNotFull();
 
     void insert(const std::vector<unsigned char>& vKey);
     void insert(const COutPoint& outpoint);

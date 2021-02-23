@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=YieldStakingWallet Core
+Comment=YieldStakingWallet P2P Cryptocurrency
+Comment[fr]=YieldStakingWallet, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=YieldStakingWallet, eşten eşe kriptografik sanal para birimi
+Exec=yieldstakingwallet-qt %u
+Terminal=false
+Type=Application
+Icon=yieldstakingwallet128
+MimeType=x-scheme-handler/yieldstakingwallet;
+Categories=Office;Finance;
+StartupWMClass=YieldStakingWallet-qt

@@ -1,12 +1,12 @@
 // Copyright (c) 2016-2020 The ZCash developers
-// Copyright (c) 2020 The PIVX developers
+// Copyright (c) 2020 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "wallet/test/wallet_test_fixture.h"
 
-#include "sapling/util.h"
-#include "sapling/address.hpp"
+#include "sapling/sapling_util.h"
+#include "sapling/address.h"
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
 #include "util.h"
@@ -60,15 +60,15 @@ BOOST_AUTO_TEST_CASE(StoreAndLoadSaplingZkeys) {
     HDSeed seed1(seed.GetPrivKey());
     auto m = libzcash::SaplingExtendedSpendingKey::Master(seed1);
     auto sk = m.Derive(0);
-    BOOST_CHECK(wallet.AddSaplingZKey(sk, sk.DefaultAddress()));
+    BOOST_CHECK(wallet.AddSaplingZKey(sk));
 
     // verify wallet did add it
-    auto fvk = sk.expsk.full_viewing_key();
-    BOOST_CHECK(wallet.HaveSaplingSpendingKey(fvk));
+    auto extfvk = sk.ToXFVK();
+    BOOST_CHECK(wallet.HaveSaplingSpendingKey(extfvk));
 
     // verify spending key stored correctly
     libzcash::SaplingExtendedSpendingKey keyOut;
-    wallet.GetSaplingSpendingKey(fvk, keyOut);
+    wallet.GetSaplingSpendingKey(extfvk, keyOut);
     BOOST_CHECK(sk == keyOut);
 
     // verify there are two keys
@@ -84,11 +84,18 @@ BOOST_AUTO_TEST_CASE(StoreAndLoadSaplingZkeys) {
     auto dpa = sk.ToXFVK().Address(diversifier).get().second;
 
     // verify wallet only has the default address
-    BOOST_CHECK(wallet.HaveSaplingIncomingViewingKey(sk.DefaultAddress()));
+    libzcash::SaplingPaymentAddress defaultAddr = sk.DefaultAddress();
+    BOOST_CHECK(wallet.HaveSaplingIncomingViewingKey(defaultAddr));
+
+    // Keep trying different diversifiers until we get a different address
+    while (dpa == defaultAddr && diversifier.begin()[0] < 255) {
+        diversifier.begin()[0] += 1;
+        dpa = sk.ToXFVK().Address(diversifier).get().second;
+    }
     BOOST_CHECK(!wallet.HaveSaplingIncomingViewingKey(dpa));
 
     // manually add a diversified address
-    auto ivk = fvk.in_viewing_key();
+    auto ivk = extfvk.fvk.in_viewing_key();
     BOOST_CHECK(wallet.AddSaplingIncomingViewingKeyW(ivk, dpa));
 
     // verify wallet did add it

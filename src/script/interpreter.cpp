@@ -1,11 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2017-2020 The PIVX developers
+// Copyright (c) 2017-2020 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "interpreter.h"
 
+#include "consensus/upgrades.h"
 #include "primitives/transaction.h"
 #include "crypto/ripemd160.h"
 #include "crypto/sha1.h"
@@ -1041,6 +1042,7 @@ public:
             nInput = nIn;
         // Serialize the prevout
         ::Serialize(s, txTo.vin[nInput].prevout);
+        assert(nInput != NOT_AN_INPUT);
         // Serialize the script
         if (nInput != nIn)
             // Blank out other inputs' signatures
@@ -1070,6 +1072,8 @@ public:
     void Serialize(S &s) const {
         // Serialize nVersion
         ::Serialize(s, txTo.nVersion);
+        // Serialize nType
+        ::Serialize(s, txTo.nType);
         // Serialize vin
         unsigned int nInputs = fAnyoneCanPay ? 1 : txTo.vin.size();
         ::WriteCompactSize(s, nInputs);
@@ -1085,8 +1089,21 @@ public:
     }
 };
 
+const unsigned char YieldSakingWallet_PREVOUTS_HASH_PERSONALIZATION[crypto_generichash_blake2b_PERSONALBYTES] =
+        {'P','I','V','X','P','r','e','v','o','u','t','H','a','s','h'};
+const unsigned char YieldSakingWallet_SEQUENCE_HASH_PERSONALIZATION[crypto_generichash_blake2b_PERSONALBYTES] =
+        {'P','I','V','X','S','e','q','u','e','n','c','H','a','s','h'};
+const unsigned char YieldSakingWallet_OUTPUTS_HASH_PERSONALIZATION[crypto_generichash_blake2b_PERSONALBYTES] =
+        {'P','I','V','X','O','u','t','p','u','t','s','H','a','s','h'};
+const unsigned char YieldSakingWallet_SHIELDED_SPENDS_HASH_PERSONALIZATION[crypto_generichash_blake2b_PERSONALBYTES] =
+        {'P','I','V','X','S','S','p','e','n','d','s','H','a','s','h'};
+const unsigned char YieldSakingWallet_SHIELDED_OUTPUTS_HASH_PERSONALIZATION[crypto_generichash_blake2b_PERSONALBYTES] =
+        {'P','I','V','X','S','O','u','t','p','u','t','H','a','s','h'};
+
+
+
 uint256 GetPrevoutHash(const CTransaction& txTo) {
-    CHashWriter ss(SER_GETHASH, 0);
+    CBLAKE2bWriter ss(SER_GETHASH, 0, YieldSakingWallet_PREVOUTS_HASH_PERSONALIZATION);
     for (unsigned int n = 0; n < txTo.vin.size(); n++) {
         ss << txTo.vin[n].prevout;
     }
@@ -1094,7 +1111,7 @@ uint256 GetPrevoutHash(const CTransaction& txTo) {
 }
 
 uint256 GetSequenceHash(const CTransaction& txTo) {
-    CHashWriter ss(SER_GETHASH, 0);
+    CBLAKE2bWriter ss(SER_GETHASH, 0, YieldSakingWallet_SEQUENCE_HASH_PERSONALIZATION);
     for (unsigned int n = 0; n < txTo.vin.size(); n++) {
         ss << txTo.vin[n].nSequence;
     }
@@ -1102,9 +1119,33 @@ uint256 GetSequenceHash(const CTransaction& txTo) {
 }
 
 uint256 GetOutputsHash(const CTransaction& txTo) {
-    CHashWriter ss(SER_GETHASH, 0);
+    CBLAKE2bWriter ss(SER_GETHASH, 0, YieldSakingWallet_OUTPUTS_HASH_PERSONALIZATION);
     for (unsigned int n = 0; n < txTo.vout.size(); n++) {
         ss << txTo.vout[n];
+    }
+    return ss.GetHash();
+}
+
+uint256 GetShieldedSpendsHash(const CTransaction& txTo) {
+    assert(txTo.sapData);
+    CBLAKE2bWriter ss(SER_GETHASH, 0, YieldSakingWallet_SHIELDED_SPENDS_HASH_PERSONALIZATION);
+    auto sapData = txTo.sapData;
+    for (const auto& n : sapData->vShieldedSpend) {
+        ss << n.cv;
+        ss << n.anchor;
+        ss << n.nullifier;
+        ss << n.rk;
+        ss << n.zkproof;
+    }
+    return ss.GetHash();
+}
+
+uint256 GetShieldedOutputsHash(const CTransaction& txTo) {
+    assert(txTo.sapData);
+    CBLAKE2bWriter ss(SER_GETHASH, 0, YieldSakingWallet_SHIELDED_OUTPUTS_HASH_PERSONALIZATION);
+    auto sapData = txTo.sapData;
+    for (const auto& n : sapData->vShieldedOutput) {
+        ss << n;
     }
     return ss.GetHash();
 }
@@ -1116,20 +1157,31 @@ PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo)
     hashPrevouts = GetPrevoutHash(txTo);
     hashSequence = GetSequenceHash(txTo);
     hashOutputs = GetOutputsHash(txTo);
+    if (txTo.sapData) {
+        hashShieldedSpends = GetShieldedSpendsHash(txTo);
+        hashShieldedOutputs = GetShieldedOutputsHash(txTo);
+    }
 }
 
 uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache)
 {
-    if (nIn >= txTo.vin.size()) {
+    if (nIn >= txTo.vin.size() && nIn != NOT_AN_INPUT) {
         //  nIn out of range
         return UINT256_ONE;
     }
 
-    if (sigversion == SIGVERSION_WITNESS_V0) {
+    if (txTo.isSaplingVersion() && sigversion != SIGVERSION_SAPLING) {
+        throw std::runtime_error("SignatureHash in Sapling tx with wrong sigversion " + std::to_string(sigversion));
+    }
+
+    if (sigversion == SIGVERSION_SAPLING) {
 
         uint256 hashPrevouts;
         uint256 hashSequence;
         uint256 hashOutputs;
+        uint256 hashShieldedSpends;
+        uint256 hashShieldedOutputs;
+        bool hasSapData = false;
 
         if (!(nHashType & SIGHASH_ANYONECANPAY)) {
             hashPrevouts = cache ? cache->hashPrevouts : GetPrevoutHash(txTo);
@@ -1142,26 +1194,64 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
         if ((nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
             hashOutputs = cache ? cache->hashOutputs : GetOutputsHash(txTo);
         } else if ((nHashType & 0x1f) == SIGHASH_SINGLE && nIn < txTo.vout.size()) {
-            CHashWriter ss(SER_GETHASH, 0);
+            CBLAKE2bWriter ss(SER_GETHASH, 0, YieldSakingWallet_OUTPUTS_HASH_PERSONALIZATION);
             ss << txTo.vout[nIn];
             hashOutputs = ss.GetHash();
         }
 
-        CHashWriter ss(SER_GETHASH, 0);
+        if (txTo.sapData) {
+            if (!txTo.sapData->vShieldedSpend.empty()) {
+                hashShieldedSpends = cache ? cache->hashShieldedSpends : GetShieldedSpendsHash(txTo);
+                hasSapData = true;
+            }
+
+            if (!txTo.sapData->vShieldedOutput.empty()) {
+                hashShieldedOutputs = cache ? cache->hashShieldedOutputs : GetShieldedOutputsHash(txTo);
+                hasSapData = true;
+            }
+        }
+
+        // todo: complete branch id with the active network upgrade
+        uint32_t leConsensusBranchId = htole32(0);
+        unsigned char personalization[16] = {};
+        memcpy(personalization, "YieldSakingWalletSigHash", 12);
+        memcpy(personalization+12, &leConsensusBranchId, 4);
+
+        CBLAKE2bWriter ss(SER_GETHASH, 0, personalization);
         // Version
         ss << txTo.nVersion;
+        // Type
+        ss << txTo.nType;
         // Input prevouts/nSequence (none/all, depending on flags)
         ss << hashPrevouts;
         ss << hashSequence;
-        // The input being signed (replacing the scriptSig with scriptCode + amount)
-        // The prevout may already be contained in hashPrevout, and the nSequence
-        // may already be contained in hashSequence.
-        ss << txTo.vin[nIn].prevout;
-        ss << static_cast<const CScriptBase&>(scriptCode);
-        ss << amount;
-        ss << txTo.vin[nIn].nSequence;
         // Outputs (none/one/all, depending on flags)
         ss << hashOutputs;
+
+        if (hasSapData) {
+            // Spend descriptions
+            ss << hashShieldedSpends;
+            // Output descriptions
+            ss << hashShieldedOutputs;
+            // Sapling value balance
+            ss << txTo.sapData->valueBalance;
+        }
+
+        if (nIn != NOT_AN_INPUT) {
+            // The input being signed (replacing the scriptSig with scriptCode + amount)
+            // The prevout may already be contained in hashPrevout, and the nSequence
+            // may already be contained in hashSequence.
+            ss << txTo.vin[nIn].prevout;
+            ss << static_cast<const CScriptBase&>(scriptCode);
+            ss << amount;
+            ss << txTo.vin[nIn].nSequence;
+        }
+
+        // Extra payload for special transactions
+        if (txTo.IsSpecialTx()) {
+            ss << *(txTo.extraPayload);
+        }
+
         // Locktime
         ss << txTo.nLockTime;
         // Sighash type
@@ -1205,7 +1295,7 @@ bool TransactionSignatureChecker::CheckSig(const std::vector<unsigned char>& vch
     int nHashType = vchSig.back();
     vchSig.pop_back();
 
-    uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, this->precomTxData);
+    const uint256& sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, this->precomTxData);
 
     if (!VerifySignature(vchSig, pubkey, sighash))
         return false;
@@ -1250,7 +1340,7 @@ bool TransactionSignatureChecker::CheckLockTime(const CScriptNum& nLockTime) con
 }
 
 
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* serror)
 {
     set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
 
@@ -1259,12 +1349,12 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigne
     }
 
     std::vector<std::vector<unsigned char> > stack, stackCopy;
-    if (!EvalScript(stack, scriptSig, flags, checker, SIGVERSION_BASE, serror))
+    if (!EvalScript(stack, scriptSig, flags, checker, sigversion, serror))
         // serror is set
         return false;
     if (flags & SCRIPT_VERIFY_P2SH)
         stackCopy = stack;
-    if (!EvalScript(stack, scriptPubKey, flags, checker, SIGVERSION_BASE, serror))
+    if (!EvalScript(stack, scriptPubKey, flags, checker, sigversion, serror))
         // serror is set
         return false;
     if (stack.empty())
@@ -1289,7 +1379,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigne
         CScript pubKey2(pubKeySerialized.begin(), pubKeySerialized.end());
         popstack(stackCopy);
 
-        if (!EvalScript(stackCopy, pubKey2, flags, checker, SIGVERSION_BASE, serror))
+        if (!EvalScript(stackCopy, pubKey2, flags, checker, sigversion, serror))
             // serror is set
             return false;
         if (stackCopy.empty())

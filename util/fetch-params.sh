@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Copyright (c) 2015-2020 The Zcash developers
-# Copyright (c) 2020 The PIVX developers
+# Copyright (c) 2020 The YieldStakingWallet developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,17 +13,14 @@ if [ -n "${1:-}" ]; then
     PARAMS_DIR="$1"
 else
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        PARAMS_DIR="$HOME/Library/Application Support/PIVXParams"
+        PARAMS_DIR="$HOME/Library/Application Support/YieldSakingWalletParams"
     else
-        PARAMS_DIR="$HOME/.pivx-params"
+        PARAMS_DIR="$HOME/.yieldstakingwallet-params"
     fi
 fi
 
-SPROUT_PKEY_NAME='sprout-proving.key'
-SPROUT_VKEY_NAME='sprout-verifying.key'
 SAPLING_SPEND_NAME='sapling-spend.params'
 SAPLING_OUTPUT_NAME='sapling-output.params'
-SAPLING_SPROUT_GROTH16_NAME='sprout-groth16.params'
 DOWNLOAD_URL="https://download.z.cash/downloads"
 IPFS_HASH="/ipfs/QmXRHVGLQBiKwvNq7c2vPxAKz1zRVmMYbmt7G5TQss7tY7"
 
@@ -99,7 +96,7 @@ EOF
 function fetch_failure {
     cat >&2 <<EOF
 
-Failed to fetch the PIVX zkSNARK parameters!
+Failed to fetch the YieldStakingWallet zkSNARK parameters!
 Try installing one of the following programs and make sure you're online:
 
  * ipfs
@@ -184,9 +181,9 @@ function main() {
     || exit_locked_error
 
     cat <<EOF
-PIVX - fetch-params.sh
+YieldStakingWallet - fetch-params.sh
 
-This script will fetch the PIVX zkSNARK parameters and verify their
+This script will fetch the YieldStakingWallet zkSNARK parameters and verify their
 integrity with sha256sum.
 
 If they already exist locally, it will exit now and do nothing else.
@@ -198,7 +195,7 @@ EOF
         mkdir -p "$PARAMS_DIR"
         README_PATH="$PARAMS_DIR/README"
         cat >> "$README_PATH" <<EOF
-This directory stores common PIVX zkSNARK parameters. Note that it is
+This directory stores common YieldStakingWallet zkSNARK parameters. Note that it is
 distinct from the daemon's -datadir argument because the parameters are
 large and may be shared across multiple distinct -datadir's such as when
 setting up test networks.
@@ -207,10 +204,7 @@ EOF
         # This may be the first time the user's run this script, so give
         # them some info, especially about bandwidth usage:
         cat <<EOF
-The complete parameters are currently just under 1.7GB in size, so plan
-accordingly for your bandwidth constraints. If the Sprout parameters are
-already present the additional Sapling parameters required are just under
-800MB in size. If the files are already present and have the correct
+If the files are already present and have the correct
 sha256sum, no networking is used.
 
 Creating params directory. For details about this directory, see:
@@ -224,7 +218,6 @@ EOF
     # Sapling parameters:
     fetch_params "$SAPLING_SPEND_NAME" "$PARAMS_DIR/$SAPLING_SPEND_NAME" "8e48ffd23abb3a5fd9c5589204f32d9c31285a04b78096ba40a79b75677efc13"
     fetch_params "$SAPLING_OUTPUT_NAME" "$PARAMS_DIR/$SAPLING_OUTPUT_NAME" "2f0ebbcbb9bb0bcffe95a397e7eba89c29eb4dde6191c339db88570e3f3fb0e4"
-    fetch_params "$SAPLING_SPROUT_GROTH16_NAME" "$PARAMS_DIR/$SAPLING_SPROUT_GROTH16_NAME" "b685d700c60328498fbde589c8c7c484c722b788b265b72af448a5bf0ee55b50"
 }
 
 if [ "x${1:-}" = 'x--testnet' ]

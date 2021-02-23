@@ -1,10 +1,14 @@
 // Copyright (c) 2012-2014 The Bitcoin Core developers
-// Copyright (c) 2019-2020 The PIVX developers
+// Copyright (c) 2019-2020 The YieldStakingWallet developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "wallet/wallet.h"
+#include "wallet/test/wallet_test_fixture.h"
+
 #include "consensus/merkle.h"
+#include "txmempool.h"
+#include "validation.h"
+#include "wallet/wallet.h"
 
 #include <set>
 #include <stdint.h>
@@ -12,7 +16,6 @@
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
-#include "wallet/test/wallet_test_fixture.h"
 
 // how many times to run all the tests to have a chance to catch errors that only show up with particular random shuffles
 #define RUN_TESTS 100
@@ -212,7 +215,7 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
         // run the 'mtgox' test (see http://blockexplorer.com/tx/29a3efd3ef04f9153d47a990bd7b048a4b2d213daaa5fb8ed670fb85f13bdbcf)
         // they tried to consolidate 10 50k coins into one 500k coin, and ended up with 50k in change
         empty_wallet();
-        for (int i = 0; i < 20; i++)
+        for (int j = 0; j < 20; j++)
             add_coin(50000 * COIN);
 
         BOOST_CHECK(pwalletMain->SelectCoinsMinConf(500000 * COIN, 1, 1, vCoins, setCoinsRet, nValueRet));
@@ -271,7 +274,7 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
             BOOST_CHECK(!equal_sets(setCoinsRet, setCoinsRet2));
 
             int fails = 0;
-            for (int i = 0; i < RANDOM_REPEATS; i++)
+            for (int j = 0; j < RANDOM_REPEATS; j++)
             {
                 // selecting 1 from 100 identical coins depends on the shuffle; this test will fail 1% of the time
                 // run the test RANDOM_REPEATS times and only complain if all of them fail
@@ -288,7 +291,7 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
             add_coin( 5*CENT); add_coin(10*CENT); add_coin(15*CENT); add_coin(20*CENT); add_coin(25*CENT);
 
             fails = 0;
-            for (int i = 0; i < RANDOM_REPEATS; i++)
+            for (int j = 0; j < RANDOM_REPEATS; j++)
             {
                 // selecting 1 from 100 identical coins depends on the shuffle; this test will fail 1% of the time
                 // run the test RANDOM_REPEATS times and only complain if all of them fail
@@ -320,21 +323,21 @@ void removeTxFromMempool(CWalletTx& wtx)
 CBlockIndex* SimpleFakeMine(CWalletTx& wtx, CBlockIndex* pprev = nullptr)
 {
     CBlock block;
-    block.vtx.push_back(wtx);
+    block.vtx.emplace_back(std::make_shared<const CTransaction>(wtx));
     block.hashMerkleRoot = BlockMerkleRoot(block);
     if (pprev) block.hashPrevBlock = pprev->GetBlockHash();
     CBlockIndex* fakeIndex = new CBlockIndex(block);
     fakeIndex->pprev = pprev;
-    mapBlockIndex.insert(std::make_pair(block.GetHash(), fakeIndex));
+    mapBlockIndex.emplace(block.GetHash(), fakeIndex);
     fakeIndex->phashBlock = &mapBlockIndex.find(block.GetHash())->first;
     chainActive.SetTip(fakeIndex);
     BOOST_CHECK(chainActive.Contains(fakeIndex));
-    wtx.SetMerkleBranch(fakeIndex, 0);
+    wtx.SetMerkleBranch(fakeIndex->GetBlockHash(), 0);
     removeTxFromMempool(wtx);
     return fakeIndex;
 }
 
-void fakeMempoolInsertion(const CWalletTx& wtxCredit)
+void fakeMempoolInsertion(const CTransactionRef& wtxCredit)
 {
     CTxMemPoolEntry entry(wtxCredit, 0, 0, 0, 0, false, 0, false, 0);
     LOCK(mempool.cs);
@@ -432,7 +435,7 @@ BOOST_AUTO_TEST_CASE(cached_balances_tests)
     );
 
     // GetUnconfirmedBalance requires tx in mempool.
-    fakeMempoolInsertion(wtxCredit);
+    fakeMempoolInsertion(MakeTransactionRef(wtxCredit));
     BOOST_CHECK_EQUAL(wallet.GetUnconfirmedBalance(), nCredit);
 
     // 2) Confirm tx and verify

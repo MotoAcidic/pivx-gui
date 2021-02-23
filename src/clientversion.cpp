@@ -1,5 +1,5 @@
 // Copyright (c) 2012-2017 The Bitcoin Core developers
-// Copyright (c) 2016-2019 The PIVX developers
+// Copyright (c) 2016-2019 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,10 +10,10 @@
 
 /**
  * Name of client reported in the 'version' message. Report the same name
- * for both pivxd and pivx-qt, to make it harder for attackers to
+ * for both yswd and ysw-qt, to make it harder for attackers to
  * target servers or GUI users specifically.
  */
-const std::string CLIENT_NAME("PIVX Core");
+const std::string CLIENT_NAME("Yield Staking Wallet Core");
 
 /**
  * Client version number
@@ -45,8 +45,8 @@ const std::string CLIENT_NAME("PIVX Core");
 //! git will put "#define GIT_ARCHIVE 1" on the next line inside archives. 
 #define GIT_ARCHIVE 1
 #ifdef GIT_ARCHIVE
-#define GIT_COMMIT_ID "1ff92c01f008817c21d2bded7c6f73e2d7ea64d9"
-#define GIT_COMMIT_DATE "Sun, 27 Sep 2020 02:02:41 -0700"
+#define GIT_COMMIT_ID "7e84d8db8f37f77a1b59794d712f90f7cb873d4b"
+#define GIT_COMMIT_DATE "Wed, 6 Jan 2021 14:34:02 -0800"
 #endif
 
 #define BUILD_DESC_WITH_SUFFIX(maj, min, rev, build, suffix) \

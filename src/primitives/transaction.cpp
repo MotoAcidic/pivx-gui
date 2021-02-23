@@ -1,36 +1,40 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2015-2020 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
-#include "primitives/block.h"
 #include "primitives/transaction.h"
 
-#include "chain.h"
 #include "hash.h"
-#include "main.h"
+#include "script/standard.h"
 #include "tinyformat.h"
 #include "utilstrencodings.h"
-#include "transaction.h"
 
+// contextual flag to guard the serialization for v5 upgrade.
+// can be removed once v5 enforcement is activated.
+std::atomic<bool> g_IsSaplingActive{false};
 
-extern bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock, bool fAllowSlow);
-
-std::string COutPoint::ToString() const
-{
-    return strprintf("COutPoint(%s, %u)", hash.ToString()/*.substr(0,10)*/, n);
-}
-
-std::string COutPoint::ToStringShort() const
+std::string BaseOutPoint::ToStringShort() const
 {
     return strprintf("%s-%u", hash.ToString().substr(0,64), n);
 }
 
-uint256 COutPoint::GetHash() const
+uint256 BaseOutPoint::GetHash() const
 {
     return Hash(BEGIN(hash), END(hash), BEGIN(n), END(n));
 }
+
+std::string COutPoint::ToString() const
+{
+    return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10), n);
+}
+
+std::string SaplingOutPoint::ToString() const
+{
+    return strprintf("SaplingOutPoint(%s, %u)", hash.ToString().substr(0, 10), n);
+}
+
 
 CTxIn::CTxIn(COutPoint prevoutIn, CScript scriptSigIn, uint32_t nSequenceIn)
 {
@@ -113,27 +117,12 @@ std::string CTxOut::ToString() const
     return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0,30));
 }
 
-CMutableTransaction::CMutableTransaction() : nVersion(CTransaction::CURRENT_VERSION), nLockTime(0) {}
-CMutableTransaction::CMutableTransaction(const CTransaction& tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime) {}
+CMutableTransaction::CMutableTransaction() : nVersion(CTransaction::CURRENT_VERSION), nType(CTransaction::TxType::NORMAL), nLockTime(0) {}
+CMutableTransaction::CMutableTransaction(const CTransaction& tx) : nVersion(tx.nVersion), nType(tx.nType), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime), sapData(tx.sapData), extraPayload(tx.extraPayload) {}
 
 uint256 CMutableTransaction::GetHash() const
 {
     return SerializeHash(*this);
-}
-
-std::string CMutableTransaction::ToString() const
-{
-    std::string str;
-    str += strprintf("CMutableTransaction(ver=%d, vin.size=%u, vout.size=%u, nLockTime=%u)\n",
-        nVersion,
-        vin.size(),
-        vout.size(),
-        nLockTime);
-    for (unsigned int i = 0; i < vin.size(); i++)
-        str += "    " + vin[i].ToString() + "\n";
-    for (unsigned int i = 0; i < vout.size(); i++)
-        str += "    " + vout[i].ToString() + "\n";
-    return str;
 }
 
 void CTransaction::UpdateHash() const
@@ -146,18 +135,24 @@ size_t CTransaction::DynamicMemoryUsage() const
     return memusage::RecursiveDynamicUsage(vin) + memusage::RecursiveDynamicUsage(vout);
 }
 
-CTransaction::CTransaction() : nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), nLockTime(0) { }
+CTransaction::CTransaction() : nVersion(CTransaction::CURRENT_VERSION), nType(TxType::NORMAL), vin(), vout(), nLockTime(0) { }
 
-CTransaction::CTransaction(const CMutableTransaction &tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime) {
+CTransaction::CTransaction(const CMutableTransaction &tx) : nVersion(tx.nVersion), nType(tx.nType), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime), sapData(tx.sapData), extraPayload(tx.extraPayload) {
+    UpdateHash();
+}
+
+CTransaction::CTransaction(CMutableTransaction &&tx) : nVersion(tx.nVersion), nType(tx.nType), vin(std::move(tx.vin)), vout(std::move(tx.vout)), nLockTime(tx.nLockTime), sapData(tx.sapData), extraPayload(tx.extraPayload) {
     UpdateHash();
 }
 
 CTransaction& CTransaction::operator=(const CTransaction &tx) {
-    *const_cast<int*>(&nVersion) = tx.nVersion;
+    *const_cast<int16_t*>(&nVersion) = tx.nVersion;
+    *const_cast<int16_t*>(&nType) = tx.nType;
     *const_cast<std::vector<CTxIn>*>(&vin) = tx.vin;
     *const_cast<std::vector<CTxOut>*>(&vout) = tx.vout;
     *const_cast<unsigned int*>(&nLockTime) = tx.nLockTime;
     *const_cast<uint256*>(&hash) = tx.hash;
+    *const_cast<Optional<SaplingTxData>*>(&sapData) = tx.sapData;
     return *this;
 }
 
@@ -181,7 +176,7 @@ bool CTransaction::HasZerocoinMintOutputs() const
 
 bool CTransaction::HasZerocoinPublicSpendInputs() const
 {
-    // The wallet only allows publicSpend inputs in the same tx and not a combination between piv and zpiv
+    // The wallet only allows publicSpend inputs in the same tx and not a combination between ysw and zysw
     for(const CTxIn& txin : vin) {
         if (txin.IsZerocoinPublicSpend())
             return true;
@@ -238,9 +233,8 @@ bool CTransaction::HasP2CSOutputs() const
 CAmount CTransaction::GetValueOut() const
 {
     CAmount nValueOut = 0;
-    for (std::vector<CTxOut>::const_iterator it(vout.begin()); it != vout.end(); ++it)
-    {
-        // PIVX: previously MoneyRange() was called here. This has been replaced with negative check and boundary wrap check.
+    for (std::vector<CTxOut>::const_iterator it(vout.begin()); it != vout.end(); ++it) {
+        // YieldStakingWallet: previously MoneyRange() was called here. This has been replaced with negative check and boundary wrap check.
         if (it->nValue < 0)
             throw std::runtime_error("CTransaction::GetValueOut() : value out of range : less than 0");
 
@@ -249,7 +243,34 @@ CAmount CTransaction::GetValueOut() const
 
         nValueOut += it->nValue;
     }
+
+    // Sapling
+    if (hasSaplingData() && sapData->valueBalance < 0) {
+        // NB: negative valueBalance "takes" money from the transparent value pool just as outputs do
+        nValueOut += -sapData->valueBalance;
+
+        // Verify Sapling version
+        if (!isSaplingVersion())
+            throw std::runtime_error("GetValueOut(): invalid tx version");
+    }
+
     return nValueOut;
+}
+
+CAmount CTransaction::GetShieldedValueIn() const
+{
+    CAmount nValue = 0;
+
+    if (hasSaplingData() && sapData->valueBalance > 0) {
+        // NB: positive valueBalance "gives" money to the transparent value pool just as inputs do
+        nValue += sapData->valueBalance;
+
+        // Verify Sapling
+        if (!isSaplingVersion())
+            throw std::runtime_error("GetValueOut(): invalid tx version");
+    }
+
+    return nValue;
 }
 
 CAmount CTransaction::GetZerocoinSpent() const
@@ -298,16 +319,25 @@ unsigned int CTransaction::GetTotalSize() const
 
 std::string CTransaction::ToString() const
 {
-    std::string str;
-    str += strprintf("CTransaction(hash=%s, ver=%d, vin.size=%u, vout.size=%u, nLockTime=%u)\n",
-        GetHash().ToString().substr(0,10),
-        nVersion,
-        vin.size(),
-        vout.size(),
-        nLockTime);
+    std::ostringstream ss;
+    ss << "CTransaction(hash=" << GetHash().ToString().substr(0, 10)
+       << ", ver=" << nVersion
+       << ", type=" << nType
+       << ", vin.size=" << vin.size()
+       << ", vout.size=" << vout.size()
+       << ", nLockTime=" << nLockTime;
+    if (IsShieldedTx()) {
+        ss << ", valueBalance=" << sapData->valueBalance
+           << ", vShieldedSpend.size=" << sapData->vShieldedSpend.size()
+           << ", vShieldedOutput.size=" << sapData->vShieldedOutput.size();
+    }
+    if (IsSpecialTx()) {
+        ss << ", extraPayload.size=" << extraPayload->size();
+    }
+    ss << ")\n";
     for (unsigned int i = 0; i < vin.size(); i++)
-        str += "    " + vin[i].ToString() + "\n";
+        ss << "    " << vin[i].ToString() << "\n";
     for (unsigned int i = 0; i < vout.size(); i++)
-        str += "    " + vout[i].ToString() + "\n";
-    return str;
+        ss << "    " << vout[i].ToString() << "\n";
+    return ss.str();
 }

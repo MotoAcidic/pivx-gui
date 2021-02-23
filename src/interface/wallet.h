@@ -1,10 +1,10 @@
 // Copyright (c) 2018-2020 The Bitcoin Core developers
-// Copyright (c) 2020 The PIVX developers
+// Copyright (c) 2020 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIVX_INTERFACES_WALLET_H
-#define PIVX_INTERFACES_WALLET_H
+#ifndef YieldSakingWallet_INTERFACES_WALLET_H
+#define YieldSakingWallet_INTERFACES_WALLET_H
 
 #include <amount.h>
 #include "wallet/wallet.h"
@@ -23,6 +23,8 @@ struct WalletBalances
     CAmount immature_watch_only_balance{0};
     CAmount delegate_balance{0};
     CAmount coldstaked_balance{0};
+    CAmount shielded_balance{0};
+    CAmount unconfirmed_shielded_balance{0};
 
     bool balanceChanged(const WalletBalances& prev) const
     {
@@ -30,7 +32,8 @@ struct WalletBalances
                immature_balance != prev.immature_balance || watch_only_balance != prev.watch_only_balance ||
                unconfirmed_watch_only_balance != prev.unconfirmed_watch_only_balance ||
                immature_watch_only_balance != prev.immature_watch_only_balance ||
-               delegate_balance != prev.delegate_balance || coldstaked_balance != prev.coldstaked_balance;
+               delegate_balance != prev.delegate_balance || coldstaked_balance != prev.coldstaked_balance ||
+               shielded_balance != prev.shielded_balance || unconfirmed_shielded_balance != prev.unconfirmed_shielded_balance;
     }
 };
 

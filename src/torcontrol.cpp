@@ -1,6 +1,6 @@
 // Copyright (c) 2015-2016 The Bitcoin Core developers
 // Copyright (c) 2017 The Zcash developers
-// Copyright (c) 2017-2020 The PIVX developers
+// Copyright (c) 2017-2020 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,7 +20,6 @@
 
 #include <boost/bind.hpp>
 #include <boost/signals2/signal.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -529,7 +528,7 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
 
         // Now that we know Tor is running setup the proxy for onion addresses
         // if -onion isn't set to something else.
-        if (GetArg("-onion", "") == "") {
+        if (gArgs.GetArg("-onion", "") == "") {
             CService resolved(LookupNumeric("127.0.0.1", 9050));
             proxyType addrOnion = proxyType(resolved, true);
             SetProxy(NET_TOR, addrOnion);
@@ -645,7 +644,7 @@ void TorController::protocolinfo_cb(TorControlConnection& _conn, const TorContro
          *   cookie:   hex-encoded ~/.tor/control_auth_cookie
          *   password: "password"
          */
-        std::string torpassword = GetArg("-torpassword", "");
+        std::string torpassword = gArgs.GetArg("-torpassword", "");
         if (!torpassword.empty()) {
             if (methods.count("HASHEDPASSWORD")) {
                 LogPrint(BCLog::TOR, "tor: Using HASHEDPASSWORD authentication\n");
@@ -734,16 +733,16 @@ void TorController::reconnect_cb(evutil_socket_t fd, short what, void *arg)
 
 /****** Thread ********/
 static struct event_base *gBase;
-static boost::thread torControlThread;
+static std::thread torControlThread;
 
 static void TorControlThread()
 {
-    TorController ctrl(gBase, GetArg("-torcontrol", DEFAULT_TOR_CONTROL));
+    TorController ctrl(gBase, gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL));
 
     event_base_dispatch(gBase);
 }
 
-void StartTorControl(boost::thread_group& threadGroup/*, CScheduler& scheduler*/)
+void StartTorControl()
 {
     assert(!gBase);
 #ifdef WIN32
@@ -757,7 +756,7 @@ void StartTorControl(boost::thread_group& threadGroup/*, CScheduler& scheduler*/
         return;
     }
 
-    torControlThread = boost::thread(boost::bind(&TraceThread<void (*)()>, "torcontrol", &TorControlThread));
+    torControlThread = std::thread(std::bind(&TraceThread<void (*)()>, "torcontrol", &TorControlThread));
 }
 
 void InterruptTorControl()
@@ -770,11 +769,9 @@ void InterruptTorControl()
 
 void StopTorControl()
 {
-    // try_join_for() avoids the wallet not closing during a repair-restart. For a 'normal' wallet exit
-    // it behaves for our cases exactly like the normal join()
     if (gBase) {
-        torControlThread.try_join_for(boost::chrono::seconds(1));
+        torControlThread.join();
         event_base_free(gBase);
-        gBase = 0;
+        gBase = nullptr;
     }
 }

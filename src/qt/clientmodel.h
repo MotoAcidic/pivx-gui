@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2015-2020 The YieldStakingWallet developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -39,7 +39,7 @@ enum NumConnections {
     CONNECTIONS_ALL = (CONNECTIONS_IN | CONNECTIONS_OUT),
 };
 
-/** Model for PIVX network client. */
+/** Model for YieldStakingWallet network client. */
 class ClientModel : public QObject
 {
     Q_OBJECT
@@ -89,6 +89,9 @@ public:
     // Start/Stop the masternode polling timer
     void startMasternodesTimer();
     void stopMasternodesTimer();
+    // Force a MN count update calling mnmanager directly locking its internal mutex.
+    // Future todo: implement an event based update and remove the lock requirement.
+    QString getMasternodesCount();
 
 private:
     QString getMasternodeCountString() const;

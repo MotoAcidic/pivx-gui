@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2016-2020 The PIVX developers
+// Copyright (c) 2016-2020 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -67,6 +67,7 @@ const CBlockIndex* CChain::FindFork(const CBlockIndex* pindex) const
 CBlockIndex::CBlockIndex(const CBlock& block):
         nVersion{block.nVersion},
         hashMerkleRoot{block.hashMerkleRoot},
+        hashFinalSaplingRoot(block.hashFinalSaplingRoot),
         nTime{block.nTime},
         nBits{block.nBits},
         nNonce{block.nNonce}
@@ -115,6 +116,7 @@ CBlockHeader CBlockIndex::GetBlockHeader() const
     block.nBits = nBits;
     block.nNonce = nNonce;
     if (nVersion > 3 && nVersion < 7) block.nAccumulatorCheckpoint = nAccumulatorCheckpoint;
+    if (nVersion >= 8) block.hashFinalSaplingRoot = hashFinalSaplingRoot;
     return block;
 }
 
@@ -132,7 +134,7 @@ int64_t CBlockIndex::MinPastBlockTime() const
 
     // on the transition from Time Protocol v1 to v2
     // pindexPrev->nTime might be in the future (up to the allowed drift)
-    // so we allow the nBlockTimeProtocolV2 (PIVX v4.0) to be at most (180-14) seconds earlier than previous block
+    // so we allow the nBlockTimeProtocolV2 (YieldStakingWallet v4.0) to be at most (180-14) seconds earlier than previous block
     if (nHeight + 1 == consensus.vUpgrades[Consensus::UPGRADE_V4_0].nActivationHeight)
         return GetBlockTime() - consensus.FutureBlockTimeDrift(nHeight) + consensus.FutureBlockTimeDrift(nHeight + 1);
 
@@ -159,7 +161,7 @@ int64_t CBlockIndex::GetMedianTimePast() const
 unsigned int CBlockIndex::GetStakeEntropyBit() const
 {
     unsigned int nEntropyBit = ((GetBlockHash().GetCheapHash()) & 1);
-    if (GetBoolArg("-printstakemodifier", false))
+    if (gArgs.GetBoolArg("-printstakemodifier", false))
         LogPrintf("GetStakeEntropyBit: nHeight=%u hashBlock=%s nEntropyBit=%u\n", nHeight, GetBlockHash().ToString().c_str(), nEntropyBit);
 
     return nEntropyBit;
@@ -237,6 +239,20 @@ uint256 CBlockIndex::GetStakeModifierV2() const
     uint256 nStakeModifier;
     std::memcpy(nStakeModifier.begin(), vStakeModifier.data(), vStakeModifier.size());
     return nStakeModifier;
+}
+
+void CBlockIndex::SetChainSaplingValue()
+{
+    // Sapling, update chain value
+    if (pprev) {
+        if (pprev->nChainSaplingValue) {
+            nChainSaplingValue = *pprev->nChainSaplingValue + nSaplingValue;
+        } else {
+            nChainSaplingValue = nullopt;
+        }
+    } else {
+        nChainSaplingValue = nSaplingValue;
+    }
 }
 
 //! Check whether this block index entry is valid up to the passed validity level.

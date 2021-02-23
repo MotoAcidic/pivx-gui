@@ -1,11 +1,10 @@
 // Copyright (c) 2014-2018 The Dash Core developers
-// Copyright (c) 2018-2020 The PIVX developers
+// Copyright (c) 2018-2020 The YieldStakingWallet developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
 #include "hash.h"
-#include "main.h" // For strMessageMagic
 #include "messagesigner.h"
 #include "masternodeman.h"  // For GetPublicKey (of MN from its vin)
 #include "tinyformat.h"
@@ -131,8 +130,8 @@ bool CSignedMessage::CheckSignature() const
 
 const CPubKey CSignedMessage::GetPublicKey(std::string& strErrorRet) const
 {
-    const CTxIn vin = GetVin();
-    CMasternode* pmn = mnodeman.Find(vin);
+    const CTxIn& vin = GetVin();
+    CMasternode* pmn = mnodeman.Find(vin.prevout);
     if(pmn) {
         return pmn->pubKeyMasternode;
     }

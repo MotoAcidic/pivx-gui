@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2016-2020 The PIVX developers
+// Copyright (c) 2016-2020 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,10 +8,12 @@
 #define BITCOIN_TXMEMPOOL_H
 
 #include <list>
+#include <memory>
 #include <set>
 
 #include "amount.h"
 #include "coins.h"
+#include "policy/feerate.h"
 #include "primitives/transaction.h"
 #include "sync.h"
 #include "random.h"
@@ -38,20 +40,6 @@ inline bool AllowFree(double dPriority)
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
-class SaltedTxidHasher
-{
-private:
-    /** Salt */
-    const uint64_t k0, k1;
-
-public:
-    SaltedTxidHasher();
-
-    size_t operator()(const uint256& txid) const {
-        return SipHashUint256(k0, k1, txid);
-    }
-};
-
 class CTxMemPool;
 
 /** \class CTxMemPoolEntry
@@ -73,13 +61,14 @@ class CTxMemPool;
 class CTxMemPoolEntry
 {
 private:
-    CTransaction tx;
+    CTransactionRef tx;
     CAmount nFee;         //! Cached to avoid expensive parent-transaction lookups
     size_t nTxSize;       //! ... and avoid recomputing tx size
     size_t nModSize;      //! ... and modified size for priority
     size_t nUsageSize;    //! ... and total memory usage
     CFeeRate feeRate;     //! ... and fee per kB
-    bool hasZerocoins{false}; //! ... and checking if it contains zPIV (mints/spends)
+    bool hasZerocoins{false}; //! ... and checking if it contains zYSW (mints/spends)
+    bool m_isShielded{false}; //! ... and checking if it contains shielded spends/outputs
     int64_t nTime;        //! Local time when entering the mempool
     double entryPriority;     //! Priority when entering the mempool
     unsigned int entryHeight; //! Chain height when entering the mempool
@@ -99,13 +88,14 @@ private:
     CAmount nFeesWithDescendants;  //! ... and total fees (all including us)
 
 public:
-    CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
+    CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
             int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
             bool poolHasNoInputsOf, CAmount _inChainInputValue, bool _spendsCoinbaseOrCoinstake,
             unsigned int nSigOps);
     CTxMemPoolEntry(const CTxMemPoolEntry& other);
 
-    const CTransaction& GetTx() const { return this->tx; }
+    const CTransaction& GetTx() const { return *this->tx; }
+    std::shared_ptr<const CTransaction> GetSharedTx() const { return this->tx; }
     /**
      * Fast calculation of lower bound of current priority as update
      * from entry priority. Only inputs that were originally in-chain will age.
@@ -116,6 +106,7 @@ public:
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return entryHeight; }
     bool HasZerocoins() const { return hasZerocoins; }
+    bool IsShielded() const { return m_isShielded; }
     bool WasClearAtEntry() const { return hadNoDependencies; }
     unsigned int GetSigOpCount() const { return sigOpCount; }
     int64_t GetModifiedFee() const { return nFee + feeDelta; }
@@ -246,6 +237,10 @@ public:
     }
 };
 
+// Multi_index tag names
+struct descendant_score {};
+struct entry_time {};
+struct mining_score {};
 
 class CBlockPolicyEstimator;
 
@@ -368,6 +363,10 @@ private:
 
     void trackPackageRemoved(const CFeeRate& rate);
 
+    // Shielded txes
+    std::map<uint256, CTransactionRef> mapSaplingNullifiers;
+    void checkNullifiers() const;
+
 public:
 
     static const int ROLLING_FEE_HALFLIFE = 60 * 60 * 12; // public only for testing
@@ -376,21 +375,24 @@ public:
         CTxMemPoolEntry,
         boost::multi_index::indexed_by<
             // sorted by txid
-            boost::multi_index::hashed_unique<mempoolentry_txid, SaltedTxidHasher>,
+            boost::multi_index::hashed_unique<mempoolentry_txid, SaltedIdHasher>,
             // sorted by fee rate
             boost::multi_index::ordered_non_unique<
+                boost::multi_index::tag<descendant_score>,
                 boost::multi_index::identity<CTxMemPoolEntry>,
                 CompareTxMemPoolEntryByFee
             >,
             // sorted by entry time
             boost::multi_index::ordered_non_unique<
+                boost::multi_index::tag<entry_time>,
                 boost::multi_index::identity<CTxMemPoolEntry>,
                 CompareTxMemPoolEntryByEntryTime
             >,
             // sorted by score (for mining prioritization)
             boost::multi_index::ordered_unique<
-                    boost::multi_index::identity<CTxMemPoolEntry>,
-                    CompareTxMemPoolEntryByScore
+                boost::multi_index::tag<mining_score>,
+                boost::multi_index::identity<CTxMemPoolEntry>,
+                CompareTxMemPoolEntryByScore
             >
         >
     > indexed_transaction_set;
@@ -475,10 +477,11 @@ public:
     // then invoke the second version.
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry& entry, bool fCurrentEstimate = true);
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, setEntries &setAncestors, bool fCurrentEstimate = true);
-    void remove(const CTransaction& tx, std::list<CTransaction>& removed, bool fRecursive = false);
+    void remove(const CTransaction& tx, std::list<CTransactionRef>& removed, bool fRecursive = false);
     void removeForReorg(const CCoinsViewCache* pcoins, unsigned int nMemPoolHeight, int flags);
-    void removeConflicts(const CTransaction& tx, std::list<CTransaction>& removed);
-    void removeForBlock(const std::vector<CTransaction>& vtx, unsigned int nBlockHeight, std::list<CTransaction>& conflicts, bool fCurrentEstimate = true);
+    void removeWithAnchor(const uint256& invalidRoot);
+    void removeConflicts(const CTransaction& tx, std::list<CTransactionRef>& removed);
+    void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight, std::list<CTransactionRef>& conflicts, bool fCurrentEstimate = true);
     void clear();
     void _clear();  // lock-free
     void queryHashes(std::vector<uint256>& vtxid);
@@ -496,6 +499,8 @@ public:
     void PrioritiseTransaction(const uint256 hash, const std::string strHash, double dPriorityDelta, const CAmount& nFeeDelta);
     void ApplyDeltas(const uint256 hash, double& dPriorityDelta, CAmount& nFeeDelta) const;
     void ClearPrioritisation(const uint256 hash);
+
+    bool nullifierExists(const uint256& nullifier) const;
 
     /** Remove a set of transactions from the mempool.
      *  If a transaction is in this set, then all in-mempool descendants must
@@ -648,6 +653,7 @@ public:
     CCoinsViewMemPool(CCoinsView* baseIn, CTxMemPool& mempoolIn);
     bool GetCoin(const COutPoint& outpoint, Coin& coin) const;
     bool HaveCoin(const COutPoint& outpoint) const;
+    bool GetNullifier(const uint256& nullifier) const;
 };
 
 // We want to sort transactions by coin age priority

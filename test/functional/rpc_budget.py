@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019 The PIVX developers
+# Copyright (c) 2019 The YieldStakingWallet developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test RPC commands for budget proposal creation, submission, and verification."""
 
-from test_framework.test_framework import PivxTestFramework
+from test_framework.test_framework import YieldSakingWalletTestFramework
 from test_framework.util import *
 
 
-class BudgetProposalTest(PivxTestFramework):
+class BudgetProposalTest(YieldSakingWalletTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
@@ -36,23 +36,29 @@ class BudgetProposalTest(PivxTestFramework):
         assert_raises_rpc_error(-8, "Invalid payment count, must be more than zero.", self.nodes[0].preparebudget,
                                 name, scheme + url, 0, nextsuperblock, address, cycleamount)
 
+        self.log.info("Test with invalid (21) cycles")
+        assert_raises_rpc_error(-8, "Invalid payment count, must be <= 20", self.nodes[0].preparebudget,
+                                name, scheme + url, 21, nextsuperblock, address, cycleamount)
+
         self.log.info("Test with invalid block start")
         assert_raises_rpc_error(-8, "Invalid block start", self.nodes[0].preparebudget,
                                 name, scheme + url, numcycles, nextsuperblock - 12, address, cycleamount)
         assert_raises_rpc_error(-8, "Invalid block start", self.nodes[0].preparebudget,
                                 name, scheme + url, numcycles, nextsuperblock - budgetcycleblocks, address, cycleamount)
 
-        self.log.info("Test with invalid PIVX address")
-        assert_raises_rpc_error(-5, "Invalid PIVX address", self.nodes[0].preparebudget,
+        self.log.info("Test with invalid YieldStakingWallet address")
+        assert_raises_rpc_error(-5, "Invalid YieldStakingWallet address", self.nodes[0].preparebudget,
                                 name, scheme + url, numcycles, nextsuperblock, "DBREvBPNQguwuC4YMoCG5FoH1sA2YntvZm", cycleamount)
 
         self.log.info("Test with too low amount")
-        assert_raises_rpc_error(-8, "Invalid amount - Payment of 9.00 is less than minimum 10 PIV allowed", self.nodes[0].preparebudget,
-                                name, scheme + url, numcycles, nextsuperblock, address, 9)
+        invalid_amt = 9.99999999
+        assert_raises_rpc_error(-8, "Invalid amount - Payment of %.8f is less than minimum 10 YSW allowed" % invalid_amt, self.nodes[0].preparebudget,
+                                name, scheme + url, numcycles, nextsuperblock, address, invalid_amt)
 
         self.log.info("Test with too high amount")
-        assert_raises_rpc_error(-8, "Invalid amount - Payment of 648001.00 more than max of 648000.00", self.nodes[0].preparebudget,
-                                name, scheme + url, numcycles, nextsuperblock, address, 648001)
+        invalid_amt = 50 * 144 + 0.00000001
+        assert_raises_rpc_error(-8, "Invalid amount - Payment of %.8f more than max of 7200.00" % invalid_amt, self.nodes[0].preparebudget,
+                                name, scheme + url, numcycles, nextsuperblock, address, invalid_amt)
 
 
         self.log.info("Test without URL scheme")

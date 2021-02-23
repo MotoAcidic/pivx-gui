@@ -1,12 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2015-2020 The YieldStakingWallet developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/pivx-config.h"
+#include "config/yieldstakingwallet-config.h"
 #endif
 
 #include "net.h"
@@ -18,12 +18,11 @@
 #include "crypto/sha256.h"
 #include "guiinterface.h"
 #include "hash.h"
-#include "main.h"
-#include "miner.h"
+#include "netbase.h"
 #include "netmessagemaker.h"
 #include "primitives/transaction.h"
-#include "netbase.h"
 #include "scheduler.h"
+#include "validation.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -33,7 +32,6 @@
 
 #ifdef USE_UPNP
 #include <miniupnpc/miniupnpc.h>
-#include <miniupnpc/miniwget.h>
 #include <miniupnpc/upnpcommands.h>
 #include <miniupnpc/upnperrors.h>
 #endif
@@ -77,9 +75,6 @@ static bool vfLimited[NET_MAX] = {};
 static CNode* pnodeLocalHost = NULL;
 std::string strSubVersion;
 
-std::map<CInv, CDataStream> mapRelay;
-std::deque<std::pair<int64_t, CInv> > vRelayExpiration;
-RecursiveMutex cs_mapRelay;
 limitedmap<CInv, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
 
 // Signals for message handling
@@ -94,7 +89,7 @@ void CConnman::AddOneShot(const std::string& strDest)
 
 unsigned short GetListenPort()
 {
-    return (unsigned short)(GetArg("-port", Params().GetDefaultPort()));
+    return (unsigned short)(gArgs.GetArg("-port", Params().GetDefaultPort()));
 }
 
 // find 'best' local address for a particular peer
@@ -153,47 +148,6 @@ CAddress GetLocalAddress(const CNetAddr* paddrPeer, ServiceFlags nLocalServices)
     }
     ret.nTime = GetAdjustedTime();
     return ret;
-}
-
-bool RecvLine(SOCKET hSocket, std::string& strLine)
-{
-    strLine = "";
-    while (true) {
-        char c;
-        int nBytes = recv(hSocket, &c, 1, 0);
-        if (nBytes > 0) {
-            if (c == '\n')
-                continue;
-            if (c == '\r')
-                return true;
-            strLine += c;
-            if (strLine.size() >= 9000)
-                return true;
-        } else if (nBytes <= 0) {
-            boost::this_thread::interruption_point();
-            if (nBytes < 0) {
-                int nErr = WSAGetLastError();
-                if (nErr == WSAEMSGSIZE)
-                    continue;
-                if (nErr == WSAEWOULDBLOCK || nErr == WSAEINTR || nErr == WSAEINPROGRESS) {
-                    MilliSleep(10);
-                    continue;
-                }
-            }
-            if (!strLine.empty())
-                return true;
-            if (nBytes == 0) {
-                // socket closed
-                LogPrint(BCLog::NET, "socket closed\n");
-                return false;
-            } else {
-                // socket error
-                int nErr = WSAGetLastError();
-                LogPrint(BCLog::NET, "recv failed: %s\n", NetworkErrorString(nErr));
-                return false;
-            }
-        }
-    }
 }
 
 int GetnScore(const CService& addr)
@@ -405,7 +359,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char* pszDest, bool fCo
         pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime) / 3600.0);
 
     // Connect
-    SOCKET hSocket = INVALID_SOCKET;;
+    SOCKET hSocket = INVALID_SOCKET;
     bool proxyConnectionFailed = false;
     if (pszDest ? ConnectSocketByName(addrConnect, hSocket, pszDest, Params().GetDefaultPort(), nConnectTimeout, &proxyConnectionFailed) :
                   ConnectSocket(addrConnect, hSocket, nConnectTimeout, &proxyConnectionFailed)) {
@@ -532,7 +486,7 @@ void CConnman::Ban(const CSubNet& subNet, const BanReason &banReason, int64_t ba
     banEntry.banReason = banReason;
     if (bantimeoffset <= 0)
     {
-        bantimeoffset = GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME); // Default 24-hour ban
+        bantimeoffset = gArgs.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME); // Default 24-hour ban
         sinceUnixEpoch = false;
     }
     banEntry.nBanUntil = (sinceUnixEpoch ? 0 : GetTime() )+bantimeoffset;
@@ -718,7 +672,7 @@ void CNode::copyStats(CNodeStats& stats)
         nPingUsecWait = GetTimeMicros() - nPingUsecStart;
     }
 
-    // Raw ping time is in microseconds, but show it to user as whole seconds (PIVX users should be well used to small numbers with many decimal places by now :)
+    // Raw ping time is in microseconds, but show it to user as whole seconds (YieldStakingWallet users should be well used to small numbers with many decimal places by now :)
     stats.dPingTime = (((double)nPingUsecTime) / 1e6);
     stats.dPingWait = (((double)nPingUsecWait) / 1e6);
 
@@ -739,7 +693,7 @@ bool CNode::ReceiveMsgBytes(const char* pch, unsigned int nBytes, bool& complete
         // get current incomplete message, or create a new one
         if (vRecvMsg.empty() ||
             vRecvMsg.back().complete())
-            vRecvMsg.push_back(CNetMessage(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
+            vRecvMsg.emplace_back(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION);
 
         CNetMessage& msg = vRecvMsg.back();
 
@@ -924,7 +878,7 @@ void CheckOffsetDisconnectedPeers(const CNetAddr& ip)
         setOffsetDisconnectedPeers.clear();
         // Trigger the warning
         std::string strWarn1 = _("Peers are being disconnected due time differences.");
-        std::string strWarn2 = _("Please check that your computer's date and time are correct! If your clock is wrong PIVX Core will not work properly.");
+        std::string strWarn2 = _("Please check that your computer's date and time are correct! If your clock is wrong YieldStakingWallet Core will not work properly.");
 
         LogPrintf("*** Warning: %s %s\n", strWarn1, strWarn2);
 
@@ -1084,7 +1038,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     }
 
     if (IsBanned(addr) && !whitelisted) {
-        LogPrintf("connection from %s dropped (banned)\n", addr.ToString());
+        LogPrint(BCLog::NET, "connection from %s dropped (banned)\n", addr.ToString());
         CloseSocket(hSocket);
         return;
     }
@@ -1151,11 +1105,12 @@ void CConnman::ThreadSocketHandler()
                 if (pnode->GetRefCount() <= 0) {
                     bool fDelete = false;
                     {
-                        TRY_LOCK(pnode->cs_vSend, lockSend);
-                        if (lockSend) {
-                                TRY_LOCK(pnode->cs_inventory, lockInv);
-                                if (lockInv)
-                                    fDelete = true;
+                        TRY_LOCK(pnode->cs_inventory, lockInv);
+                        if (lockInv) {
+                            TRY_LOCK(pnode->cs_vSend, lockSend);
+                            if (lockSend) {
+                                fDelete = true;
+                            }
                         }
                     }
                     if (fDelete) {
@@ -1392,6 +1347,8 @@ void CConnman::WakeMessageHandler()
 
 
 #ifdef USE_UPNP
+static CThreadInterrupt g_upnp_interrupt;
+static std::thread g_upnp_thread;
 void ThreadMapPort()
 {
     std::string port = strprintf("%u", GetListenPort());
@@ -1436,37 +1393,31 @@ void ThreadMapPort()
             }
         }
 
-        std::string strDesc = "PIVX " + FormatFullVersion();
+        std::string strDesc = "YieldStakingWallet " + FormatFullVersion();
 
-        try {
-            while (true) {
+        do {
 #ifndef UPNPDISCOVER_SUCCESS
-                /* miniupnpc 1.5 */
-                r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-                    port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0);
+            /* miniupnpc 1.5 */
+            r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
+                port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0);
 #else
-                /* miniupnpc 1.6 */
-                r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-                    port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0, "0");
+            /* miniupnpc 1.6 */
+            r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
+                port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0, "0");
 #endif
 
-                if (r != UPNPCOMMAND_SUCCESS)
-                    LogPrintf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
-                        port, port, lanaddr, r, strupnperror(r));
-                else
-                    LogPrintf("UPnP Port Mapping successful.\n");
-                ;
-
-                MilliSleep(20 * 60 * 1000); // Refresh every 20 minutes
-            }
-        } catch (const boost::thread_interrupted&) {
-            r = UPNP_DeletePortMapping(urls.controlURL, data.first.servicetype, port.c_str(), "TCP", 0);
-            LogPrintf("UPNP_DeletePortMapping() returned : %d\n", r);
-            freeUPNPDevlist(devlist);
-            devlist = 0;
-            FreeUPNPUrls(&urls);
-            throw;
+            if (r!=UPNPCOMMAND_SUCCESS)
+                LogPrintf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
+                          port, port, lanaddr, r, strupnperror(r));
+            else
+                LogPrintf("UPnP Port Mapping successful.\n");
         }
+        while(g_upnp_interrupt.sleep_for(std::chrono::minutes(20)));
+
+        r = UPNP_DeletePortMapping(urls.controlURL, data.first.servicetype, port.c_str(), "TCP", 0);
+        LogPrintf("UPNP_DeletePortMapping() returned: %d\n", r);
+        freeUPNPDevlist(devlist); devlist = nullptr;
+        FreeUPNPUrls(&urls);
     } else {
         LogPrintf("No valid UPnP IGDs found\n");
         freeUPNPDevlist(devlist);
@@ -1476,27 +1427,39 @@ void ThreadMapPort()
     }
 }
 
-void MapPort(bool fUseUPnP)
+void StartMapPort()
 {
-    static boost::thread* upnp_thread = NULL;
+    if (!g_upnp_thread.joinable()) {
+        assert(!g_upnp_interrupt);
+        g_upnp_thread = std::thread(std::bind(&TraceThread<void (*)()>, "upnp", &ThreadMapPort));
+    }
+}
 
-    if (fUseUPnP) {
-        if (upnp_thread) {
-            upnp_thread->interrupt();
-            upnp_thread->join();
-            delete upnp_thread;
-        }
-        upnp_thread = new boost::thread(boost::bind(&TraceThread<void (*)()>, "upnp", &ThreadMapPort));
-    } else if (upnp_thread) {
-        upnp_thread->interrupt();
-        upnp_thread->join();
-        delete upnp_thread;
-        upnp_thread = NULL;
+void InterruptMapPort()
+{
+    if (g_upnp_thread.joinable()) {
+        g_upnp_interrupt();
+    }
+}
+
+void StopMapPort()
+{
+    if (g_upnp_thread.joinable()) {
+        g_upnp_thread.join();
+        g_upnp_interrupt.reset();
     }
 }
 
 #else
-void MapPort(bool)
+void StartMapPort()
+{
+    // Intentionally left blank.
+}
+void InterruptMapPort()
+{
+    // Intentionally left blank.
+}
+void StopMapPort()
 {
     // Intentionally left blank.
 }
@@ -1518,7 +1481,7 @@ void CConnman::ThreadDNSAddressSeed()
 {
     // goal: only query DNS seeds if address need is acute
     if ((addrman.size() > 0) &&
-        (!GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED))) {
+        (!gArgs.GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED))) {
         if (!interruptNet.sleep_for(std::chrono::seconds(11)))
             return;
 
@@ -1535,6 +1498,9 @@ void CConnman::ThreadDNSAddressSeed()
     LogPrintf("Loading addresses from DNS seeds (could take a while)\n");
 
     for (const CDNSSeedData& seed : vSeeds) {
+        if (interruptNet) {
+            return;
+        }
         if (HaveNameProxy()) {
             AddOneShot(seed.host);
         } else {
@@ -1549,6 +1515,9 @@ void CConnman::ThreadDNSAddressSeed()
                     vAdd.push_back(addr);
                     found++;
                 }
+            }
+            if (interruptNet) {
+                return;
             }
             // TODO: The seed name resolve may fail, yielding an IP of [::], which results in
             // addrman assigning the same source to results from different seeds.
@@ -1614,12 +1583,12 @@ void CConnman::ProcessOneShot()
 void CConnman::ThreadOpenConnections()
 {
     // Connect to specific addresses
-    if (mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0) {
+    if (gArgs.IsArgSet("-connect")) {
         for (int64_t nLoop = 0;; nLoop++) {
             ProcessOneShot();
-            for (std::string strAddr : mapMultiArgs["-connect"]) {
+            for (const std::string& strAddr : gArgs.GetArgs("-connect")) {
                 CAddress addr(CService(), NODE_NONE);
-                OpenNetworkConnection(addr, false, NULL, strAddr.c_str());
+                OpenNetworkConnection(addr, false, nullptr, strAddr.c_str());
                 for (int i = 0; i < 10 && i < nLoop; i++) {
                     if (!interruptNet.sleep_for(std::chrono::milliseconds(500)))
                         return;
@@ -1790,17 +1759,17 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo()
             // strAddNode is an IP:port
             auto it = mapConnected.find(service);
             if (it != mapConnected.end()) {
-                ret.push_back(AddedNodeInfo{strAddNode, service, true, it->second});
+                ret.emplace_back(strAddNode, service, true, it->second);
             } else {
-                ret.push_back(AddedNodeInfo{strAddNode, CService(), false, false});
+                ret.emplace_back(strAddNode, CService(), false, false);
             }
         } else {
             // strAddNode is a name
             auto it = mapConnectedByName.find(strAddNode);
             if (it != mapConnectedByName.end()) {
-                ret.push_back(AddedNodeInfo{strAddNode, it->second.second, true, it->second.first});
+                ret.emplace_back(strAddNode, it->second.second, true, it->second.first);
             } else {
-                ret.push_back(AddedNodeInfo{strAddNode, CService(), false, false});
+                ret.emplace_back(strAddNode, CService(), false, false);
             }
         }
     }
@@ -1812,7 +1781,7 @@ void CConnman::ThreadOpenAddedConnections()
 {
     {
         LOCK(cs_vAddedNodes);
-        vAddedNodes = mapMultiArgs["-addnode"];
+        vAddedNodes = gArgs.GetArgs("-addnode");
     }
 
     for (unsigned int i = 0; true; i++) {
@@ -1862,11 +1831,11 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (fFeeler)
         pnode->fFeeler = true;
 
+    GetNodeSignals().InitializeNode(pnode, *this);
     {
         LOCK(cs_vNodes);
         vNodes.push_back(pnode);
     }
-    GetNodeSignals().InitializeNode(pnode, *this);
 
     return true;
 }
@@ -1982,7 +1951,7 @@ bool CConnman::BindListenPort(const CService& addrBind, std::string& strError, b
     if (::bind(hListenSocket, (struct sockaddr*)&sockaddr, len) == SOCKET_ERROR) {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
-            strError = strprintf(_("Unable to bind to %s on this computer. PIVX Core is probably already running."), addrBind.ToString());
+            strError = strprintf(_("Unable to bind to %s on this computer. YieldStakingWallet Core is probably already running."), addrBind.ToString());
         else
             strError = strprintf(_("Unable to bind to %s on this computer (bind returned error %s)"), addrBind.ToString(), NetworkErrorString(nErr));
         LogPrintf("%s\n", strError);
@@ -1999,7 +1968,7 @@ bool CConnman::BindListenPort(const CService& addrBind, std::string& strError, b
         return false;
     }
 
-    vhListenSocket.push_back(ListenSocket(hListenSocket, fWhitelisted));
+    vhListenSocket.emplace_back(hListenSocket, fWhitelisted);
 
     if (addrBind.IsRoutable() && fDiscover && !fWhitelisted)
         AddLocal(addrBind, LOCAL_BIND);
@@ -2007,7 +1976,7 @@ bool CConnman::BindListenPort(const CService& addrBind, std::string& strError, b
     return true;
 }
 
-void Discover(boost::thread_group& threadGroup)
+void Discover()
 {
     if (!fDiscover)
         return;
@@ -2157,7 +2126,7 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
     // Send and receive from sockets, accept connections
     threadSocketHandler = std::thread(&TraceThread<std::function<void()> >, "net", std::function<void()>(std::bind(&CConnman::ThreadSocketHandler, this)));
 
-    if (!GetBoolArg("-dnsseed", true))
+    if (!gArgs.GetBoolArg("-dnsseed", true))
         LogPrintf("DNS seeding disabled\n");
     else
         threadDNSAddressSeed = std::thread(&TraceThread<std::function<void()> >, "dnsseed", std::function<void()>(std::bind(&CConnman::ThreadDNSAddressSeed, this)));
@@ -2166,7 +2135,7 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
     threadOpenAddedConnections = std::thread(&TraceThread<std::function<void()> >, "addcon", std::function<void()>(std::bind(&CConnman::ThreadOpenAddedConnections, this)));
 
     // Initiate outbound connections unless connect=0
-    if (!mapArgs.count("-connect") || mapMultiArgs["-connect"].size() != 1 || mapMultiArgs["-connect"][0] != "0")
+    if (!gArgs.IsArgSet("-connect") || gArgs.GetArgs("-connect").size() != 1 || gArgs.GetArgs("-connect")[0] != "0")
         threadOpenConnections = std::thread(&TraceThread<std::function<void()> >, "opencon", std::function<void()>(std::bind(&CConnman::ThreadOpenConnections, this)));
 
     // Process messages
@@ -2377,20 +2346,6 @@ bool CConnman::DisconnectNode(NodeId id)
         }
     }
     return false;
-}
-
-void CConnman::RelayTransactionLockReq(const CTransaction& tx, bool relayToAll)
-{
-    CInv inv(MSG_TXLOCK_REQUEST, tx.GetHash());
-
-    //broadcast the new lock
-    LOCK(cs_vNodes);
-    for (CNode* pnode : vNodes) {
-        if (!relayToAll && !pnode->fRelayTxes)
-            continue;
-
-        g_connman->PushMessage(pnode, CNetMsgMaker(pnode->GetSendVersion()).Make(NetMsgType::IX, tx));
-    }
 }
 
 void CConnman::RelayInv(CInv& inv)

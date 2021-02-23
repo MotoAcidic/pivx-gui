@@ -1,18 +1,17 @@
 // Copyright (c) 2011-2014 The Bitcoin Core developers
-// Copyright (c) 2016-2019 The PIVX developers
+// Copyright (c) 2016-2019 The YieldStakingWallet developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "test/test_yieldstakingwallet.h"
+
 #include "init.h"
 #include "consensus/merkle.h"
-#include "main.h"
 #include "miner.h"
 #include "pubkey.h"
 #include "uint256.h"
 #include "util.h"
 #include "wallet/wallet.h"
-
-#include "test/test_pivx.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -91,7 +90,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
         pblock->nNonce = blockinfo[i].nonce;
         CValidationState state;
-        BOOST_CHECK(ProcessNewBlock(state, NULL, pblock, connman));
+        BOOST_CHECK(ProcessNewBlock(state, NULL, pblock));
         BOOST_CHECK(state.IsValid());
         pblock->hashPrevBlock = pblock->GetHash();
     }

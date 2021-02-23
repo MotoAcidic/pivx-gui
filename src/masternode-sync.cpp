@@ -1,14 +1,13 @@
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2020 The PIVX developers
+// Copyright (c) 2015-2020 The YieldStakingWallet developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 // clang-format off
-#include "main.h"
 #include "activemasternode.h"
+#include "budget/budgetmanager.h"
 #include "masternode-sync.h"
 #include "masternode-payments.h"
-#include "masternode-budget.h"
 #include "masternode.h"
 #include "masternodeman.h"
 #include "netmessagemaker.h"
@@ -66,11 +65,9 @@ bool CMasternodeSync::IsBlockchainSynced()
 
     int64_t blockTime = 0;
     {
-        TRY_LOCK(cs_main, lockMain);
-        if (!lockMain) return false;
-        CBlockIndex *pindex = chainActive.Tip();
-        if (pindex == nullptr) return false;
-        blockTime = pindex->nTime;
+        TRY_LOCK(g_best_block_mutex, lock);
+        if (!lock) return false;
+        blockTime = g_best_block_time;
     }
 
     if (blockTime + 60 * 60 < lastProcess)
@@ -115,7 +112,7 @@ void CMasternodeSync::AddedMasternodeList(const uint256& hash)
         }
     } else {
         lastMasternodeList = GetTime();
-        mapSeenSyncMNB.insert(std::make_pair(hash, 1));
+        mapSeenSyncMNB.emplace(hash, 1);
     }
 }
 
@@ -128,23 +125,23 @@ void CMasternodeSync::AddedMasternodeWinner(const uint256& hash)
         }
     } else {
         lastMasternodeWinner = GetTime();
-        mapSeenSyncMNW.insert(std::make_pair(hash, 1));
+        mapSeenSyncMNW.emplace(hash, 1);
     }
 }
 
 void CMasternodeSync::AddedBudgetItem(const uint256& hash)
 {
-    if (budget.HaveSeenProposal(hash) ||
-            budget.HaveSeenProposalVote(hash) ||
-            budget.HaveSeenFinalizedBudget(hash) ||
-            budget.HaveSeenFinalizedBudgetVote(hash)) {
+    if (g_budgetman.HaveProposal(hash) ||
+            g_budgetman.HaveSeenProposalVote(hash) ||
+            g_budgetman.HaveFinalizedBudget(hash) ||
+            g_budgetman.HaveSeenFinalizedBudgetVote(hash)) {
         if (mapSeenSyncBudget[hash] < MASTERNODE_SYNC_THRESHOLD) {
             lastBudgetItem = GetTime();
             mapSeenSyncBudget[hash]++;
         }
     } else {
         lastBudgetItem = GetTime();
-        mapSeenSyncBudget.insert(std::make_pair(hash, 1));
+        mapSeenSyncBudget.emplace(hash, 1);
     }
 }
 
@@ -263,7 +260,7 @@ void CMasternodeSync::Process()
         /*
             Resync if we lose all masternodes from sleep/wake or failure to sync originally
         */
-        if (mnodeman.CountEnabled() == 0) {
+        if (mnodeman.CountEnabled() == 0 && !isRegTestNet) {
             Reset();
         } else
             return;
@@ -281,35 +278,28 @@ void CMasternodeSync::Process()
     if (RequestedMasternodeAssets == MASTERNODE_SYNC_INITIAL) GetNextAsset();
 
     // sporks synced but blockchain is not, wait until we're almost at a recent block to continue
-    if (!isRegTestNet && !IsBlockchainSynced() &&
+    if (!IsBlockchainSynced() &&
         RequestedMasternodeAssets > MASTERNODE_SYNC_SPORKS) return;
 
     CMasternodeSync* sync = this;
-    g_connman->ForEachNodeContinueIf([sync, isRegTestNet](CNode* pnode) {
-      return sync->SyncWithNode(pnode, isRegTestNet);
+
+    // New sync architecture, regtest only for now.
+    if (isRegTestNet) {
+        g_connman->ForEachNode([sync](CNode* pnode){
+            return sync->SyncRegtest(pnode);
+        });
+        return;
+    }
+
+    // Mainnet sync
+    g_connman->ForEachNodeContinueIf([sync](CNode* pnode){
+        return sync->SyncWithNode(pnode);
     });
 }
 
-bool CMasternodeSync::SyncWithNode(CNode* pnode, bool isRegTestNet)
+bool CMasternodeSync::SyncWithNode(CNode* pnode)
 {
     CNetMsgMaker msgMaker(pnode->GetSendVersion());
-    if (isRegTestNet) {
-        if (RequestedMasternodeAttempt <= 2) {
-            g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::GETSPORKS)); //get current network sporks
-        } else if (RequestedMasternodeAttempt < 4) {
-            mnodeman.DsegUpdate(pnode);
-        } else if (RequestedMasternodeAttempt < 6) {
-            int nMnCount = mnodeman.CountEnabled();
-
-            g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::GETMNWINNERS, nMnCount)); //sync payees
-            uint256 n;
-            g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::BUDGETVOTESYNC, n)); //sync masternode votes
-        } else {
-            RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
-        }
-        RequestedMasternodeAttempt++;
-        return false;
-    }
 
     //set to synced
     if (RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS) {

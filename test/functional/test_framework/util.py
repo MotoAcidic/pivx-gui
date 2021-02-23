@@ -28,10 +28,10 @@ def assert_fee_amount(fee, tx_size, fee_per_kB):
     """Assert the fee was in range"""
     target_fee = round(tx_size * fee_per_kB / 1000, 8)
     if fee < target_fee:
-        raise AssertionError("Fee of %s PIV too low! (Should be %s PIV)" % (str(fee), str(target_fee)))
+        raise AssertionError("Fee of %s YSW too low! (Should be %s YSW)" % (str(fee), str(target_fee)))
     # allow the wallet's estimation to be at most 2 bytes off
     if fee > (tx_size + 20) * fee_per_kB / 1000:
-        raise AssertionError("Fee of %s PIV too high! (Should be %s PIV)" % (str(fee), str(target_fee)))
+        raise AssertionError("Fee of %s YSW too high! (Should be %s YSW)" % (str(fee), str(target_fee)))
 
 def assert_equal(thing1, thing2, *args):
     if thing1 != thing2 or any(thing1 != arg for arg in args):
@@ -207,7 +207,14 @@ def str_to_b64str(string):
 def satoshi_round(amount):
     return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
 
-def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=None):
+def wait_until(predicate,
+               *,
+               attempts=float('inf'),
+               timeout=float('inf'),
+               lock=None,
+               sendpings=None,
+               mocktime=None):
+
     if attempts == float('inf') and timeout == float('inf'):
         timeout = 60
     attempt = 0
@@ -223,6 +230,10 @@ def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=N
                 return
         attempt += 1
         time.sleep(0.5)
+        if sendpings is not None:
+            sendpings()
+        if mocktime is not None:
+            mocktime(1)
 
     # Print the cause of the timeout
     assert_greater_than(attempts, attempt)
@@ -295,7 +306,7 @@ def initialize_datadir(dirname, n):
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
     rpc_u, rpc_p = rpc_auth_pair(n)
-    with open(os.path.join(datadir, "pivx.conf"), 'w', encoding='utf8') as f:
+    with open(os.path.join(datadir, "yieldstakingwallet.conf"), 'w', encoding='utf8') as f:
         f.write("regtest=1\n")
         f.write("rpcuser=" + rpc_u + "\n")
         f.write("rpcpassword=" + rpc_p + "\n")
@@ -318,8 +329,8 @@ def get_datadir_path(dirname, n):
 def get_auth_cookie(datadir):
     user = None
     password = None
-    if os.path.isfile(os.path.join(datadir, "pivx.conf")):
-        with open(os.path.join(datadir, "pivx.conf"), 'r', encoding='utf8') as f:
+    if os.path.isfile(os.path.join(datadir, "yieldstakingwallet.conf")):
+        with open(os.path.join(datadir, "yieldstakingwallet.conf"), 'r', encoding='utf8') as f:
             for line in f:
                 if line.startswith("rpcuser="):
                     assert user is None  # Ensure that there is only one rpcuser line
@@ -592,7 +603,7 @@ def find_vout_for_address(node, txid, addr):
             return i
     raise RuntimeError("Vout not found for address: txid=%s, addr=%s" % (txid, addr))
 
-### PIVX specific utils ###
+### YieldStakingWallet specific utils ###
 vZC_DENOMS = [1, 5, 10, 50, 100, 500, 1000, 5000]
 DEFAULT_FEE = 0.01
 SPORK_ACTIVATION_TIME = 1563253447
@@ -602,4 +613,18 @@ def DecimalAmt(x):
     """Return Decimal from float for equality checks against rpc outputs"""
     return Decimal("{:0.8f}".format(x))
 
+# Find a coinstake/coinbase address on the node, filtering by the number of UTXOs it has.
+# If no filter is provided, returns the coinstake/coinbase address on the node containing
+# the greatest number of spendable UTXOs.
+# The default cached chain has one address per coinbase output.
+def get_coinstake_address(node, expected_utxos=None):
+    addrs = [utxo['address'] for utxo in node.listunspent() if utxo['generated']]
+    assert(len(set(addrs)) > 0)
 
+    if expected_utxos is None:
+        addrs = [(addrs.count(a), a) for a in set(addrs)]
+        return sorted(addrs, reverse=True)[0][1]
+
+    addrs = [a for a in set(addrs) if addrs.count(a) == expected_utxos]
+    assert(len(addrs) > 0)
+    return addrs[0]

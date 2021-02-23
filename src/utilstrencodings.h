@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2017-2019 The PIVX developers
+// Copyright (c) 2017-2019 The YieldStakingWallet developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,9 +20,6 @@
 #define UBEGIN(a) ((unsigned char*)&(a))
 #define UEND(a) ((unsigned char*)&((&(a))[1]))
 #define ARRAYLEN(array) (sizeof(array) / sizeof((array)[0]))
-
-/** This is needed because the foreach macro can't get over the comma in pair<t1, t2> */
-#define PAIRTYPE(t1, t2) std::pair<t1, t2>
 
 /** Used by SanitizeString() */
 enum SafeChars
@@ -72,6 +69,16 @@ int64_t atoi64(const std::string& str);
 int atoi(const std::string& str);
 
 /**
+ * Tests if the given character is a decimal digit.
+ * @param[in] c     character to test
+ * @return          true if the argument is a decimal digit; otherwise false.
+ */
+constexpr bool IsDigit(char c)
+{
+    return c >= '0' && c <= '9';
+}
+
+/**
  * Convert string to signed 32-bit integer with strict parse error feedback.
  * @returns true if the entire string could be parsed as valid integer,
  *   false if not the entire string could be parsed or when overflow or underflow occurred.
@@ -91,6 +98,13 @@ bool ParseInt64(const std::string& str, int64_t *out);
  *   false if not the entire string could be parsed or when overflow or underflow occurred.
  */
 bool ParseDouble(const std::string& str, double *out);
+
+/* Return iterator to first non zero element, or itend */
+template <typename T>
+T FindFirstNonZero(T itbegin, T itend)
+{
+    return std::find_if(itbegin, itend, [](unsigned char v) { return v != 0; });
+}
 
 template <typename T>
 std::string HexStr(const T itbegin, const T itend, bool fSpaces = false)
@@ -114,6 +128,12 @@ template <typename T>
 inline std::string HexStr(const T& vch, bool fSpaces = false)
 {
     return HexStr(vch.begin(), vch.end(), fSpaces);
+}
+
+template <typename T>
+inline std::string HexStrTrimmed(const T& vch, bool fSpaces = false)
+{
+    return HexStr(vch.begin(), FindFirstNonZero(vch.rbegin(), vch.rend()).base(), fSpaces);
 }
 
 /** Reverse the endianess of a string */
@@ -190,5 +210,55 @@ bool ConvertBits(const O& outfn, I it, I end) {
   */
 bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out);
 
+/**
+ * Converts the given character to its lowercase equivalent.
+ * This function is locale independent. It only converts uppercase
+ * characters in the standard 7-bit ASCII range.
+ * @param[in] c     the character to convert to lowercase.
+ * @return          the lowercase equivalent of c; or the argument
+ *                  if no conversion is possible.
+ */
+constexpr unsigned char ToLower(unsigned char c)
+{
+    return (c >= 'A' && c <= 'Z' ? (c - 'A') + 'a' : c);
+}
+
+/**
+ * Converts the given string to its lowercase equivalent.
+ * This function is locale independent. It only converts uppercase
+ * characters in the standard 7-bit ASCII range.
+ * @param[in,out] str   the string to convert to lowercase.
+ */
+void Downcase(std::string& str);
+
+/**
+ * Converts the given character to its uppercase equivalent.
+ * This function is locale independent. It only converts lowercase
+ * characters in the standard 7-bit ASCII range.
+ * @param[in] c     the character to convert to uppercase.
+ * @return          the uppercase equivalent of c; or the argument
+ *                  if no conversion is possible.
+ */
+constexpr unsigned char ToUpper(unsigned char c)
+{
+    return (c >= 'a' && c <= 'z' ? (c - 'a') + 'A' : c);
+}
+
+/**
+ * Capitalizes the first character of the given string.
+ * This function is locale independent. It only capitalizes the
+ * first character of the argument if it has an uppercase equivalent
+ * in the standard 7-bit ASCII range.
+ * @param[in] str   the string to capitalize.
+ * @return          string with the first letter capitalized.
+ */
+std::string Capitalize(std::string str);
+
+/**
+ * Checks for valid 4-byte UTF-8 encoding in a string
+ * @param[in] str   the string to check.
+ * @return          boolean. true for valid UTF-8 encoding.
+ */
+bool IsValidUTF8(const std::string& str);
 
 #endif // BITCOIN_UTILSTRENCODINGS_H
