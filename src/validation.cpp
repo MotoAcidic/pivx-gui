@@ -816,6 +816,7 @@ int64_t GetMasternodePayment(unsigned mnlevel)
         case 1: return COIN / 2; // 0.5
         case 2: return 1 * COIN; // 1
         case 3: return 2 * COIN; // 2
+        case 4: return 3 * COIN; // 3
         default: return 0;
     }
 }

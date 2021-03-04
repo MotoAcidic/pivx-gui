@@ -183,10 +183,20 @@ CMasternode::state CMasternode::GetActiveState() const
 unsigned CMasternode::Level(CAmount vin_val)
 {
     switch(vin_val) {
-        case 10000 * COIN: return 1;
-        case 100000 * COIN: return 2;
-        case 1000000 * COIN: return 3;
-        default: return LevelValue::UNSPECIFIED;
+        if (sporkManager.IsSporkActive(SPORK_21_COLLATERAL_CHANGE)) {
+            case 1000 * COIN: return 1;
+            case 5000 * COIN: return 2;
+            case 10000 * COIN: return 3;
+            case 50000 * COIN: return 4;
+            default: return LevelValue::UNSPECIFIED;
+        } else {            
+            case 1000 * COIN: return 1;
+            case 5000 * COIN: return 2;
+            case 10000 * COIN: return 3;
+            case 50000 * COIN: return 4;
+            default: return LevelValue::UNSPECIFIED;
+        }
+
     }
 }
 
