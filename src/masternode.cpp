@@ -13,6 +13,7 @@
 #include "netbase.h"
 #include "sync.h"
 #include "util.h"
+#include "spork.h"
 #include "wallet/wallet.h"
 
 #define MASTERNODE_MIN_CONFIRMATIONS_REGTEST 1
@@ -190,10 +191,10 @@ unsigned CMasternode::Level(CAmount vin_val)
             case 50000 * COIN: return 4;
             default: return LevelValue::UNSPECIFIED;
         } else {            
-            case 1000 * COIN: return 1;
-            case 5000 * COIN: return 2;
-            case 10000 * COIN: return 3;
-            case 50000 * COIN: return 4;
+            case 10000 * COIN: return 1;
+            case 50000 * COIN: return 2;
+            case 100000 * COIN: return 3;
+            case 500000 * COIN: return 4;
             default: return LevelValue::UNSPECIFIED;
         }
 
