@@ -144,7 +144,7 @@ public:
         consensus.nMaxMoneyOut = 21000000 * COIN;
         consensus.nPoolMaxTransactions = 3;
         consensus.nProposalEstablishmentTime = 60 * 60 * 24;    // must be at least a day old to make it into a budget
-        consensus.nStakeMinAge = 1;  // 60 * 60 old setting, set to 1minute for testing
+        consensus.nStakeMinAge = 10 * 60;  // 60 * 60 old setting, set to 1minute for testing
         consensus.nStakeMinDepth = 600;
         consensus.nTargetTimespan = 40 * 60;
         consensus.nTargetTimespanV2 = 30 * 60;
@@ -189,15 +189,15 @@ public:
                 Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
         consensus.vUpgrades[Consensus::UPGRADE_TESTDUMMY].nActivationHeight =
                 Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
-        consensus.vUpgrades[Consensus::UPGRADE_POS].nActivationHeight           = 201;
-        consensus.vUpgrades[Consensus::UPGRADE_POS_V2].nActivationHeight        = 202;
+        consensus.vUpgrades[Consensus::UPGRADE_POS].nActivationHeight           = 150;
+        consensus.vUpgrades[Consensus::UPGRADE_POS_V2].nActivationHeight        = 200;
         consensus.vUpgrades[Consensus::UPGRADE_ZC].nActivationHeight            = INT_MAX;
         consensus.vUpgrades[Consensus::UPGRADE_ZC_V2].nActivationHeight         = INT_MAX;
-        consensus.vUpgrades[Consensus::UPGRADE_BIP65].nActivationHeight         = 201;
+        consensus.vUpgrades[Consensus::UPGRADE_BIP65].nActivationHeight         = 40;
         consensus.vUpgrades[Consensus::UPGRADE_ZC_PUBLIC].nActivationHeight     = INT_MAX;
-        consensus.vUpgrades[Consensus::UPGRADE_V3_4].nActivationHeight          = 201;
-        consensus.vUpgrades[Consensus::UPGRADE_V4_0].nActivationHeight          = 202;
-        consensus.vUpgrades[Consensus::UPGRADE_V5_0].nActivationHeight          = 203;
+        consensus.vUpgrades[Consensus::UPGRADE_V3_4].nActivationHeight          = 10;
+        consensus.vUpgrades[Consensus::UPGRADE_V4_0].nActivationHeight          = 20;
+        consensus.vUpgrades[Consensus::UPGRADE_V5_0].nActivationHeight          = 30;
 
 
         consensus.vUpgrades[Consensus::UPGRADE_ZC].hashActivationBlock =
