@@ -54,6 +54,8 @@ static const CRPCConvertParam vRPCConvertParams[] = {
     { "getbalance", 2 },
     { "getbalance", 3 },
     { "getbalance", 4 },
+    { "getmasternodecount", 0},
+    { "masternodecurrent", 0},
     { "getshieldbalance", 1 },
     { "getshieldbalance", 2 },
     { "rawshieldsendmany", 1 },
