@@ -189,8 +189,8 @@ public:
                 Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
         consensus.vUpgrades[Consensus::UPGRADE_TESTDUMMY].nActivationHeight =
                 Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
-        consensus.vUpgrades[Consensus::UPGRADE_POS].nActivationHeight           = 150;
-        consensus.vUpgrades[Consensus::UPGRADE_POS_V2].nActivationHeight        = 200;
+        consensus.vUpgrades[Consensus::UPGRADE_POS].nActivationHeight           = 200;
+        consensus.vUpgrades[Consensus::UPGRADE_POS_V2].nActivationHeight        = 250;
         consensus.vUpgrades[Consensus::UPGRADE_ZC].nActivationHeight            = INT_MAX;
         consensus.vUpgrades[Consensus::UPGRADE_ZC_V2].nActivationHeight         = INT_MAX;
         consensus.vUpgrades[Consensus::UPGRADE_BIP65].nActivationHeight         = 350;
