@@ -153,8 +153,8 @@ public:
         consensus.nMaxProposalPayments = 6;
 
         // spork keys
-        consensus.strSporkPubKey = "03af9745200827d138df547d4441d06a3cbdd02ed54a86a8d26f59546e573e2947";
-        consensus.strSporkPubKeyOld = "040F129DE6546FE405995329A887329BED4321325B1A73B0A257423C05C1FCFE9E40EF0678AEF59036A22C42E61DFD29DF7EFB09F56CC73CADF64E05741880E3E7";
+        consensus.strSporkPubKey = "034216f51d3b2d0940db48ddd193724918b33572c6cddf895d7166027a5841b83a";
+        consensus.strSporkPubKeyOld = "03af9745200827d138df547d4441d06a3cbdd02ed54a86a8d26f59546e573e2947";
         consensus.nTime_EnforceNewSporkKey = 1454124731;     //!> December 21, 2020 01:00:00 AM GMT
         consensus.nTime_RejectOldSporkKey = 1614560400;     //!> March 1, 2021 01:00:00 AM GMT
 
