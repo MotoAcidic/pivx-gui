@@ -189,7 +189,6 @@ unsigned CMasternode::Level(CAmount vin_val)
             case 5000 * COIN: return 2;
             case 10000 * COIN: return 3;
             case 50000 * COIN: return 4;
-            default: return LevelValue::UNSPECIFIED;
         }
     } else { 
         switch (vin_val) { 
@@ -197,10 +196,10 @@ unsigned CMasternode::Level(CAmount vin_val)
             case 50000 * COIN: return 2;
             case 100000 * COIN: return 3;
             case 500000 * COIN: return 4;
-            default: return LevelValue::UNSPECIFIED;
         }
 
     }
+    return 0;
 }
 
 unsigned CMasternode::Level(const CTxIn& vin)

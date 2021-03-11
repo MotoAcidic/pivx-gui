@@ -812,13 +812,16 @@ CAmount GetBlockValue(int nHeight)
 
 int64_t GetMasternodePayment(unsigned mnlevel)
 {
+    int64_t ret = 0;
+
     switch(mnlevel) {
-        case 1: return COIN / 2; // 0.5
-        case 2: return 1 * COIN; // 1
-        case 3: return 2 * COIN; // 2
-        case 4: return 3 * COIN; // 3
-        default: return 0;
+        case 1: ret = COIN / 2; // 0.5
+        case 2: ret = 1 * COIN; // 1
+        case 3: ret = 2 * COIN; // 2
+        case 4: ret = 3 * COIN; // 3
+        //default: ret 0;
     }
+    return ret;
 }
 
 bool IsInitialBlockDownload()
