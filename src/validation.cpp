@@ -2755,8 +2755,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
         if (!GetTransaction(block.vtx[1]->vin[0].prevout.hash, txPrev, hashBlockPrev, true))
             return state.DoS(100, error("CheckBlock() : stake failed to find vin transaction"));
-        if (txPrev.vout[block.vtx[1]->vin[0].prevout.hash.n].nValue < Params().GetConsensus().StakeInputMinimal())
-            return state.DoS(100, error("CheckBlock() : stake input below minimum value"));
+        if (txPrev.vout[block.vtx[1]->vin[0].prevout.n].nValue < Params().GetConsensus().nStakeInput())
+            return state.DoS(100, error("CheckBlock() : stake input below minimum defined value via spork 22"));
     }
 
     // Cold Staking enforcement (true during sync - reject P2CS outputs when false)
