@@ -101,7 +101,7 @@ struct Params {
     int64_t nProposalEstablishmentTime;
     int nStakeMinAge;
     int nStakeMinDepth;
-    int nStakeInput;
+    //int nStakeInput;
     int64_t nTargetTimespan;
     int64_t nTargetTimespanV2;
     int64_t nTargetSpacing;
