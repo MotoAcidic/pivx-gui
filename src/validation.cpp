@@ -2742,7 +2742,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         for (unsigned int i = 2; i < block.vtx.size(); i++)
             if (block.vtx[i]->IsCoinStake())
                 return state.DoS(100, false, REJECT_INVALID, "bad-cs-multiple", false, "more than one coinstake");
-        //check for minimal stake input after fork
+
+        //check for minimal stake input
         CBlockIndex* pindex = NULL;
         CTransaction txPrev;
         uint256 hashBlockPrev = block.hashPrevBlock;
@@ -2752,9 +2753,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         else
             return state.DoS(100, error("CheckBlock() : stake failed to find block index"));
 
-        if (!GetTransaction(block.vtx[1].vin[0].prevout.hash, txPrev, hashBlockPrev, true))
+        if (!GetTransaction(block.vtx[1]->vin[0].prevout.hash, txPrev, hashBlockPrev, true))
             return state.DoS(100, error("CheckBlock() : stake failed to find vin transaction"));
-        if (txPrev.vout[block.vtx[1].vin[0].prevout.n].nValue < Params().StakeInputMinimal())
+        if (txPrev.vout[block.vtx[1]->vin[0].prevout.hash.n].nValue < Params().GetConsensus().StakeInputMinimal())
             return state.DoS(100, error("CheckBlock() : stake input below minimum value"));
     }
 
