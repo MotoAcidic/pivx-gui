@@ -11,6 +11,8 @@
 #include "consensus/merkle.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "spork.h"
+#include "sporkdb.h"
 
 #include <boost/assign/list_of.hpp>
 
@@ -137,15 +139,16 @@ public:
         consensus.posLimitV2 = ~UINT256_ZERO >> 20;
         consensus.nBudgetCycleBlocks = 43200;       // approx. 1 every 30 days
         consensus.nBudgetFeeConfirmations = 6;      // Number of confirmations for the finalization fee
-        consensus.nCoinbaseMaturity = 6;            // Final will be 100, testing is set to 6
+        consensus.nCoinbaseMaturity = 6;                                               // Final will be 100, testing is set to 6
         consensus.nFutureTimeDriftPoW = 7200;
         consensus.nFutureTimeDriftPoS = 180;
-        consensus.nMasternodeCountDrift = 20;       // num of MN we allow the see-saw payments to be off by
+        consensus.nMasternodeCountDrift = 20;                                          // num of MN we allow the see-saw payments to be off by
         consensus.nMaxMoneyOut = 21000000 * COIN;
         consensus.nPoolMaxTransactions = 3;
-        consensus.nProposalEstablishmentTime = 60 * 60 * 24;    // must be at least a day old to make it into a budget
-        consensus.nStakeMinAge = 10 * 60;  // 60 * 60 old setting, set to 1minute for testing
-        consensus.nStakeMinDepth = 30;  //Was 600
+        consensus.nProposalEstablishmentTime = 60 * 60 * 24;                           // must be at least a day old to make it into a budget
+        consensus.nStakeMinAge = 10 * 60;                                              // 60 * 60 old setting, set to 10 minute for testing
+        consensus.nStakeMinDepth = 30;                                                 // Depth to allow coins for staking
+        consensus.nStakeInput = sporkManager.GetSporkValue(SPORK_22_MIN_STAKE_INPUT);  // Default set to 1 coin, dynamic input based on spork value
         consensus.nTargetTimespan = 40 * 60;
         consensus.nTargetTimespanV2 = 30 * 60;
         consensus.nTargetSpacing = 1 * 60;

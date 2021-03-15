@@ -28,6 +28,7 @@ std::vector<CSporkDef> sporkDefs = {
     MAKE_SPORK_DEF(SPORK_19_COLDSTAKING_MAINTENANCE,        4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_20_SAPLING_MAINTENANCE,            4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_21_COLLATERAL_CHANGE,              4070908800ULL), // OFF
+    MAKE_SPORK_DEF(SPORK_22_MIN_STAKE_INPUT,                1),             // 1 YSW
 };
 
 CSporkManager sporkManager;

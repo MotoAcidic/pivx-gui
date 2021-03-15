@@ -2742,6 +2742,20 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         for (unsigned int i = 2; i < block.vtx.size(); i++)
             if (block.vtx[i]->IsCoinStake())
                 return state.DoS(100, false, REJECT_INVALID, "bad-cs-multiple", false, "more than one coinstake");
+        //check for minimal stake input after fork
+        CBlockIndex* pindex = NULL;
+        CTransaction txPrev;
+        uint256 hashBlockPrev = block.hashPrevBlock;
+        BlockMap::iterator it = mapBlockIndex.find(hashBlockPrev);
+        if (it != mapBlockIndex.end())
+            pindex = it->second;
+        else
+            return state.DoS(100, error("CheckBlock() : stake failed to find block index"));
+
+        if (!GetTransaction(block.vtx[1].vin[0].prevout.hash, txPrev, hashBlockPrev, true))
+            return state.DoS(100, error("CheckBlock() : stake failed to find vin transaction"));
+        if (txPrev.vout[block.vtx[1].vin[0].prevout.n].nValue < Params().StakeInputMinimal())
+            return state.DoS(100, error("CheckBlock() : stake input below minimum value"));
     }
 
     // Cold Staking enforcement (true during sync - reject P2CS outputs when false)
