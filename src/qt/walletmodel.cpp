@@ -136,9 +136,9 @@ CAmount WalletModel::getUnlockedBalance(const CCoinControl* coinControl, bool fI
     return getBalance(coinControl, fIncludeDelegated, true, fIncludeShielded);
 }
 
-CAmount WalletModel::getMinColdStakingAmount() const
+CAmount WalletModel::getMinColdStakingAmount()
 {
-    return MIN_COLDSTAKING_AMOUNT;
+    return sporkManager.GetSporkValue(SPORK_23_MIN_COLDSTAKE_INPUT);
 }
 
 CAmount WalletModel::getLockedBalance() const

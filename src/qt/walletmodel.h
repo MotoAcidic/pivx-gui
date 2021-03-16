@@ -152,7 +152,7 @@ public:
     bool isColdStakingNetworkelyEnabled() const;
     bool isSaplingInMaintenance() const;
     bool isSaplingEnforced() const;
-    CAmount getMinColdStakingAmount() const;
+    CAmount getMinColdStakingAmount();
     /* current staking status from the miner thread **/
     bool isStakingStatusActive() const;
 

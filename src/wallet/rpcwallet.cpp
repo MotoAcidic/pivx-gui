@@ -1073,6 +1073,8 @@ UniValue CreateColdStakeDelegation(const UniValue& params, CWalletTx& wtxNew, CR
 {
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
+    CAmount MIN_COLDSTAKE_AMOUNT = sporkManager.GetSporkValue(SPORK_23_MIN_COLDSTAKE_INPUT) * COIN;
+
     // Check that Cold Staking has been enforced or fForceNotEnabled = true
     bool fForceNotEnabled = false;
     if (params.size() > 6 && !params[6].isNull())
@@ -1097,9 +1099,9 @@ UniValue CreateColdStakeDelegation(const UniValue& params, CWalletTx& wtxNew, CR
 
     // Get Amount
     CAmount nValue = AmountFromValue(params[1]);
-    if (nValue < MIN_COLDSTAKING_AMOUNT)
+    if (nValue < MIN_COLDSTAKE_AMOUNT)
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid amount (%d). Min amount: %d",
-                nValue, MIN_COLDSTAKING_AMOUNT));
+                nValue, MIN_COLDSTAKE_AMOUNT));
 
     // include already delegated coins
     bool fUseDelegated = false;

@@ -66,6 +66,8 @@ bool CheckTransaction(const CTransaction& tx, bool fZerocoinActive, bool fReject
     if (tx.vout.empty() && (tx.sapData && tx.sapData->vShieldedOutput.empty()))
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
 
+    CAmount MIN_COLDSTAKE_AMOUNT = sporkManager.GetSporkValue(SPORK_23_MIN_COLDSTAKE_INPUT) * COIN;
+
     // Version check
     if (fSaplingActive) {
         // After sapling activation we require 1 <= tx.nVersion < TxVersion::TOOHIGH
@@ -110,7 +112,7 @@ bool CheckTransaction(const CTransaction& tx, bool fZerocoinActive, bool fReject
         if (txout.scriptPubKey.IsPayToColdStaking()) {
             if (!fColdStakingActive)
                 return state.DoS(10, false, REJECT_INVALID, "cold-stake-inactive");
-            if (txout.nValue < MIN_COLDSTAKING_AMOUNT)
+            if (txout.nValue < MIN_COLDSTAKE_AMOUNT)
                 return state.DoS(100, false, REJECT_INVALID, "cold-stake-vout-toosmall");
         }
     }
