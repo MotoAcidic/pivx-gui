@@ -8,6 +8,7 @@
 #define BITCOIN_CONSENSUS_CONSENSUS_H
 
 #include "amount.h"
+#include "../spork.h"
 #include <stdint.h>
 
 /** The maximum allowed size for a block, in bytes (only for buffer size limits) */
@@ -28,8 +29,12 @@ static const unsigned int MAX_BLOCK_SIGOPS_LEGACY = MAX_BLOCK_SIZE_LEGACY / 50;
 static const unsigned int MAX_TX_SIGOPS_CURRENT = MAX_BLOCK_SIGOPS_CURRENT / 5;
 static const unsigned int MAX_TX_SIGOPS_LEGACY = MAX_BLOCK_SIGOPS_LEGACY / 5;
 
-/** The minimum amount for the value of a P2CS output */
-static const CAmount MIN_COLDSTAKING_AMOUNT = 1 * COIN;
+/** The amount for the value of a P2CS output */
+//static const CAmount MIN_COLDSTAKING_AMOUNT = 1 * COIN;
+CAmount MIN_COLDSTAKING_AMOUNT = sporkManager.GetSporkValue(SPORK_23_MIN_COLDSTAKE_INPUT) * COIN;
+
+/** The amount for the value of stake input */
+CAmount MIN_STAKE_AMOUNT = sporkManager.GetSporkValue(SPORK_22_MIN_STAKE_INPUT) * COIN;
 
 /** The default maximum reorganization depth **/
 static const int DEFAULT_MAX_REORG_DEPTH = 100;

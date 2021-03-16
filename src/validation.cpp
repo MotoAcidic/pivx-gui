@@ -2755,7 +2755,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
         if (!GetTransaction(block.vtx[1]->vin[0].prevout.hash, txPrev, hashBlockPrev, true))
             return state.DoS(100, error("CheckBlock() : stake failed to find vin transaction"));
-        if (txPrev.vout[block.vtx[1]->vin[0].prevout.n].nValue < sporkManager.GetSporkValue(SPORK_22_MIN_STAKE_INPUT))
+        if (txPrev.vout[block.vtx[1]->vin[0].prevout.n].nValue < MIN_STAKE_AMOUNT)
             return state.DoS(100, error("CheckBlock() : stake input below minimum defined value via spork 22"));
     }
 
