@@ -2691,6 +2691,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // These are checks that are independent of context.
     const bool IsPoS = block.IsProofOfStake();
 
+    CAmount MIN_STAKE_AMOUNT = sporkManager.GetSporkValue(SPORK_22_MIN_STAKE_INPUT);
+
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
     if (!IsPoS && fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits))
