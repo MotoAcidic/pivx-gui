@@ -30,11 +30,10 @@ static const unsigned int MAX_TX_SIGOPS_CURRENT = MAX_BLOCK_SIGOPS_CURRENT / 5;
 static const unsigned int MAX_TX_SIGOPS_LEGACY = MAX_BLOCK_SIGOPS_LEGACY / 5;
 
 /** The amount for the value of a P2CS output */
-//static const CAmount MIN_COLDSTAKING_AMOUNT = 1 * COIN;
 static const CAmount MIN_COLDSTAKING_AMOUNT = 1 * COIN;
 
 /** The amount for the value of stake input */
-CAmount MIN_STAKE_AMOUNT = sporkManager.GetSporkValue(SPORK_22_MIN_STAKE_INPUT) * COIN;
+CAmount MIN_STAKE_AMOUNT = sporkManager.GetSporkValue(SPORK_22_MIN_STAKE_INPUT);
 
 /** The default maximum reorganization depth **/
 static const int DEFAULT_MAX_REORG_DEPTH = 100;
