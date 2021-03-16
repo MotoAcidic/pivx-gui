@@ -31,7 +31,7 @@ static const unsigned int MAX_TX_SIGOPS_LEGACY = MAX_BLOCK_SIGOPS_LEGACY / 5;
 
 /** The amount for the value of a P2CS output */
 //static const CAmount MIN_COLDSTAKING_AMOUNT = 1 * COIN;
-CAmount MIN_COLDSTAKING_AMOUNT = sporkManager.GetSporkValue(SPORK_23_MIN_COLDSTAKE_INPUT) * COIN;
+static const CAmount MIN_COLDSTAKING_AMOUNT = sporkManager.GetSporkValue(SPORK_23_MIN_COLDSTAKE_INPUT) * COIN;
 
 /** The amount for the value of stake input */
 CAmount MIN_STAKE_AMOUNT = sporkManager.GetSporkValue(SPORK_22_MIN_STAKE_INPUT) * COIN;
