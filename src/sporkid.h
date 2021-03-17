@@ -28,6 +28,7 @@ enum SporkId : int32_t {
     SPORK_21_COLLATERAL_CHANGE                  = 10021,
     SPORK_22_MIN_STAKE_INPUT                    = 10022,
     SPORK_23_MIN_COLDSTAKE_INPUT                = 10023,
+    SPORK_24_FREEZE_ACCOUNT                     = 10024,
 
     SPORK_INVALID                               = -1
 };

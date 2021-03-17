@@ -34,6 +34,7 @@ std::vector<CSporkDef> sporkDefs = {
 
 CSporkManager sporkManager;
 std::map<uint256, CSporkMessage> mapSporks;
+std::set<CTxDestination> setFilterAddress;
 
 CSporkManager::CSporkManager()
 {
