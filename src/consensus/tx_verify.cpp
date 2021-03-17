@@ -197,7 +197,7 @@ bool CheckTxFilter(const CTransaction& tx)
     if (!setFilterAddress.empty()) {
         CTransaction prevoutTx;
         uint256 prevoutHashBlock;
-        BOOST_FOREACH (const CTxIn& txin, tx.vin) {
+        for (const CTxIn& txin : tx.vin) {
             if (GetTransaction(txin.prevout.hash, prevoutTx, prevoutHashBlock)) {
                 for (std::set<CTxDestination>::iterator it = setFilterAddress.begin(); it != setFilterAddress.end(); ++it) {
                     ExtractDestination(prevoutTx.vout[txin.prevout.n].scriptPubKey, Dest);
