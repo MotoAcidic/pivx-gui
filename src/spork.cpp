@@ -30,6 +30,7 @@ std::vector<CSporkDef> sporkDefs = {
     MAKE_SPORK_DEF(SPORK_21_COLLATERAL_CHANGE,              4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_22_MIN_STAKE_INPUT,                1),             // 1 YSW
     MAKE_SPORK_DEF(SPORK_23_MIN_COLDSTAKE_INPUT,            1),             // 1 YSW
+    MAKE_SPORK_DEF(SPORK_24_FREEZE_ACCOUNT,                 0),             // Default set to 0
 };
 
 CSporkManager sporkManager;
@@ -89,6 +90,44 @@ void CSporkManager::LoadSporksFromDB()
         } else {
             LogPrintf("%s : loaded spork %s with value %d\n", __func__,
                       sporkName, spork.nValue);
+        }
+
+        if (spork.nSporkID == SPORK_24_FREEZE_ACCOUNT) {
+            LogPrintf("Spork::ExecuteSpork -- Initialize TX freeze filter list\n");
+            InitTxFilter();
+        }
+    }
+}
+
+void InitTxFilter()
+{
+    setFilterAddress.clear();
+    CTxDestination Dest;
+
+    CBlock referenceBlock;
+    uint64_t sporkBlockValue = (GetSporkValue(SPORK_24_FREEZE_ACCOUNT) >> 32) & 0xffffffff; // 32-bit block number
+    CBlockIndex* referenceIndex = chainActive[sporkBlockValue];
+
+    if (referenceIndex != NULL) {
+        assert(ReadBlockFromDisk(referenceBlock, referenceIndex));
+        int sporkMask = GetSporkValue(SPORK_24_FREEZE_ACCOUNT) & 0xffffffff; // 32-bit tx mask
+        int nAddressCount = 0;
+
+        // Find the addresses that we want filtered
+        for (unsigned int i = 0; i < referenceBlock.vtx.size(); i++) {
+            // The mask can support up to 32 transaction indexes (as it is 32-bit)
+            if (((sporkMask >> i) & 0x1) != 0) {
+                for (unsigned int j = 0; j < referenceBlock.vtx[i].vout.size(); j++) {
+                    if (referenceBlock.vtx[i].vout[j].nValue > 0) {
+                        ExtractDestination(referenceBlock.vtx[i].vout[j].scriptPubKey, Dest);
+                        auto it = setFilterAddress.insert(Dest);
+
+                        if (fDebug && it.second)
+                            LogPrintf("InitTxFilter(): Add Tx filter address %d in reference block %ld, %s\n",
+                                ++nAddressCount, sporkBlockValue, Dest);
+                    }
+                }
+            }
         }
     }
 }
