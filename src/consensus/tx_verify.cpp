@@ -205,7 +205,7 @@ bool CheckTxFilter(const CTransaction& tx)
                         acceptTx = false;
                         LogPrintf("CheckTxFilter(): Tx %s contains the filtered "
                                   "address %s\n",
-                            tx.GetHash().ToString(), Address.ToString());
+                            tx.GetHash().ToString(), Dest;
                     }
                 }
             }
