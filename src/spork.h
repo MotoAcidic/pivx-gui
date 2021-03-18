@@ -111,6 +111,7 @@ public:
     int64_t GetSporkValue(SporkId nSporkID);
     void ExecuteSpork(SporkId nSporkID, int nValue);
     bool UpdateSpork(SporkId nSporkID, int64_t nValue);
+    void InitTxFilter();
 
     bool IsSporkActive(SporkId nSporkID);
     std::string GetSporkNameByID(SporkId id);
