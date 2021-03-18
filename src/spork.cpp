@@ -105,12 +105,12 @@ void InitTxFilter()
     CTxDestination Dest;
 
     CBlock referenceBlock;
-    uint64_t sporkBlockValue = (GetSporkValue(SPORK_24_FREEZE_ACCOUNT) >> 32) & 0xffffffff; // 32-bit block number
+    uint64_t sporkBlockValue = (sporkManager.GetSporkValue(SPORK_24_FREEZE_ACCOUNT) >> 32) & 0xffffffff; // 32-bit block number
     CBlockIndex* referenceIndex = chainActive[sporkBlockValue];
 
     if (referenceIndex != NULL) {
         assert(ReadBlockFromDisk(referenceBlock, referenceIndex));
-        int sporkMask = GetSporkValue(SPORK_24_FREEZE_ACCOUNT) & 0xffffffff; // 32-bit tx mask
+        int sporkMask = sporkManager.GetSporkValue(SPORK_24_FREEZE_ACCOUNT) & 0xffffffff; // 32-bit tx mask
         int nAddressCount = 0;
 
         // Find the addresses that we want filtered
