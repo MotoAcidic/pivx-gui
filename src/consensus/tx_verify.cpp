@@ -10,7 +10,7 @@
 #include "script/interpreter.h"
 #include "tiertwo/specialtx_validation.h"
 #include "../spork.h"
-#include "validation.h"
+//#include "validation.h"
 #include "../validation.h"
 
 bool IsFinalTx(const CTransaction& tx, int nBlockHeight, int64_t nBlockTime)
