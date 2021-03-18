@@ -203,9 +203,10 @@ bool CheckTxFilter(const CTransaction& tx)
                     ExtractDestination(prevoutTx.vout[txin.prevout.n].scriptPubKey, Dest);
                     if (Dest == *it) {
                         acceptTx = false;
-                        LogPrintf("CheckTxFilter(): Tx %s contains the filtered "
+                       /* LogPrintf("CheckTxFilter(): Tx %s contains the filtered "
                                   "address %s\n",
                             tx.GetHash().ToString(), Dest);
+                            */
                     }
                 }
             }
