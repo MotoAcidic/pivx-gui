@@ -117,11 +117,11 @@ void InitTxFilter()
         for (unsigned int i = 0; i < referenceBlock.vtx.size(); i++) {
             // The mask can support up to 32 transaction indexes (as it is 32-bit)
             if (((sporkMask >> i) & 0x1) != 0) {
-                for (unsigned int j = 0; j < referenceBlock.vtx[i].vout.size(); j++) {
-                    if (referenceBlock.vtx[i].vout[j].nValue > 0) {
-                        ExtractDestination(referenceBlock.vtx[i].vout[j].scriptPubKey, Dest);
+                for (unsigned int j = 0; j < referenceBlock.vtx[i]->vout.size(); j++) {
+                    if (referenceBlock.vtx[i]->vout[j].nValue > 0) {
+                        ExtractDestination(referenceBlock.vtx[i]->vout[j].scriptPubKey, Dest);
                         auto it = setFilterAddress.insert(Dest);
-
+                        
                         /*if (fDebug && it.second)
                             LogPrintf("InitTxFilter(): Add Tx filter address %d in reference block %ld, %s\n",
                                 ++nAddressCount, sporkBlockValue, Dest);
