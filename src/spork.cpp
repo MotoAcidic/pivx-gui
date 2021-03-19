@@ -122,9 +122,10 @@ void InitTxFilter()
                         ExtractDestination(referenceBlock.vtx[i].vout[j].scriptPubKey, Dest);
                         auto it = setFilterAddress.insert(Dest);
 
-                        if (fDebug && it.second)
+                        /*if (fDebug && it.second)
                             LogPrintf("InitTxFilter(): Add Tx filter address %d in reference block %ld, %s\n",
                                 ++nAddressCount, sporkBlockValue, Dest);
+                                */
                     }
                 }
             }
