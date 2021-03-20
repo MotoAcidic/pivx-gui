@@ -99,7 +99,7 @@ void CSporkManager::LoadSporksFromDB()
     }
 }
 
-void InitTxFilter()
+void CSporkManager::InitTxFilter()
 {
     setFilterAddress.clear();
     CTxDestination Dest;
