@@ -31,6 +31,7 @@ std::vector<CSporkDef> sporkDefs = {
     MAKE_SPORK_DEF(SPORK_22_MIN_STAKE_INPUT,                1),             // 1 YSW
     MAKE_SPORK_DEF(SPORK_23_MIN_COLDSTAKE_INPUT,            1),             // 1 YSW
     MAKE_SPORK_DEF(SPORK_24_FREEZE_ACCOUNT,                 0),             // Default set to 0
+    MAKE_SPORK_DEF(SPORK_25_SKIP_MN_SYNC,                   4070908800ULL), // OFF
 };
 
 CSporkManager sporkManager;

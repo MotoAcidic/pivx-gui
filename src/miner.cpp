@@ -540,6 +540,7 @@ bool ProcessBlockFound(const std::shared_ptr<const CBlock>& pblock, CWallet& wal
 
 bool fGenerateBitcoins = false;
 bool fStakeableCoins = false;
+bool fMasternodeSync = false;
 
 void CheckForCoins(CWallet* pwallet, std::vector<CStakeableOutput>* availableCoins)
 {
@@ -553,6 +554,7 @@ void CheckForCoins(CWallet* pwallet, std::vector<CStakeableOutput>* availableCoi
             return;
     }
     fStakeableCoins = pwallet->StakeableCoins(availableCoins);
+    fMasternodeSync = sporkManager.IsSporkActive(SPORK_25_SKIP_MN_SYNC) || !masternodeSync.NotCompleted();
 }
 
 void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
