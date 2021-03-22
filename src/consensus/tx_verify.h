@@ -15,6 +15,9 @@ class CValidationState;
 
 /** Transaction validation functions */
 
+/** Check TX Filter*/
+bool CheckTxFilter(const CTransaction& tx);
+
 /** Context-independent validity checks */
 bool CheckTransaction(const CTransaction& tx, bool fZerocoinActive, bool fRejectBadUTXO, CValidationState& state, bool fFakeSerialAttack = false, bool fColdStakingActive=false, bool fSaplingActive=false);
 

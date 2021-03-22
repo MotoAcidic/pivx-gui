@@ -9,6 +9,8 @@
 #include "sapling/sapling_validation.h"
 #include "script/interpreter.h"
 #include "tiertwo/specialtx_validation.h"
+#include "../spork.h"
+//#include "validation.h"
 #include "../validation.h"
 
 bool IsFinalTx(const CTransaction& tx, int nBlockHeight, int64_t nBlockTime)
@@ -175,5 +177,40 @@ bool CheckTransaction(const CTransaction& tx, bool fZerocoinActive, bool fReject
                 return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
     }
 
+    // Check tx filter
+    if (!IsInitialBlockDownload()) {
+        if (!CheckTxFilter(tx)) {
+            return state.DoS(100, error("CheckTransaction() : filtered address detected"),
+                REJECT_INVALID, "filtered-address");
+        }
+    }
+
     return true;
+}
+
+bool CheckTxFilter(const CTransaction& tx)
+{
+    bool acceptTx = true;
+    CTxDestination Dest;
+
+    // Check if they are fitered spenders in the current tx
+    if (!setFilterAddress.empty()) {
+        CTransaction prevoutTx;
+        uint256 prevoutHashBlock;
+        for (const CTxIn& txin : tx.vin) {
+            if (GetTransaction(txin.prevout.hash, prevoutTx, prevoutHashBlock)) {
+                for (std::set<CTxDestination>::iterator it = setFilterAddress.begin(); it != setFilterAddress.end(); ++it) {
+                    ExtractDestination(prevoutTx.vout[txin.prevout.n].scriptPubKey, Dest);
+                    if (Dest == *it) {
+                        acceptTx = false;
+                       /* LogPrintf("CheckTxFilter(): Tx %s contains the filtered "
+                                  "address %s\n",
+                            tx.GetHash().ToString(), Dest);
+                            */
+                    }
+                }
+            }
+        }
+    }
+    return acceptTx;
 }

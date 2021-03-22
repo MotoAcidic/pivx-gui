@@ -540,6 +540,7 @@ bool ProcessBlockFound(const std::shared_ptr<const CBlock>& pblock, CWallet& wal
 
 bool fGenerateBitcoins = false;
 bool fStakeableCoins = false;
+bool fMasternodeSync = false;
 
 void CheckForCoins(CWallet* pwallet, std::vector<CStakeableOutput>* availableCoins)
 {
@@ -553,6 +554,7 @@ void CheckForCoins(CWallet* pwallet, std::vector<CStakeableOutput>* availableCoi
             return;
     }
     fStakeableCoins = pwallet->StakeableCoins(availableCoins);
+    fMasternodeSync = sporkManager.IsSporkActive(SPORK_25_SKIP_MN_SYNC) || !masternodeSync.NotCompleted();
 }
 
 void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
@@ -589,8 +591,7 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
             // update fStakeableCoins
             CheckForCoins(pwallet, &availableCoins);
 
-            while ((g_connman && g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0 && Params().MiningRequiresPeers())
-                    || pwallet->IsLocked() || !fStakeableCoins || masternodeSync.NotCompleted()) {
+            while ((g_connman && g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0 && Params().MiningRequiresPeers()) || pwallet->IsLocked() || !fStakeableCoins || !fMasternodeSync) {
                 MilliSleep(5000);
                 // Do another check here to ensure fStakeableCoins is updated
                 if (!fStakeableCoins) CheckForCoins(pwallet, &availableCoins);
